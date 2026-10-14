@@ -16,7 +16,7 @@ Web app berlangganan untuk artist: melacak open commission gambar (deadline, pro
    - semua halaman aplikasi wajib login; belum login → redirect ke `/login`
    - user baru otomatis dapat trial 7 hari
    - login tapi langganan/trial habis → redirect ke `/billing`
-   - pembayaran langganan lewat Midtrans (Milestone 5); sebelum itu aktivasi manual di Supabase
+   - pembayaran langganan lewat Midtrans (Milestone 7, ditunda); sebelum itu aktivasi manual di Supabase
    - data tiap user terpisah (RLS per `user_id`)
 2. CRUD commission dengan field:
    - tanggal mulai dan deadline
@@ -104,12 +104,12 @@ TrackerCommis/
 - [x] Repo GitHub, deploy kosong ke Vercel
 
 ### Milestone 1 — Database dan auth (1 hari)
-- [ ] Jalankan migration dari `database.md`
-- [ ] Trigger user baru: buat `subscriptions`, `settings`, tipe dan add-on default
+- [x] Jalankan migration dari `database.md`
+- [x] Trigger user baru: buat `subscriptions`, `settings`, tipe dan add-on default
 - [ ] Halaman daftar, login, logout, lupa password (Supabase Auth)
-- [ ] Proxy (`proxy.ts`): belum login → `/login`; langganan tidak aktif → `/billing`
-- [ ] Aktifkan RLS per user + `has_access()`; uji akses langsung lewat API dengan akun tanpa langganan (harus ditolak)
-- [ ] Halaman `/billing`: status langganan / sisa hari trial (tombol bayar menyusul di Milestone 5)
+- [x] Proxy (`proxy.ts`): belum login → `/login`; langganan tidak aktif → `/billing`
+- [x] Aktifkan RLS per user + `has_access()`; uji akses langsung lewat API dengan akun tanpa langganan (harus ditolak)
+- [ ] Halaman `/billing`: status langganan / sisa hari trial (tombol bayar menyusul di Milestone 7)
 - [ ] Akun demo dengan langganan aktif dan beberapa commission contoh (data fiktif)
 
 ### Milestone 2 — CRUD commission (2 hari)
@@ -133,27 +133,30 @@ TrackerCommis/
 - [ ] Indikator deadline
 - [ ] Halaman pengaturan harga
 
-### Milestone 5 — Pembayaran Midtrans (1-2 hari)
-- [ ] Akun Midtrans sandbox; env `MIDTRANS_SERVER_KEY`, `MIDTRANS_IS_PRODUCTION`
-- [ ] Tentukan harga dan durasi paket (lihat Keputusan Tertunda)
-- [ ] `POST /api/billing/checkout`: buat baris `payments` (pending), panggil Snap API, redirect user ke `redirect_url`
-- [ ] `POST /api/midtrans/notification`: verifikasi signature, cocokkan `gross_amount`, panggil `activate_payment`
-- [ ] Set Payment Notification URL di dashboard Midtrans
-- [ ] Banner "trial sisa X hari" + tombol bayar di `/billing`
-- [ ] Unit test verifikasi signature dan mapping status
-- [ ] Uji end-to-end di sandbox: sukses, pending, expire, notifikasi ganda
-
-### Milestone 6 — Halaman publik (Fase 2, 2 hari)
+### Milestone 5 — Halaman publik (Fase 2, 2 hari)
 - [ ] Kode tracking unik per commission
 - [ ] Halaman `/track/[code]` read-only (tanpa data sensitif seperti harga dan kontak)
 - [ ] Upload gambar WIP ke Supabase Storage
 - [ ] Slot open commission
 
-### Milestone 7 — Portofolio (1 hari)
+### Milestone 6 — Portofolio (1 hari)
 - [ ] README: fitur, screenshot, cara menjalankan
 - [ ] Demo live dengan data dummy (jangan pakai data client asli)
 - [ ] Studi kasus singkat: masalah, keputusan teknis, hasil
 - [ ] Tambahkan ke ariefusry.me
+
+### Milestone 7 — Pembayaran Midtrans (DITUNDA, 1-2 hari)
+Dikerjakan paling akhir, setelah Midtrans (atau alternatifnya) siap dipakai. Sampai saat itu: trial 7 hari + aktivasi manual di Supabase. Tabel `payments` dan fungsi `activate_payment` belum di-migrate.
+- [ ] Pilih gateway (Midtrans atau alternatif)
+- [ ] Migration `payments` + `activate_payment` (lihat `database.md`)
+- [ ] Akun Midtrans sandbox; env `MIDTRANS_SERVER_KEY`, `MIDTRANS_IS_PRODUCTION`
+- [ ] Tentukan harga dan durasi paket (lihat Keputusan Tertunda)
+- [ ] `POST /api/billing/checkout`: buat baris `payments` (pending), panggil Snap API, redirect user ke `redirect_url`
+- [ ] `POST /api/midtrans/notification`: verifikasi signature, cocokkan `gross_amount`, panggil `activate_payment`
+- [ ] Set Payment Notification URL di dashboard Midtrans
+- [ ] Tombol bayar di `/billing`
+- [ ] Unit test verifikasi signature dan mapping status
+- [ ] Uji end-to-end di sandbox: sukses, pending, expire, notifikasi ganda
 
 Estimasi total: sekitar 11-12 hari kerja santai.
 
@@ -200,4 +203,4 @@ Estimasi total: sekitar 11-12 hari kerja santai.
 
 ## 10. Keputusan Tertunda
 
-- **Harga dan durasi paket langganan** — ditentukan setelah fitur MVP selesai, sebelum Milestone 5 go-live. Simpan sebagai konstanta di `lib/billing.ts` agar mudah diubah.
+- **Harga dan durasi paket langganan** — ditentukan setelah fitur MVP selesai, sebelum Milestone 7. Simpan sebagai konstanta di `lib/billing.ts` agar mudah diubah.
