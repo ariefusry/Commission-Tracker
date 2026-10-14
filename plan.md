@@ -136,10 +136,14 @@ TrackerCommis/
 ### Milestone 5 — Halaman publik (Fase 2, 2 hari)
 - [x] Kode tracking unik per commission
 - [x] Halaman `/track/[code]` read-only (tanpa data sensitif seperti harga dan kontak)
-- [x] Posisi antrean client + papan "Sedang dikerjakan" / "Antrean" (tanpa nama client lain)
+- [x] Posisi antrean client + papan "Sedang dikerjakan" / "Waiting list" (tanpa nama client lain), juga untuk client yang sudah dikerjakan
 - [x] Perkiraan tanggal selesai dari kecepatan kerja artist (bisa disembunyikan di Pengaturan)
 - [ ] Upload gambar WIP ke Supabase Storage (kompres WebP di browser, logika di `lib/storage.ts`)
-- [ ] Slot open commission
+- [x] Board Waiting list → Sedang dikerjakan → Selesai (tampilan Daftar | Board)
+- [x] Drag & drop kartu (urutan prioritas + pindah kolom), dipakai juga untuk urutan antrean client
+- [x] Slot: jumlah commission dikerjakan bersamaan, waiting list otomatis saat penuh, tawaran "mulai berikutnya"
+- [x] Label status "Waiting list", tahap default pertama "Dikonfirmasi"
+- [ ] Tombol buka/tutup commission (`settings.is_open`), ditunda sampai form order publik (Fase 3)
 
 ### Milestone 6 — Portofolio (1 hari)
 - [ ] README: fitur, screenshot, cara menjalankan

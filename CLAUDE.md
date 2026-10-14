@@ -40,5 +40,5 @@ Next.js (App Router), TypeScript, Tailwind, shadcn/ui, TanStack Table, Recharts,
 - Kerjakan per milestone sesuai `plan.md`; centang item yang selesai.
 - Satu perubahan fokus per commit, pesan commit singkat (mis. `feat: add commission form`).
 - Sebelum menandai selesai: jalankan lint dan test, cek di mobile dan desktop.
-- Jangan tambah dependency baru tanpa alasan jelas.
+- Jangan tambah dependency baru tanpa alasan jelas. (`@dnd-kit/*` dipakai untuk drag & drop board: sentuh + keyboard.)
 - Data demo hanya data fiktif, bukan data client asli.
