@@ -143,3 +143,23 @@ export async function deleteCommission(id: string): Promise<ActionResult> {
   refresh();
   return {};
 }
+
+const moveSchema = z.object({
+  status: z.enum(["queue", "in_progress", "revision", "done"]),
+  queue_order: z.number().finite(),
+});
+
+/** Pindah/urutkan kartu di board: status kolom tujuan + urutan prioritas baru. */
+export async function moveCommission(id: string, move: z.input<typeof moveSchema>): Promise<ActionResult> {
+  const parsed = moveSchema.safeParse(move);
+  if (!idSchema.safeParse(id).success || !parsed.success) return { error: "Data tidak valid." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("commissions").update(parsed.data).eq("id", id).select("id");
+  if (error || !data?.length) {
+    if (error) console.error("moveCommission", error);
+    return { error: "Gagal memindahkan. Coba lagi." };
+  }
+  refresh();
+  return {};
+}

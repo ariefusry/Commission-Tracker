@@ -12,7 +12,7 @@ export async function getCommissionRows(): Promise<CommissionRow[]> {
   const { data, error } = await supabase
     .from("commissions")
     .select(
-      "id, tracking_code, client_username, type_custom, start_date, deadline, stage_id, status, payment_status, dp_amount, price_total, commission_types(name)",
+      "id, tracking_code, client_username, type_custom, start_date, deadline, stage_id, completed_at, queue_order, status, payment_status, dp_amount, price_total, commission_types(name)",
     )
     .order("start_date", { ascending: false })
     .order("created_at", { ascending: false });
@@ -30,6 +30,17 @@ export async function getStages(): Promise<StageOption[]> {
   const { data, error } = await supabase.from("stages").select("id, name, is_active").order("sort_order").order("name");
   if (error) throw error;
   return data;
+}
+
+/** Jumlah commission yang sedang dikerjakan (mengisi slot). */
+export async function getWorkingCount(): Promise<number> {
+  const supabase = await createClient();
+  const { count, error } = await supabase
+    .from("commissions")
+    .select("id", { count: "exact", head: true })
+    .in("status", ["in_progress", "revision"]);
+  if (error) throw error;
+  return count ?? 0;
 }
 
 export async function getFormOptions(include?: { typeId: string | null; addonIds: string[] }) {

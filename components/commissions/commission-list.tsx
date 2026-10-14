@@ -35,6 +35,8 @@ export type CommissionRow = {
   start_date: string;
   deadline: string | null;
   stage_id: string;
+  completed_at: string | null;
+  queue_order: number;
   status: Status;
   payment_status: PaymentStatus;
   dp_amount: number;
@@ -50,7 +52,7 @@ const TONE_CLASS: Record<DeadlineTone, string> = {
   none: "text-muted-foreground",
 };
 
-function Deadline({ row, today }: { row: CommissionRow; today: string }) {
+export function Deadline({ row, today }: { row: CommissionRow; today: string }) {
   const info = deadlineInfo(row.deadline, row.status, today);
   return (
     <div className="grid">
@@ -60,7 +62,7 @@ function Deadline({ row, today }: { row: CommissionRow; today: string }) {
   );
 }
 
-function Total({ row }: { row: CommissionRow }) {
+export function Total({ row }: { row: CommissionRow }) {
   const due = row.status === "cancelled" ? 0 : amountDue(row.price_total, row.payment_status, row.dp_amount);
   return (
     <div className="grid justify-items-end tabular-nums">
@@ -116,7 +118,7 @@ function QuickSelects({ row, stages, onUpdate, pending, labelled }: { row: Commi
   ));
 }
 
-function Actions({ row }: { row: CommissionRow }) {
+export function Actions({ row }: { row: CommissionRow }) {
   return (
     <div className="flex justify-end">
       <CopyTrackingLink code={row.tracking_code} name={row.client_username} />

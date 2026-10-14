@@ -1,16 +1,17 @@
 import { ClipboardList, Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
-import { CommissionList } from "@/components/commissions/commission-list";
+import { CommissionViews } from "@/components/commissions/commission-views";
 import { SkeletonBlock } from "@/components/skeleton-block";
 import { StateMessage } from "@/components/state-message";
 import { Button } from "@/components/ui/button";
 import { getCommissionRows, getStages } from "@/lib/data/commissions";
+import { getPreferences } from "@/lib/data/settings";
 import { deadlineInfo } from "@/lib/deadline";
 import { todayWib } from "@/lib/subscription";
 
 async function Content() {
-  const [rows, stages] = await Promise.all([getCommissionRows(), getStages()]);
+  const [rows, stages, { slot_limit }] = await Promise.all([getCommissionRows(), getStages(), getPreferences()]);
   const today = todayWib();
   const active = rows.filter((r) => r.status !== "done" && r.status !== "cancelled").length;
   const late = rows.filter((r) => deadlineInfo(r.deadline, r.status, today).tone === "late").length;
@@ -35,7 +36,7 @@ async function Content() {
         {active} aktif dari {rows.length}
         {late > 0 && <span className="text-destructive"> · {late} terlambat</span>}
       </p>
-      <CommissionList data={rows} today={today} stages={stages} />
+      <CommissionViews data={rows} today={today} stages={stages} slotLimit={slot_limit} />
     </div>
   );
 }
