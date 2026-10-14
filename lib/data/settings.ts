@@ -8,13 +8,17 @@ const countBy = (ids: (string | null)[]) => {
   return m;
 };
 
-export type Preferences = { count_cancelled_paid: boolean };
+export type Preferences = { display_name: string; count_cancelled_paid: boolean; show_queue: boolean };
 
 export async function getPreferences(): Promise<Preferences> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("settings").select("count_cancelled_paid").maybeSingle();
+  const { data, error } = await supabase.from("settings").select("display_name, count_cancelled_paid, show_queue").maybeSingle();
   if (error) throw error;
-  return { count_cancelled_paid: data?.count_cancelled_paid ?? true };
+  return {
+    display_name: data?.display_name ?? "",
+    count_cancelled_paid: data?.count_cancelled_paid ?? true,
+    show_queue: data?.show_queue ?? true,
+  };
 }
 
 export async function getCatalog(): Promise<{ types: CatalogItem[]; addons: CatalogItem[]; stages: CatalogItem[] }> {

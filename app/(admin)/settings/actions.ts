@@ -110,17 +110,26 @@ export async function moveItem(kind: "type" | "stage", id: string, direction: "u
   return {};
 }
 
-const preferencesSchema = z.object({ count_cancelled_paid: z.boolean() });
+const preferencesSchema = z
+  .object({
+    display_name: z.string().trim().max(60, "Maksimal 60 karakter"),
+    count_cancelled_paid: z.boolean(),
+    show_queue: z.boolean(),
+  })
+  .partial();
 
 export async function updatePreferences(input: z.input<typeof preferencesSchema>): Promise<CatalogResult> {
   const parsed = preferencesSchema.safeParse(input);
-  if (!parsed.success) return { error: "Data tidak valid." };
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  const { display_name, ...rest } = parsed.data;
+  // "" → null agar halaman tracking menyembunyikan nama.
+  const patch = display_name === undefined ? rest : { ...rest, display_name: display_name || null };
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
   const userId = claims?.claims.sub;
   if (!userId) return { error: "Sesi berakhir. Login ulang." };
 
-  const { data, error } = await supabase.from("settings").update(parsed.data).eq("user_id", userId).select("user_id");
+  const { data, error } = await supabase.from("settings").update(patch).eq("user_id", userId).select("user_id");
   if (error || !data?.length) {
     if (error) console.error("updatePreferences", error);
     return { error: "Gagal menyimpan. Coba lagi." };

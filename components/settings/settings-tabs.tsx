@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { CatalogKind } from "@/app/(admin)/settings/actions";
-import { PaymentPreferences } from "@/components/settings/payment-preferences";
+import { GeneralSettings } from "@/components/settings/general-settings";
 import { CatalogEditor, type CatalogItem } from "@/components/settings/catalog-editor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Preferences } from "@/lib/data/settings";
@@ -43,8 +43,8 @@ export function SettingsTabs({
               <h2 className="font-semibold">{t.title}</h2>
               <p className="text-sm text-muted-foreground">{t.description}</p>
             </div>
-            {t.kind === "payment" ? (
-              <PaymentPreferences initial={preferences} />
+            {t.kind === "general" ? (
+              <GeneralSettings initial={preferences} />
             ) : (
               <CatalogEditor kind={t.kind} label={t.label} items={items[t.kind]} />
             )}

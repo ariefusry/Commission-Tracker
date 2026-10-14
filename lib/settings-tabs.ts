@@ -1,7 +1,7 @@
 import type { CatalogKind } from "@/app/(admin)/settings/actions";
 
 // Modul biasa (bukan "use client") agar bisa dipakai server page dan client tabs.
-export type SettingsTab = CatalogKind | "payment";
+export type SettingsTab = CatalogKind | "general";
 
 export const SETTINGS_TABS: { kind: SettingsTab; title: string; label: string; description: string }[] = [
   {
@@ -18,10 +18,10 @@ export const SETTINGS_TABS: { kind: SettingsTab; title: string; label: string; d
     description: "Alur pengerjaan commission. Urutan di sini menjadi urutan pilihan Tahap.",
   },
   {
-    kind: "payment",
-    title: "Pembayaran",
-    label: "pembayaran",
-    description: "Cara menghitung uang masuk di dashboard.",
+    kind: "general",
+    title: "Umum",
+    label: "umum",
+    description: "Nama yang tampil di halaman tracking client dan cara menghitung uang masuk.",
   },
 ];
 
