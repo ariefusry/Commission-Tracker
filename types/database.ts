@@ -61,17 +61,23 @@ isOneToOne: false
                   ]
                 },"commissions": {
                   Row: {
-                    "base_price": number,"client_username": string,"contact_handle": string | null,"contact_platform": string | null,"created_at": string,"deadline": string | null,"dp_amount": number,"id": string,"notes": string | null,"payment_status": Database["public"]['Enums']["payment_status"],"price_override": number | null,"price_total": number,"reference_links": (string)[],"revision_count": number,"stage": Database["public"]['Enums']["commission_stage"],"stage_custom": string | null,"start_date": string,"status": Database["public"]['Enums']["commission_status"],"tracking_code": string,"type_custom": string | null,"type_id": string | null,"updated_at": string,"user_id": string
+                    "base_price": number,"client_username": string,"contact_handle": string | null,"contact_platform": string | null,"created_at": string,"deadline": string | null,"dp_amount": number,"id": string,"notes": string | null,"payment_status": Database["public"]['Enums']["payment_status"],"price_override": number | null,"price_total": number,"reference_links": (string)[],"revision_count": number,"stage_id": string,"start_date": string,"status": Database["public"]['Enums']["commission_status"],"tracking_code": string,"type_custom": string | null,"type_id": string | null,"updated_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "base_price"?: number,"client_username": string,"contact_handle"?: string | null,"contact_platform"?: string | null,"created_at"?: string,"deadline"?: string | null,"dp_amount"?: number,"id"?: string,"notes"?: string | null,"payment_status"?: Database["public"]['Enums']["payment_status"],"price_override"?: number | null,"price_total"?: number,"reference_links"?: (string)[],"revision_count"?: number,"stage"?: Database["public"]['Enums']["commission_stage"],"stage_custom"?: string | null,"start_date"?: string,"status"?: Database["public"]['Enums']["commission_status"],"tracking_code"?: string,"type_custom"?: string | null,"type_id"?: string | null,"updated_at"?: string,"user_id"?: string
+                    "base_price"?: number,"client_username": string,"contact_handle"?: string | null,"contact_platform"?: string | null,"created_at"?: string,"deadline"?: string | null,"dp_amount"?: number,"id"?: string,"notes"?: string | null,"payment_status"?: Database["public"]['Enums']["payment_status"],"price_override"?: number | null,"price_total"?: number,"reference_links"?: (string)[],"revision_count"?: number,"stage_id": string,"start_date"?: string,"status"?: Database["public"]['Enums']["commission_status"],"tracking_code"?: string,"type_custom"?: string | null,"type_id"?: string | null,"updated_at"?: string,"user_id"?: string
                   }
                   Update: {
-                    "base_price"?: number,"client_username"?: string,"contact_handle"?: string | null,"contact_platform"?: string | null,"created_at"?: string,"deadline"?: string | null,"dp_amount"?: number,"id"?: string,"notes"?: string | null,"payment_status"?: Database["public"]['Enums']["payment_status"],"price_override"?: number | null,"price_total"?: number,"reference_links"?: (string)[],"revision_count"?: number,"stage"?: Database["public"]['Enums']["commission_stage"],"stage_custom"?: string | null,"start_date"?: string,"status"?: Database["public"]['Enums']["commission_status"],"tracking_code"?: string,"type_custom"?: string | null,"type_id"?: string | null,"updated_at"?: string,"user_id"?: string
+                    "base_price"?: number,"client_username"?: string,"contact_handle"?: string | null,"contact_platform"?: string | null,"created_at"?: string,"deadline"?: string | null,"dp_amount"?: number,"id"?: string,"notes"?: string | null,"payment_status"?: Database["public"]['Enums']["payment_status"],"price_override"?: number | null,"price_total"?: number,"reference_links"?: (string)[],"revision_count"?: number,"stage_id"?: string,"start_date"?: string,"status"?: Database["public"]['Enums']["commission_status"],"tracking_code"?: string,"type_custom"?: string | null,"type_id"?: string | null,"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "commissions_stage_id_fkey"
+      columns: ["stage_id"]
+isOneToOne: false
+      referencedRelation: "stages"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "commissions_type_id_fkey"
       columns: ["type_id"]
 isOneToOne: false
@@ -81,14 +87,28 @@ isOneToOne: false
                   ]
                 },"settings": {
                   Row: {
-                    "is_open": boolean,"slot_limit": number,"user_id": string
+                    "count_cancelled_paid": boolean,"is_open": boolean,"slot_limit": number,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "is_open"?: boolean,"slot_limit"?: number,"user_id"?: string
+                    "count_cancelled_paid"?: boolean,"is_open"?: boolean,"slot_limit"?: number,"user_id"?: string
                   }
                   Update: {
-                    "is_open"?: boolean,"slot_limit"?: number,"user_id"?: string
+                    "count_cancelled_paid"?: boolean,"is_open"?: boolean,"slot_limit"?: number,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"stages": {
+                  Row: {
+                    "id": string,"is_active": boolean,"name": string,"sort_order": number,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "id"?: string,"is_active"?: boolean,"name": string,"sort_order"?: number,"user_id"?: string
+                  }
+                  Update: {
+                    "id"?: string,"is_active"?: boolean,"name"?: string,"sort_order"?: number,"user_id"?: string
                   }
                   Relationships: [
                     
@@ -109,14 +129,14 @@ isOneToOne: false
                   ]
                 },"wip_images": {
                   Row: {
-                    "commission_id": string,"created_at": string,"id": string,"stage": Database["public"]['Enums']["commission_stage"],"storage_path": string
+                    "commission_id": string,"created_at": string,"id": string,"stage_id": string,"storage_path": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "commission_id": string,"created_at"?: string,"id"?: string,"stage": Database["public"]['Enums']["commission_stage"],"storage_path": string
+                    "commission_id": string,"created_at"?: string,"id"?: string,"stage_id": string,"storage_path": string
                   }
                   Update: {
-                    "commission_id"?: string,"created_at"?: string,"id"?: string,"stage"?: Database["public"]['Enums']["commission_stage"],"storage_path"?: string
+                    "commission_id"?: string,"created_at"?: string,"id"?: string,"stage_id"?: string,"storage_path"?: string
                   }
                   Relationships: [
                     {
@@ -124,6 +144,12 @@ isOneToOne: false
       columns: ["commission_id"]
 isOneToOne: false
       referencedRelation: "commissions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "wip_images_stage_id_fkey"
+      columns: ["stage_id"]
+isOneToOne: false
+      referencedRelation: "stages"
       referencedColumns: ["id"]
     }
                   ]
@@ -141,7 +167,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "commission_stage": "queue"|"sketch"|"lineart"|"coloring"|"finishing"|"custom","commission_status": "queue"|"in_progress"|"revision"|"done"|"cancelled","payment_status": "unpaid"|"dp"|"paid"
+            "commission_status": "queue"|"in_progress"|"revision"|"done"|"cancelled","payment_status": "unpaid"|"dp"|"paid"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -257,7 +283,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "commission_stage": ["queue", "sketch", "lineart", "coloring", "finishing", "custom"],"commission_status": ["queue", "in_progress", "revision", "done", "cancelled"],"payment_status": ["unpaid", "dp", "paid"]
+            "commission_status": ["queue", "in_progress", "revision", "done", "cancelled"],"payment_status": ["unpaid", "dp", "paid"]
           }
         }
 } as const

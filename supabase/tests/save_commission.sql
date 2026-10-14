@@ -12,12 +12,14 @@ do $$
 declare
   v_id uuid;
   v_addon uuid := (select id from public.addons where name = 'Detailed character');
+  v_sketch uuid := (select id from public.stages where name = 'Sketsa');
+  v_line uuid := (select id from public.stages where name = 'Lineart');
   c public.commissions;
 begin
   -- create: dengan add-on katalog + custom, reference_links array
   v_id := public.save_commission(p_id => null,
     p_data => jsonb_build_object('client_username', 'kiki', 'type_custom', 'Chibi', 'start_date', '2026-10-15',
-      'stage', 'sketch', 'status', 'in_progress', 'revision_count', 0, 'payment_status', 'dp',
+      'stage_id', v_sketch, 'status', 'in_progress', 'revision_count', 0, 'payment_status', 'dp',
       'dp_amount', 50000, 'base_price', 0, 'price_override', null, 'price_total', 100000,
       'reference_links', jsonb_build_array('https://a.test/1', 'https://a.test/2')),
     p_addons => jsonb_build_array(
@@ -28,16 +30,18 @@ begin
   if c.user_id <> '00000000-0000-0000-0000-00000000000a' then raise exception 'user_id bukan dari auth.uid()'; end if;
   if length(c.tracking_code) <> 8 then raise exception 'tracking_code tidak 8 karakter'; end if;
   if c.reference_links <> array['https://a.test/1', 'https://a.test/2'] then raise exception 'reference_links salah'; end if;
+  if c.stage_id <> v_sketch then raise exception 'stage_id tidak tersimpan'; end if;
   if (select count(*) from public.commission_addons where commission_id = v_id) <> 2 then raise exception 'add-on create salah'; end if;
 
   -- update: ganti add-on jadi satu, tracking_code tetap
   perform public.save_commission(p_id => v_id,
     p_data => jsonb_build_object('client_username', 'kiki2', 'type_custom', 'Chibi', 'start_date', '2026-10-15',
-      'stage', 'lineart', 'status', 'in_progress', 'revision_count', 1, 'payment_status', 'paid',
+      'stage_id', v_line, 'status', 'in_progress', 'revision_count', 1, 'payment_status', 'paid',
       'dp_amount', 50000, 'base_price', 0, 'price_override', 90000, 'price_total', 90000),
     p_addons => jsonb_build_array(jsonb_build_object('addon_id', null, 'custom_name', 'Extra pose', 'price', 75000)));
 
   if (select client_username from public.commissions where id = v_id) <> 'kiki2' then raise exception 'update gagal'; end if;
+  if (select stage_id from public.commissions where id = v_id) <> v_line then raise exception 'stage_id tidak terupdate'; end if;
   if (select tracking_code from public.commissions where id = v_id) <> c.tracking_code then raise exception 'tracking_code berubah saat update'; end if;
   if (select count(*) from public.commission_addons where commission_id = v_id) <> 1 then raise exception 'add-on tidak diganti'; end if;
 
@@ -45,7 +49,7 @@ begin
   begin
     perform public.save_commission(p_id => v_id,
       p_data => jsonb_build_object('client_username', 'harus-rollback', 'type_custom', 'Chibi', 'start_date', '2026-10-15',
-        'stage', 'lineart', 'status', 'in_progress', 'revision_count', 1, 'payment_status', 'paid',
+        'stage_id', v_line, 'status', 'in_progress', 'revision_count', 1, 'payment_status', 'paid',
         'dp_amount', 0, 'base_price', 0, 'price_total', 90000),
       p_addons => jsonb_build_array(jsonb_build_object('addon_id', null, 'custom_name', null, 'price', 1)));
     raise exception 'add-on tidak valid seharusnya ditolak';
@@ -62,7 +66,7 @@ do $$ begin
   begin
     perform public.save_commission(p_id => current_setting('test.id')::uuid,
       p_data => jsonb_build_object('client_username', 'hack', 'type_custom', 'X', 'start_date', '2026-10-15',
-        'stage', 'queue', 'status', 'queue', 'revision_count', 0, 'payment_status', 'unpaid',
+        'stage_id', (select id from public.stages limit 1), 'status', 'queue', 'revision_count', 0, 'payment_status', 'unpaid',
         'dp_amount', 0, 'base_price', 0, 'price_total', 0), p_addons => '[]');
     raise exception 'B bisa mengubah commission A';
   exception when no_data_found then null;

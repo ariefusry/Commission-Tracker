@@ -290,3 +290,13 @@ Snapshot harga: `commissions.base_price` dan `commission_addons.price` diambil d
 
 - Regenerate tipe setelah migration: `npx supabase@2.121.0 gen types typescript --db-url "$SUPABASE_DB_URL" --schema public > types/database.ts` (CLI lama butuh Docker).
 - Tes SQL di `supabase/tests/*.sql` berjalan dalam transaksi yang di-rollback; tidak meninggalkan data.
+
+## Tahap per User
+
+Tahap pengerjaan disimpan di tabel `stages` (per user: `name`, `sort_order`, `is_active`), sama seperti tipe pesanan. `commissions.stage_id` (wajib) menunjuk ke tahap; tahap yang dipakai tidak bisa dihapus (`on delete restrict`), cukup dinonaktifkan. User baru mendapat 5 tahap default: Antrean, Sketsa, Lineart, Coloring, Finishing.
+
+Kolom lama `commissions.stage` (enum), `stage_custom`, dan enum `commission_stage` sudah dihapus (migration `20261015040000`). `wip_images` juga memakai `stage_id`.
+
+## Preferensi User
+
+`settings.count_cancelled_paid` (default `true`): pembayaran dari commission batal (DP yang tidak dikembalikan) dihitung sebagai uang masuk di dashboard. Diubah di Pengaturan → Pembayaran.
