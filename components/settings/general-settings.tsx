@@ -67,6 +67,52 @@ function DisplayName({ initial }: { initial: string }) {
   );
 }
 
+function SlotLimit({ initial }: { initial: number }) {
+  const [saved, setSaved] = useState(String(initial));
+  const [value, setValue] = useState(String(initial));
+  const [status, setStatus] = useState<Status>({});
+  const [pending, startTransition] = useTransition();
+
+  const save = () =>
+    startTransition(async () => {
+      const result = await updatePreferences({ slot_limit: value === "" ? Number.NaN : Number(value) });
+      const error = result.error ?? result.fieldErrors?.slot_limit?.[0];
+      if (!error) setSaved(value);
+      setStatus(error ? { error } : { saved: true });
+    });
+
+  return (
+    <form
+      className="grid gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        save();
+      }}
+    >
+      <Label htmlFor="slot_limit">Jumlah slot</Label>
+      <div className="flex gap-2">
+        <Input
+          id="slot_limit"
+          type="number"
+          inputMode="numeric"
+          min={1}
+          max={50}
+          className="w-24"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+        />
+        <Button type="submit" disabled={pending || value === saved}>
+          Simpan
+        </Button>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        Berapa commission yang kamu kerjakan bersamaan. Jika slot penuh, commission baru otomatis masuk waiting list.
+      </p>
+      <StatusText pending={pending} status={status} />
+    </form>
+  );
+}
+
 function PreferenceToggle({
   field,
   initial,
@@ -109,10 +155,11 @@ export function GeneralSettings({ initial }: { initial: Preferences }) {
   return (
     <div className="grid gap-6">
       <DisplayName initial={initial.display_name} />
+      <SlotLimit initial={initial.slot_limit} />
       <div className="grid gap-2">
         <h3 className="text-sm font-semibold">Halaman tracking client</h3>
         <PreferenceToggle field="show_queue" initial={initial.show_queue} title="Tampilkan antrean dan perkiraan selesai">
-          Client melihat posisinya di antrean, papan &quot;Sedang dikerjakan&quot; / &quot;Antrean&quot; (tanpa nama client
+          Client melihat posisinya di antrean, papan &quot;Sedang dikerjakan&quot; / &quot;Waiting list&quot; (tanpa nama client
           lain), dan perkiraan tanggal selesai dari kecepatan kerja kamu.
         </PreferenceToggle>
       </div>

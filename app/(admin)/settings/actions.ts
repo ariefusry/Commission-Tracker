@@ -115,6 +115,7 @@ const preferencesSchema = z
     display_name: z.string().trim().max(60, "Maksimal 60 karakter"),
     count_cancelled_paid: z.boolean(),
     show_queue: z.boolean(),
+    slot_limit: z.number({ error: "Harus berupa angka" }).int("Harus bilangan bulat").min(1, "Minimal 1").max(50, "Maksimal 50"),
   })
   .partial();
 

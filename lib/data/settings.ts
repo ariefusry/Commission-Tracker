@@ -8,16 +8,17 @@ const countBy = (ids: (string | null)[]) => {
   return m;
 };
 
-export type Preferences = { display_name: string; count_cancelled_paid: boolean; show_queue: boolean };
+export type Preferences = { display_name: string; count_cancelled_paid: boolean; show_queue: boolean; slot_limit: number };
 
 export async function getPreferences(): Promise<Preferences> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("settings").select("display_name, count_cancelled_paid, show_queue").maybeSingle();
+  const { data, error } = await supabase.from("settings").select("display_name, count_cancelled_paid, show_queue, slot_limit").maybeSingle();
   if (error) throw error;
   return {
     display_name: data?.display_name ?? "",
     count_cancelled_paid: data?.count_cancelled_paid ?? true,
     show_queue: data?.show_queue ?? true,
+    slot_limit: data?.slot_limit ?? 5,
   };
 }
 
