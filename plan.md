@@ -121,11 +121,11 @@ TrackerCommis/
 - [x] Hapus (dengan konfirmasi)
 
 ### Milestone 3 — Dashboard (2 hari)
-- [ ] Kartu ringkasan
-- [ ] Tabel interaktif: sort, filter (status, bayar, tipe, rentang tanggal), search username
-- [ ] Grafik pendapatan per bulan
-- [ ] Grafik distribusi tipe
-- [ ] Filter periode (bulan ini, 3 bulan, semua)
+- [x] Kartu ringkasan
+- [x] Tabel interaktif: sort, filter (status, bayar, tipe, rentang tanggal), search username
+- [x] Grafik pendapatan per bulan
+- [x] Grafik distribusi tipe
+- [x] Filter periode (bulan ini, 3 bulan, semua)
 
 ### Milestone 4 — Polish MVP (1 hari)
 - [ ] Responsif di mobile
@@ -166,7 +166,7 @@ Estimasi total: sekitar 11-12 hari kerja santai.
 - **Sisa bayar** = harga total − DP (jika DP) atau 0 (jika paid).
 - **Pendapatan masuk** = jumlah DP untuk status `dp` + harga total untuk status `paid`.
 - **Pendapatan tertunda** = harga total − pendapatan masuk, untuk commission yang tidak dibatalkan.
-- **Commission dibatalkan** tidak dihitung ke total pendapatan, kecuali DP yang tidak dikembalikan (dicatat manual).
+- **Commission dibatalkan** tidak dihitung ke nilai order maupun sisa tagihan. DP/pembayaran yang sudah diterima tetap dihitung sebagai uang masuk jika pengaturan "Hitung DP dari commission yang dibatalkan" aktif (default aktif, Pengaturan → Pembayaran). DP yang dikembalikan: ubah status bayar ke "Belum bayar".
 - **Terlambat** jika deadline sudah lewat dan status belum `selesai`.
 - Mata uang: rupiah, disimpan sebagai bilangan bulat (tanpa desimal).
 - **Akses aplikasi** = sudah login dan `active_until >= hari ini`. Data lama tidak dihapus saat langganan habis, hanya tidak bisa diakses sampai diperpanjang.

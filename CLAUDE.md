@@ -24,7 +24,7 @@ Next.js (App Router), TypeScript, Tailwind, shadcn/ui, TanStack Table, Recharts,
 ## Aturan Bisnis Penting
 - Harga total = harga tipe + add-on, kecuali `price_override` terisi.
 - Pendapatan masuk = `paid` → harga total, `dp` → `dp_amount`.
-- Commission `cancelled` tidak masuk total pendapatan.
+- Commission `cancelled` tidak masuk nilai order maupun sisa tagihan. Uang yang sudah diterima darinya (DP tidak dikembalikan) masuk "sudah dibayar" jika preferensi user `settings.count_cancelled_paid` aktif (default aktif). Logika di `lib/stats.ts`.
 - Terlambat = deadline lewat dan status belum `done`.
 
 ## Keamanan
