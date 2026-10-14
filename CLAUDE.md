@@ -33,7 +33,7 @@ Next.js (App Router), TypeScript, Tailwind, shadcn/ui, TanStack Table, Recharts,
 - `subscriptions` dan `payments` hanya ditulis service role; jangan pakai secret key (`SUPABASE_SECRET_KEY`) di kode client.
 - Midtrans: logika di `lib/billing.ts`. Harga paket hanya dari server. Webhook wajib verifikasi `signature_key` + `gross_amount`, lalu panggil `activate_payment` (idempoten). Akses hanya dari `settlement` / `capture`+`accept`.
 - `MIDTRANS_SERVER_KEY` hanya di server.
-- Halaman publik hanya boleh baca lewat view `public_tracking`.
+- Halaman publik `/track/[code]` hanya membaca lewat fungsi `get_tracking(code)` (satu commission per kode, tanpa harga/kontak). Jangan beri `anon` akses ke tabel atau view.
 - Jangan commit `.env.local` atau secret key.
 
 ## Cara Kerja

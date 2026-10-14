@@ -128,15 +128,17 @@ TrackerCommis/
 - [x] Filter periode (bulan ini, 3 bulan, semua)
 
 ### Milestone 4 — Polish MVP (1 hari)
-- [ ] Responsif di mobile
-- [ ] Loading, empty, dan error state
+- [x] Responsif di mobile (audit 16 halaman × 390/768/1024/1280px)
+- [x] Loading, empty, dan error state
 - [x] Indikator deadline
-- [ ] Halaman pengaturan harga
+- [x] Halaman pengaturan harga
 
 ### Milestone 5 — Halaman publik (Fase 2, 2 hari)
-- [ ] Kode tracking unik per commission
-- [ ] Halaman `/track/[code]` read-only (tanpa data sensitif seperti harga dan kontak)
-- [ ] Upload gambar WIP ke Supabase Storage
+- [x] Kode tracking unik per commission
+- [x] Halaman `/track/[code]` read-only (tanpa data sensitif seperti harga dan kontak)
+- [x] Posisi antrean client + papan "Sedang dikerjakan" / "Antrean" (tanpa nama client lain)
+- [x] Perkiraan tanggal selesai dari kecepatan kerja artist (bisa disembunyikan di Pengaturan)
+- [ ] Upload gambar WIP ke Supabase Storage (kompres WebP di browser, logika di `lib/storage.ts`)
 - [ ] Slot open commission
 
 ### Milestone 6 — Portofolio (1 hari)
