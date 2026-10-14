@@ -188,7 +188,7 @@ create policy "owner with access" on commission_addons
 
 Pendaftaran publik di Supabase Auth **aktif** (email + password, dengan konfirmasi email). User baru langsung dapat trial 7 hari; setelah itu harus bayar lewat Midtrans.
 
-Fase 2: buat view `public_tracking` yang hanya mengekspos `tracking_code`, `client_username`, `stage`, `status`, `deadline`, lalu beri akses `anon` hanya ke view tersebut (jangan ke tabel `commissions`).
+Halaman publik tracking memakai fungsi `get_tracking(code)` (`security definer`, migration `20261015060000`): hanya mengembalikan satu commission untuk kode 8 karakter hex yang tepat, berisi nama artist (`settings.display_name`), username client, tipe, status, tanggal, dan daftar tahap. Tanpa harga, pembayaran, kontak, atau catatan. Tidak memeriksa langganan, jadi link client tetap jalan walau langganan artist habis. `anon` tidak punya akses ke tabel/view mana pun (view bisa dipakai untuk mendaftar semua kode).
 
 ## User Baru (pengganti seed global)
 
@@ -300,3 +300,11 @@ Kolom lama `commissions.stage` (enum), `stage_custom`, dan enum `commission_stag
 ## Preferensi User
 
 `settings.count_cancelled_paid` (default `true`): pembayaran dari commission batal (DP yang tidak dikembalikan) dihitung sebagai uang masuk di dashboard. Diubah di Pengaturan → Pembayaran.
+
+## Antrean & Perkiraan Selesai (halaman tracking)
+
+- `commissions.completed_at`: diisi trigger saat status menjadi `done`, dikosongkan jika dibuka lagi. Data lama diisi dari `deadline` (tanggal selesai asli tidak tercatat).
+- Antrean artist = commission berstatus `queue`/`in_progress`/`revision`, urut `start_date` (pesan duluan dikerjakan duluan).
+- `get_tracking` mengembalikan `queue_position` (urutan keseluruhan), `wait_position`/`wait_total` (urutan di antrean tunggu, status `queue`), `queue` (papan: posisi, tahap, status, penanda "kamu"; **tanpa nama/kode client lain**), dan `recent_completions` (10 tanggal selesai terakhir).
+- Perkiraan selesai dihitung di `lib/queue.ts`: hari per commission = rentang sejak selesai tertua (≤90 hari) ÷ jumlah selesai; minimal 3 data; ditampilkan sebagai rentang ±25%.
+- `settings.show_queue` (default `true`): artist bisa menyembunyikan antrean & perkiraan dari client.

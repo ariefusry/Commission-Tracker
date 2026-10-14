@@ -61,14 +61,14 @@ isOneToOne: false
                   ]
                 },"commissions": {
                   Row: {
-                    "base_price": number,"client_username": string,"contact_handle": string | null,"contact_platform": string | null,"created_at": string,"deadline": string | null,"dp_amount": number,"id": string,"notes": string | null,"payment_status": Database["public"]['Enums']["payment_status"],"price_override": number | null,"price_total": number,"reference_links": (string)[],"revision_count": number,"stage_id": string,"start_date": string,"status": Database["public"]['Enums']["commission_status"],"tracking_code": string,"type_custom": string | null,"type_id": string | null,"updated_at": string,"user_id": string
+                    "base_price": number,"client_username": string,"completed_at": string | null,"contact_handle": string | null,"contact_platform": string | null,"created_at": string,"deadline": string | null,"dp_amount": number,"id": string,"notes": string | null,"payment_status": Database["public"]['Enums']["payment_status"],"price_override": number | null,"price_total": number,"reference_links": (string)[],"revision_count": number,"stage_id": string,"start_date": string,"status": Database["public"]['Enums']["commission_status"],"tracking_code": string,"type_custom": string | null,"type_id": string | null,"updated_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "base_price"?: number,"client_username": string,"contact_handle"?: string | null,"contact_platform"?: string | null,"created_at"?: string,"deadline"?: string | null,"dp_amount"?: number,"id"?: string,"notes"?: string | null,"payment_status"?: Database["public"]['Enums']["payment_status"],"price_override"?: number | null,"price_total"?: number,"reference_links"?: (string)[],"revision_count"?: number,"stage_id": string,"start_date"?: string,"status"?: Database["public"]['Enums']["commission_status"],"tracking_code"?: string,"type_custom"?: string | null,"type_id"?: string | null,"updated_at"?: string,"user_id"?: string
+                    "base_price"?: number,"client_username": string,"completed_at"?: string | null,"contact_handle"?: string | null,"contact_platform"?: string | null,"created_at"?: string,"deadline"?: string | null,"dp_amount"?: number,"id"?: string,"notes"?: string | null,"payment_status"?: Database["public"]['Enums']["payment_status"],"price_override"?: number | null,"price_total"?: number,"reference_links"?: (string)[],"revision_count"?: number,"stage_id": string,"start_date"?: string,"status"?: Database["public"]['Enums']["commission_status"],"tracking_code"?: string,"type_custom"?: string | null,"type_id"?: string | null,"updated_at"?: string,"user_id"?: string
                   }
                   Update: {
-                    "base_price"?: number,"client_username"?: string,"contact_handle"?: string | null,"contact_platform"?: string | null,"created_at"?: string,"deadline"?: string | null,"dp_amount"?: number,"id"?: string,"notes"?: string | null,"payment_status"?: Database["public"]['Enums']["payment_status"],"price_override"?: number | null,"price_total"?: number,"reference_links"?: (string)[],"revision_count"?: number,"stage_id"?: string,"start_date"?: string,"status"?: Database["public"]['Enums']["commission_status"],"tracking_code"?: string,"type_custom"?: string | null,"type_id"?: string | null,"updated_at"?: string,"user_id"?: string
+                    "base_price"?: number,"client_username"?: string,"completed_at"?: string | null,"contact_handle"?: string | null,"contact_platform"?: string | null,"created_at"?: string,"deadline"?: string | null,"dp_amount"?: number,"id"?: string,"notes"?: string | null,"payment_status"?: Database["public"]['Enums']["payment_status"],"price_override"?: number | null,"price_total"?: number,"reference_links"?: (string)[],"revision_count"?: number,"stage_id"?: string,"start_date"?: string,"status"?: Database["public"]['Enums']["commission_status"],"tracking_code"?: string,"type_custom"?: string | null,"type_id"?: string | null,"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -87,14 +87,14 @@ isOneToOne: false
                   ]
                 },"settings": {
                   Row: {
-                    "count_cancelled_paid": boolean,"is_open": boolean,"slot_limit": number,"user_id": string
+                    "count_cancelled_paid": boolean,"display_name": string | null,"is_open": boolean,"show_queue": boolean,"slot_limit": number,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "count_cancelled_paid"?: boolean,"is_open"?: boolean,"slot_limit"?: number,"user_id"?: string
+                    "count_cancelled_paid"?: boolean,"display_name"?: string | null,"is_open"?: boolean,"show_queue"?: boolean,"slot_limit"?: number,"user_id"?: string
                   }
                   Update: {
-                    "count_cancelled_paid"?: boolean,"is_open"?: boolean,"slot_limit"?: number,"user_id"?: string
+                    "count_cancelled_paid"?: boolean,"display_name"?: string | null,"is_open"?: boolean,"show_queue"?: boolean,"slot_limit"?: number,"user_id"?: string
                   }
                   Relationships: [
                     
@@ -159,7 +159,12 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "has_access":
+            "get_tracking":
+{ Args: { "p_code": string }; Returns: {
+              "artist_name": string,"client_username": string,"current_stage": number,"deadline": string,"queue": Json,"queue_position": number,"queue_total": number,"recent_completions": (string)[],"stages": (string)[],"start_date": string,"status": Database["public"]['Enums']["commission_status"],"type_name": string,"updated_at": string,"wait_position": number,"wait_total": number
+            }[]
+                           },
+"has_access":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "save_commission":
