@@ -1,8 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import type { Database } from "@/types/database";
 
 export async function createClient() {
+  // Data Supabase per-request (token expiry pakai jam), jangan masuk prerender/prefetch shell.
+  await connection();
   const cookieStore = await cookies();
 
   return createServerClient<Database>(
