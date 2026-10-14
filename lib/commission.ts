@@ -11,7 +11,7 @@ export const PAYMENT_STATUSES = Constants.public.Enums.payment_status;
 export type StageOption = { id: string; name: string; is_active: boolean };
 
 export const STATUS_LABEL: Record<Status, string> = {
-  queue: "Antre",
+  queue: "Waiting list",
   in_progress: "Dikerjakan",
   revision: "Revisi",
   done: "Selesai",
