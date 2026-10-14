@@ -110,7 +110,7 @@ TrackerCommis/
 - [x] Proxy (`proxy.ts`): belum login → `/login`; langganan tidak aktif → `/billing`
 - [x] Aktifkan RLS per user + `has_access()`; uji akses langsung lewat API dengan akun tanpa langganan (harus ditolak)
 - [x] Halaman `/billing`: status langganan / sisa hari trial (tombol bayar menyusul di Milestone 7)
-- [ ] Akun demo dengan langganan aktif dan beberapa commission contoh (data fiktif)
+- [x] Akun demo dengan langganan aktif dan beberapa commission contoh (data fiktif, `supabase/demo/seed.sql`)
 
 ### Milestone 2 — CRUD commission (2 hari)
 - [x] Halaman daftar commission
@@ -130,7 +130,7 @@ TrackerCommis/
 ### Milestone 4 — Polish MVP (1 hari)
 - [ ] Responsif di mobile
 - [ ] Loading, empty, dan error state
-- [ ] Indikator deadline
+- [x] Indikator deadline
 - [ ] Halaman pengaturan harga
 
 ### Milestone 5 — Halaman publik (Fase 2, 2 hari)
