@@ -7,6 +7,7 @@ import { Suspense } from "react";
 const LINKS = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/commissions", label: "Commission" },
+  { href: "/settings", label: "Pengaturan" },
 ];
 
 function Links({ pathname }: { pathname: string | null }) {

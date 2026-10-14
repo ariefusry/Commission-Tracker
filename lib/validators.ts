@@ -85,3 +85,11 @@ export const quickUpdateSchema = z.discriminatedUnion("field", [
   z.object({ field: z.literal("payment_status"), value: z.enum(PAYMENT_STATUSES) }),
 ]);
 export type QuickUpdate = z.infer<typeof quickUpdateSchema>;
+
+/** Tipe pesanan / add-on milik user (halaman Pengaturan). */
+export const catalogItemSchema = z.object({
+  name: z.string().trim().min(1, "Nama wajib diisi").max(50, "Maksimal 50 karakter"),
+  price: money,
+  is_active: z.boolean(),
+});
+export type CatalogItemInput = z.input<typeof catalogItemSchema>;

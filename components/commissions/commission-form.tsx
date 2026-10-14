@@ -8,6 +8,7 @@ import { useFieldArray, useForm, useWatch, type FieldPath } from "react-hook-for
 import { saveCommission } from "@/app/(admin)/commissions/actions";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PriceInput } from "@/components/price-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
@@ -169,7 +170,7 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
                 {err(`custom_addons.${i}.name`) && <p className="text-sm text-destructive">{err(`custom_addons.${i}.name`)}</p>}
               </div>
               <div className="grid w-32 gap-1">
-                <Input type="number" inputMode="numeric" min={0} placeholder="Harga" aria-label="Harga add-on custom" aria-invalid={Boolean(err(`custom_addons.${i}.price`))} {...register(`custom_addons.${i}.price`, { setValueAs: toInt })} />
+                <PriceInput placeholder="Harga" aria-label="Harga add-on custom" aria-invalid={Boolean(err(`custom_addons.${i}.price`))} {...register(`custom_addons.${i}.price`, { setValueAs: toInt })} />
                 {err(`custom_addons.${i}.price`) && <p className="text-sm text-destructive">{err(`custom_addons.${i}.price`)}</p>}
               </div>
               <Button type="button" variant="ghost" size="icon" aria-label="Hapus add-on custom" onClick={() => customAddons.remove(i)}>
@@ -226,11 +227,11 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
           </NativeSelect>,
         )}
         {payment === "dp" &&
-          field("dp_amount", "Nominal DP", <Input type="number" inputMode="numeric" min={0} {...invalid("dp_amount")} {...register("dp_amount", { setValueAs: toInt })} />)}
+          field("dp_amount", "Nominal DP", <PriceInput {...invalid("dp_amount")} {...register("dp_amount", { setValueAs: toInt })} />)}
         {field(
           "price_override",
           "Harga manual",
-          <Input type="number" inputMode="numeric" min={0} placeholder="Otomatis" {...invalid("price_override")} {...register("price_override", { setValueAs: toIntOrNull })} />,
+          <PriceInput placeholder="Otomatis" {...invalid("price_override")} {...register("price_override", { setValueAs: toIntOrNull })} />,
           "Kosongkan untuk harga otomatis dari tipe + add-on",
         )}
       </Section>
