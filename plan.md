@@ -131,7 +131,8 @@ TrackerCommis/
 - [x] Halaman `/track/[code]` read-only (tanpa data sensitif seperti harga dan kontak)
 - [x] Posisi antrean client + papan "Sedang dikerjakan" / "Waiting list" (tanpa nama client lain), juga untuk client yang sudah dikerjakan
 - [x] Perkiraan tanggal selesai dari kecepatan kerja artist (bisa disembunyikan di Pengaturan)
-- [ ] Upload gambar WIP ke Supabase Storage (kompres WebP di browser, logika di `lib/storage.ts`)
+- [x] Upload gambar WIP ke Supabase Storage (maks. 10/commission, kompres WebP di browser, hapus otomatis 30 hari setelah selesai)
+- [x] Progress bar tahap untuk commission lain di halaman tracking client
 - [x] Board Waiting list → Sedang dikerjakan → Selesai (tampilan Daftar | Board)
 - [x] Drag & drop kartu (urutan prioritas + pindah kolom), dipakai juga untuk urutan antrean client
 - [x] Slot: jumlah commission dikerjakan bersamaan, waiting list otomatis saat penuh, tawaran "mulai berikutnya"
