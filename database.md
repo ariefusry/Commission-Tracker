@@ -1,6 +1,8 @@
 # Database Schema (Supabase / PostgreSQL)
 
-Semua uang disimpan sebagai integer rupiah.
+Semua uang disimpan sebagai integer rupiah. Tanggal langganan memakai WIB (`Asia/Jakarta`).
+
+**Sumber kebenaran skema = `supabase/migrations/`.** File ini ringkasan; migration berisi detail tambahan (constraint, grant, `tracking_code` acak otomatis).
 
 Multi-user: setiap user (artist) hanya melihat datanya sendiri. Akses aplikasi butuh login **dan** langganan aktif (`subscriptions.active_until >= hari ini`). Aturan ini ditegakkan di RLS, bukan hanya di middleware, karena publishable key bersifat publik dan bisa dipakai memanggil API Supabase langsung.
 
@@ -156,7 +158,8 @@ create or replace function has_access() returns boolean
 language sql stable security definer set search_path = public as $$
   select exists (
     select 1 from subscriptions
-    where user_id = auth.uid() and active_until >= current_date
+    where user_id = auth.uid()
+      and active_until >= (now() at time zone 'Asia/Jakarta')::date
   );
 $$;
 
@@ -194,7 +197,8 @@ Saat user mendaftar, buat baris langganan, settings, dan harga default miliknya.
 create or replace function handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
-  insert into subscriptions (user_id, active_until) values (new.id, current_date + 7);  -- trial
+  insert into subscriptions (user_id, active_until)
+    values (new.id, (now() at time zone 'Asia/Jakarta')::date + 6);  -- trial 7 hari termasuk hari daftar
   insert into settings (user_id) values (new.id);
   insert into commission_types (user_id, name, base_price, sort_order) values
     (new.id, 'Headshot', 50000, 1),
