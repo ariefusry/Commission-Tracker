@@ -1,6 +1,6 @@
 # Commission Tracker — Project Plan
 
-Web app berlangganan untuk artist: melacak open commission gambar (deadline, progress, client, tipe, add-on, pembayaran, pendapatan). Setiap artist punya akun dan data sendiri; aplikasi hanya bisa dipakai setelah login dan langganan aktif. Fase 2 menambah halaman publik agar client bisa melihat progress pesanannya.
+Web app gratis untuk artist (didukung donasi QRIS): melacak open commission gambar (deadline, progress, client, tipe, add-on, pembayaran, pendapatan). Setiap artist punya akun dan data sendiri; aplikasi dipakai setelah login. Fase 2 menambah halaman publik agar client bisa melihat progress pesanannya.
 
 ## 1. Tujuan
 
@@ -11,13 +11,11 @@ Web app berlangganan untuk artist: melacak open commission gambar (deadline, pro
 ## 2. Scope
 
 ### MVP (Fase 1)
-1. Auth dan akses berbayar:
+1. Auth:
    - daftar, login, logout, lupa password (Supabase Auth, email + password)
    - semua halaman aplikasi wajib login; belum login → redirect ke `/login`
-   - user baru otomatis dapat trial 7 hari
-   - login tapi langganan/trial habis → redirect ke `/billing`
-   - pembayaran langganan lewat Midtrans (Milestone 7, ditunda); sebelum itu aktivasi manual di Supabase
    - data tiap user terpisah (RLS per `user_id`)
+   - halaman `/donasi` (QRIS) untuk dukungan sukarela
 2. CRUD commission dengan field:
    - tanggal mulai dan deadline
    - progress: sketsa, lineart, coloring, finishing, custom
@@ -43,7 +41,6 @@ Web app berlangganan untuk artist: melacak open commission gambar (deadline, pro
 - Notifikasi deadline (email/Discord webhook).
 - Form order publik untuk client.
 - Dark mode, PWA.
-- Langganan auto-renew (Midtrans recurring); MVP cukup bayar manual per periode.
 
 ### Di luar scope
 - Tim/banyak user dalam satu akun, chat antar pengguna, panel super-admin (kelola user lewat dashboard Supabase).
@@ -58,7 +55,7 @@ Web app berlangganan untuk artist: melacak open commission gambar (deadline, pro
 | Grafik | Recharts |
 | Form dan validasi | React Hook Form + Zod |
 | Database dan auth | Supabase (Postgres, Auth, Storage) |
-| Pembayaran | Midtrans Snap (REST via `fetch`, tanpa SDK) |
+| Donasi | QRIS statis (`public/qris.png`) di halaman `/donasi` |
 | Deploy | Vercel |
 
 ## 4. Struktur Folder
@@ -74,11 +71,8 @@ TrackerCommis/
 │  ├─ track/[code]/page.tsx      # Fase 2, publik
 │  ├─ login/page.tsx             # publik
 │  ├─ signup/page.tsx            # publik
-│  ├─ billing/page.tsx           # login, tanpa langganan aktif
-│  ├─ api/billing/checkout/route.ts      # buat transaksi Snap
-│  ├─ api/midtrans/notification/route.ts # webhook Midtrans
 │  └─ layout.tsx
-├─ proxy.ts                      # cek login + langganan (Next 16: pengganti middleware.ts)
+├─ proxy.ts                      # cek login (Next 16: pengganti middleware.ts)
 ├─ components/
 │  ├─ ui/                        # shadcn
 │  ├─ commissions/               # form, tabel, badge status
@@ -86,7 +80,6 @@ TrackerCommis/
 ├─ lib/
 │  ├─ supabase/                  # client dan server helper
 │  ├─ pricing.ts                 # hitung harga commission
-│  ├─ billing.ts                 # paket langganan, Midtrans, verifikasi signature
 │  ├─ validators.ts              # skema Zod
 │  └─ format.ts                  # rupiah, tanggal
 ├─ types/
@@ -107,10 +100,10 @@ TrackerCommis/
 - [x] Jalankan migration dari `database.md`
 - [x] Trigger user baru: buat `subscriptions`, `settings`, tipe dan add-on default
 - [x] Halaman daftar, login, logout, lupa password (Supabase Auth)
-- [x] Proxy (`proxy.ts`): belum login → `/login`; langganan tidak aktif → `/billing`
-- [x] Aktifkan RLS per user + `has_access()`; uji akses langsung lewat API dengan akun tanpa langganan (harus ditolak)
-- [x] Halaman `/billing`: status langganan / sisa hari trial (tombol bayar menyusul di Milestone 7)
-- [x] Akun demo dengan langganan aktif dan beberapa commission contoh (data fiktif, `supabase/demo/seed.sql`)
+- [x] Proxy (`proxy.ts`): belum login → `/login`
+- [x] Aktifkan RLS per user; uji akses langsung lewat API (user lain dan tanpa login ditolak)
+- [x] ~~Halaman `/billing`~~ (dihapus: aplikasi gratis, diganti halaman `/donasi`)
+- [x] Akun demo dengan beberapa commission contoh (data fiktif, `supabase/demo/seed.sql`)
 
 ### Milestone 2 — CRUD commission (2 hari)
 - [x] Halaman daftar commission
@@ -151,18 +144,10 @@ TrackerCommis/
 - [ ] Studi kasus singkat: masalah, keputusan teknis, hasil
 - [ ] Tambahkan ke ariefusry.me
 
-### Milestone 7 — Pembayaran Midtrans (DITUNDA, 1-2 hari)
-Dikerjakan paling akhir, setelah Midtrans (atau alternatifnya) siap dipakai. Sampai saat itu: trial 7 hari + aktivasi manual di Supabase. Tabel `payments` dan fungsi `activate_payment` belum di-migrate.
-- [ ] Pilih gateway (Midtrans atau alternatif)
-- [ ] Migration `payments` + `activate_payment` (lihat `database.md`)
-- [ ] Akun Midtrans sandbox; env `MIDTRANS_SERVER_KEY`, `MIDTRANS_IS_PRODUCTION`
-- [ ] Tentukan harga dan durasi paket (lihat Keputusan Tertunda)
-- [ ] `POST /api/billing/checkout`: buat baris `payments` (pending), panggil Snap API, redirect user ke `redirect_url`
-- [ ] `POST /api/midtrans/notification`: verifikasi signature, cocokkan `gross_amount`, panggil `activate_payment`
-- [ ] Set Payment Notification URL di dashboard Midtrans
-- [ ] Tombol bayar di `/billing`
-- [ ] Unit test verifikasi signature dan mapping status
-- [ ] Uji end-to-end di sandbox: sukses, pending, expire, notifikasi ganda
+### Milestone 7 — Donasi
+- [x] Hapus gerbang langganan/trial (aplikasi gratis)
+- [x] Halaman `/donasi` dengan QRIS
+- [ ] Pasang gambar QRIS di `public/qris.png`
 
 Estimasi total: sekitar 11-12 hari kerja santai.
 
@@ -175,19 +160,12 @@ Estimasi total: sekitar 11-12 hari kerja santai.
 - **Commission dibatalkan** tidak dihitung ke nilai order maupun sisa tagihan. DP/pembayaran yang sudah diterima tetap dihitung sebagai uang masuk jika pengaturan "Hitung DP dari commission yang dibatalkan" aktif (default aktif, Pengaturan → Pembayaran). DP yang dikembalikan: ubah status bayar ke "Belum bayar".
 - **Terlambat** jika deadline sudah lewat dan status belum `selesai`.
 - Mata uang: rupiah, disimpan sebagai bilangan bulat (tanpa desimal).
-- **Akses aplikasi** = sudah login dan `active_until >= hari ini`. Data lama tidak dihapus saat langganan habis, hanya tidak bisa diakses sampai diperpanjang.
-- **Trial** = 7 hari sejak daftar, sekali per akun.
-- **Perpanjangan** = `max(active_until, hari ini) + durasi paket`; bayar saat masih aktif tidak menghanguskan sisa hari.
-- **Langganan aktif** hanya dari status Midtrans `settlement`, atau `capture` dengan `fraud_status = accept`. `pending` belum memberi akses.
+- **Akses aplikasi** = sudah login. Aplikasi gratis; dukungan lewat donasi QRIS.
 
 ## 7. Keamanan
 
-- Semua tabel aktifkan Row Level Security; user hanya boleh baca/tulis datanya sendiri dan hanya jika langganan aktif (`has_access()`).
-- Gerbang berbayar wajib ditegakkan di RLS, bukan hanya middleware (publishable key bisa dipakai memanggil API langsung).
-- Tabel `subscriptions` dan `payments` tidak bisa ditulis user; hanya service role (webhook Midtrans / manual).
-- Webhook Midtrans wajib verifikasi `signature_key` = SHA512(`order_id` + `status_code` + `gross_amount` + server key) dan `gross_amount` sama dengan `payments.amount`; tolak jika tidak cocok.
-- Harga paket ditentukan di server (`lib/billing.ts`), tidak pernah diambil dari input client.
-- `MIDTRANS_SERVER_KEY` hanya di server, jangan diberi prefix `NEXT_PUBLIC_`.
+- Semua tabel aktifkan Row Level Security; user hanya boleh baca/tulis datanya sendiri.
+- Isolasi data wajib ditegakkan di RLS, bukan hanya proxy (publishable key bisa dipakai memanggil API langsung).
 - Halaman publik hanya mengambil kolom yang aman lewat view atau endpoint khusus.
 - Jangan commit `.env.local`. Pakai `NEXT_PUBLIC_` hanya untuk URL dan publishable key Supabase (`sb_publishable_...`); secret key (`sb_secret_...`) hanya di server.
 - Kode tracking acak (mis. 8 karakter), bukan ID berurutan.
@@ -200,7 +178,7 @@ Estimasi total: sekitar 11-12 hari kerja santai.
 
 ## 9. Definisi Selesai (MVP)
 
-- Bisa daftar dan login; tanpa langganan aktif tidak bisa membuka aplikasi maupun membaca data lewat API.
+- Bisa daftar dan login; tanpa login tidak bisa membuka aplikasi maupun membaca data lewat API.
 - User A tidak bisa melihat data user B.
 - Bisa tambah, edit, hapus commission dengan semua field.
 - Dashboard menampilkan angka yang benar dan bisa disortir/difilter.
@@ -209,4 +187,4 @@ Estimasi total: sekitar 11-12 hari kerja santai.
 
 ## 10. Keputusan Tertunda
 
-- **Harga dan durasi paket langganan** — ditentukan setelah fitur MVP selesai, sebelum Milestone 7. Simpan sebagai konstanta di `lib/billing.ts` agar mudah diubah.
+- Tidak ada.

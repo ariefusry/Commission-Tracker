@@ -1,6 +1,6 @@
 # Commission Tracker
 
-Web app berlangganan untuk artist melacak open commission gambar. Multi-user, wajib login + langganan aktif. Baca `plan.md` untuk scope dan roadmap, `database.md` untuk skema.
+Web app gratis (didukung donasi QRIS) untuk artist melacak open commission gambar. Multi-user, wajib login. Baca `plan.md` untuk scope dan roadmap, `database.md` untuk skema.
 
 ## Stack
 Next.js (App Router), TypeScript, Tailwind, shadcn/ui, TanStack Table, Recharts, React Hook Form + Zod, Supabase.
@@ -9,7 +9,7 @@ Next.js (App Router), TypeScript, Tailwind, shadcn/ui, TanStack Table, Recharts,
 - `npm run dev` — jalankan lokal
 - `npm run build` — build produksi
 - `npm run lint` — lint
-- `npm test` — unit test (fokus `lib/pricing.ts` dan `lib/billing.ts`)
+- `npm test` — unit test (fokus `lib/pricing.ts`, `lib/stats.ts`, `lib/queue.ts`)
 - Tipe DB: `types/database.ts` hasil generate, jangan diedit manual (lihat `database.md` → Tooling)
 
 ## Aturan Kode
@@ -28,11 +28,9 @@ Next.js (App Router), TypeScript, Tailwind, shadcn/ui, TanStack Table, Recharts,
 - Terlambat = deadline lewat dan status belum `done`.
 
 ## Keamanan
-- RLS aktif di semua tabel; jangan matikan. Policy = pemilik (`user_id = auth.uid()`) + `has_access()`.
-- Semua route kecuali `/login`, `/signup`, `/track/[code]` wajib login; `/billing` untuk yang langganannya tidak aktif. `proxy.ts` (Next 16, pengganti middleware) hanya untuk UX, gerbang sebenarnya di RLS.
-- `subscriptions` dan `payments` hanya ditulis service role; jangan pakai secret key (`SUPABASE_SECRET_KEY`) di kode client.
-- Midtrans: logika di `lib/billing.ts`. Harga paket hanya dari server. Webhook wajib verifikasi `signature_key` + `gross_amount`, lalu panggil `activate_payment` (idempoten). Akses hanya dari `settlement` / `capture`+`accept`.
-- `MIDTRANS_SERVER_KEY` hanya di server.
+- RLS aktif di semua tabel; jangan matikan. Policy = pemilik (`user_id = auth.uid()`) + `has_access()` (= sudah login; aplikasi gratis).
+- Semua route kecuali `/login`, `/signup`, `/forgot-password`, `/auth/*`, `/track/[code]`, `/donasi` wajib login. `proxy.ts` (Next 16, pengganti middleware) hanya untuk UX, gerbang sebenarnya di RLS.
+- Jangan pakai secret key (`SUPABASE_SECRET_KEY`) di kode client.
 - Halaman publik `/track/[code]` hanya membaca lewat fungsi `get_tracking(code)` (satu commission per kode, tanpa harga/kontak). Jangan beri `anon` akses ke tabel atau view.
 - Jangan commit `.env.local` atau secret key.
 
