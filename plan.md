@@ -101,7 +101,7 @@ TrackerCommis/
 - [x] Buat project Next.js + TypeScript + Tailwind
 - [x] Install shadcn/ui, Recharts, TanStack Table, Zod, React Hook Form
 - [x] Buat project Supabase, simpan env di `.env.local`
-- [ ] Repo GitHub, deploy kosong ke Vercel
+- [x] Repo GitHub, deploy kosong ke Vercel
 
 ### Milestone 1 — Database dan auth (1 hari)
 - [ ] Jalankan migration dari `database.md`
