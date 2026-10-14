@@ -1,0 +1,87 @@
+"use server";
+
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { z } from "zod";
+import { createClient } from "@/lib/supabase/server";
+import {
+  forgotPasswordSchema,
+  loginSchema,
+  resetPasswordSchema,
+  signupSchema,
+} from "@/lib/validators";
+
+export type AuthState = {
+  error?: string;
+  message?: string;
+  fieldErrors?: Record<string, string[] | undefined>;
+};
+
+function parse<T extends z.ZodType>(schema: T, formData: FormData) {
+  return schema.safeParse(Object.fromEntries(formData));
+}
+
+const fieldErrors = (error: z.ZodError) => z.flattenError(error).fieldErrors;
+
+async function origin() {
+  return (await headers()).get("origin") ?? "";
+}
+
+export async function login(_: AuthState, formData: FormData): Promise<AuthState> {
+  const parsed = parse(loginSchema, formData);
+  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  if (error) {
+    return {
+      error:
+        error.code === "email_not_confirmed"
+          ? "Email belum dikonfirmasi. Cek inbox kamu."
+          : "Email atau password salah.",
+    };
+  }
+  redirect("/dashboard");
+}
+
+export async function signup(_: AuthState, formData: FormData): Promise<AuthState> {
+  const parsed = parse(signupSchema, formData);
+  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signUp({
+    email: parsed.data.email,
+    password: parsed.data.password,
+    options: { emailRedirectTo: `${await origin()}/auth/confirm?next=/dashboard` },
+  });
+  if (error) return { error: error.message };
+  return { message: "Cek email kamu untuk konfirmasi akun. Trial 7 hari dimulai setelah daftar." };
+}
+
+export async function forgotPassword(_: AuthState, formData: FormData): Promise<AuthState> {
+  const parsed = parse(forgotPasswordSchema, formData);
+  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
+
+  const supabase = await createClient();
+  await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    redirectTo: `${await origin()}/auth/confirm?next=/reset-password`,
+  });
+  // Pesan sama apa pun hasilnya, agar tidak membocorkan email terdaftar.
+  return { message: "Jika email terdaftar, link reset password sudah dikirim." };
+}
+
+export async function resetPassword(_: AuthState, formData: FormData): Promise<AuthState> {
+  const parsed = parse(resetPasswordSchema, formData);
+  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  if (error) return { error: error.message };
+  redirect("/dashboard");
+}
+
+export async function logout() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/login");
+}
