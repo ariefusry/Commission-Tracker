@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { getCommissionRows, getStages } from "@/lib/data/commissions";
 import { getPreferences } from "@/lib/data/settings";
 import { deadlineInfo } from "@/lib/deadline";
-import { todayWib } from "@/lib/subscription";
+import { todayWib } from "@/lib/date";
 
 async function Content() {
   const [rows, stages, { slot_limit }] = await Promise.all([getCommissionRows(), getStages(), getPreferences()]);

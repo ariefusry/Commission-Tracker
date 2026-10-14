@@ -4,7 +4,7 @@ import { SkeletonBlock } from "@/components/skeleton-block";
 import { getCommissionRows } from "@/lib/data/commissions";
 import { getPreferences } from "@/lib/data/settings";
 import { isIsoDate, parsePeriod } from "@/lib/stats";
-import { todayWib } from "@/lib/subscription";
+import { todayWib } from "@/lib/date";
 
 async function Content({ searchParams }: { searchParams: PageProps<"/dashboard">["searchParams"] }) {
   const params = await searchParams;

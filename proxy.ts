@@ -1,11 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isActive } from "@/lib/subscription";
 import type { Database } from "@/types/database";
 
-// UX saja: gerbang sebenarnya ada di RLS (has_access()).
-const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password", "/auth", "/track"];
-const NO_SUBSCRIPTION_PATHS = ["/billing", "/reset-password"];
+// UX saja: gerbang sebenarnya ada di RLS (user_id = auth.uid()).
+const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password", "/auth", "/track", "/donasi"];
 
 const matches = (path: string, list: string[]) =>
   list.some((p) => path === p || path.startsWith(`${p}/`));
@@ -49,11 +47,6 @@ export async function proxy(request: NextRequest) {
   }
 
   if (!loggedIn) return redirect("/login");
-  if (matches(path, NO_SUBSCRIPTION_PATHS)) return response;
-
-  const { data: sub } = await supabase.from("subscriptions").select("active_until").maybeSingle();
-  if (!isActive(sub?.active_until ?? null)) return redirect("/billing");
-
   return response;
 }
 

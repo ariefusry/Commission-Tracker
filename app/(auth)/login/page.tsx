@@ -41,7 +41,7 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
         <p className="text-muted-foreground">
           Belum punya akun?{" "}
           <Link href="/signup" className="text-foreground underline underline-offset-4">
-            Daftar, gratis trial 7 hari
+            Daftar gratis
           </Link>
         </p>
       </CardFooter>

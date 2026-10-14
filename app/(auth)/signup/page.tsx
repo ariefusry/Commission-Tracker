@@ -8,7 +8,7 @@ export default function SignupPage() {
     <Card>
       <CardHeader>
         <CardTitle>Daftar</CardTitle>
-        <CardDescription>Gratis trial 7 hari, tanpa kartu kredit.</CardDescription>
+        <CardDescription>Gratis untuk semua artist.</CardDescription>
       </CardHeader>
       <CardContent>
         <AuthForm

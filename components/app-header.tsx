@@ -1,23 +1,21 @@
-import { LogOut } from "lucide-react";
+import { Heart, LogOut } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { logout } from "@/app/auth/actions";
 import { Logo } from "@/components/logo";
 import { NavLinks } from "@/components/nav-links";
 import { Button } from "@/components/ui/button";
-import { createClient, getActiveUntil } from "@/lib/supabase/server";
-import { daysLeft } from "@/lib/subscription";
+import { createClient } from "@/lib/supabase/server";
 
-function SubscriptionPill({ left, className = "" }: { left: number; className?: string }) {
-  const warn = left <= 3;
+function DonateLink({ compact = false }: { compact?: boolean }) {
   return (
     <Link
-      href="/billing"
-      className={`w-fit rounded-full px-2.5 py-1 text-xs ${
-        warn ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" : "bg-muted text-muted-foreground"
-      } ${className}`}
+      href="/donasi"
+      className="flex w-fit items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1 text-xs text-rose-700 hover:bg-rose-100 dark:bg-rose-950 dark:text-rose-300"
     >
-      {left > 0 ? `Aktif ${left} hari lagi` : "Langganan habis"}
+      <Heart className="size-3.5" />
+      {!compact && "Dukung aplikasi ini"}
+      {compact && <span className="sr-only">Dukung aplikasi ini</span>}
     </Link>
   );
 }
@@ -26,13 +24,12 @@ function SubscriptionPill({ left, className = "" }: { left: number; className?: 
 async function Account({ variant }: { variant: "sidebar" | "header" }) {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
-  const left = daysLeft(await getActiveUntil(supabase));
   const email = data?.claims.email as string | undefined;
 
   if (variant === "header") {
     return (
       <div className="flex items-center gap-2">
-        {left <= 3 && <SubscriptionPill left={left} />}
+        <DonateLink compact />
         <form action={logout}>
           <Button type="submit" variant="ghost" size="icon-sm" aria-label="Keluar">
             <LogOut />
@@ -44,7 +41,7 @@ async function Account({ variant }: { variant: "sidebar" | "header" }) {
 
   return (
     <div className="grid gap-3">
-      <SubscriptionPill left={left} />
+      <DonateLink />
       <div className="flex items-center justify-between gap-2">
         <span className="truncate text-sm text-muted-foreground" title={email}>
           {email}

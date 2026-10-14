@@ -29,11 +29,3 @@ export async function createClient() {
     },
   );
 }
-
-/** Tanggal berakhir langganan user yang login, atau null. */
-export async function getActiveUntil(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-): Promise<string | null> {
-  const { data } = await supabase.from("subscriptions").select("active_until").maybeSingle();
-  return data?.active_until ?? null;
-}

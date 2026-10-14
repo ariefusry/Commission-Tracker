@@ -8,7 +8,7 @@ import { STATUS_LABEL } from "@/lib/commission";
 import { getTracking } from "@/lib/data/tracking";
 import { deadlineInfo } from "@/lib/deadline";
 import { formatDate } from "@/lib/format";
-import { todayWib } from "@/lib/subscription";
+import { todayWib } from "@/lib/date";
 
 export const metadata: Metadata = {
   title: "Progress Commission",
@@ -137,7 +137,12 @@ export default function TrackPage({ params }: PageProps<"/track/[code]">) {
         <Suspense fallback={<SkeletonBlock className="h-96" />}>
           <Tracking params={params} />
         </Suspense>
-        <p className="text-center text-xs text-muted-foreground">Halaman ini hanya menampilkan progress, tanpa data pembayaran.</p>
+        <p className="text-center text-xs text-muted-foreground">
+          Halaman ini hanya menampilkan progress, tanpa data pembayaran. Dibuat dengan Commission Tracker ·{" "}
+          <a href="/donasi" className="underline underline-offset-4">
+            Dukung
+          </a>
+        </p>
       </div>
     </main>
   );

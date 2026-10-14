@@ -55,7 +55,7 @@ export async function signup(_: AuthState, formData: FormData): Promise<AuthStat
     options: { emailRedirectTo: `${await origin()}/auth/confirm?next=/dashboard` },
   });
   if (error) return { error: error.message };
-  return { message: "Cek email kamu untuk konfirmasi akun. Trial 7 hari dimulai setelah daftar." };
+  return { message: "Cek email kamu untuk konfirmasi akun." };
 }
 
 export async function forgotPassword(_: AuthState, formData: FormData): Promise<AuthState> {

@@ -8,6 +8,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <Logo />
         </div>
         {children}
+        <a href="/donasi" className="justify-self-center text-xs text-muted-foreground hover:text-foreground">
+          Gratis untuk semua artist · Dukung lewat donasi
+        </a>
       </div>
     </main>
   );

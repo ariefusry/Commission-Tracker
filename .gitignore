@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Kartu QRIS asli (berisi nama/NMID); yang dipublikasikan hanya public/qris.png
+qris-original.png
