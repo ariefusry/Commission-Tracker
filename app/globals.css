@@ -126,5 +126,7 @@
   }
   html {
     @apply font-sans;
+    /* Ruang scrollbar selalu ada: konten tidak bergeser saat tinggi halaman berubah. */
+    scrollbar-gutter: stable;
   }
 }

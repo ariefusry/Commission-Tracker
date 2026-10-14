@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { AppHeader, AppHeaderFallback } from "@/components/app-header";
+import { AppShell } from "@/components/app-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient, getActiveUntil } from "@/lib/supabase/server";
 import { daysLeft } from "@/lib/subscription";
@@ -28,11 +28,8 @@ async function Status() {
 
 export default function BillingPage() {
   return (
-    <>
-      <Suspense fallback={<AppHeaderFallback />}>
-        <AppHeader />
-      </Suspense>
-      <main className="mx-auto w-full max-w-xl flex-1 px-4 py-10">
+    <AppShell>
+      <div className="mx-auto w-full max-w-xl">
         <Card>
           <CardHeader className="gap-2">
             <CardTitle>Langganan</CardTitle>
@@ -46,7 +43,7 @@ export default function BillingPage() {
             <p>Data commission kamu tetap tersimpan dan bisa diakses lagi setelah diperpanjang.</p>
           </CardContent>
         </Card>
-      </main>
-    </>
+      </div>
+    </AppShell>
   );
 }
