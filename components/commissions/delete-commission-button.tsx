@@ -1,5 +1,6 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { deleteCommission } from "@/app/(admin)/commissions/actions";
 import {
@@ -29,8 +30,10 @@ export function DeleteCommissionButton({ id, name }: { id: string; name: string 
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger render={<Button variant="ghost" size="sm" className="text-destructive" />}>
-        Hapus
+      <AlertDialogTrigger
+        render={<Button variant="ghost" size="icon-sm" className="text-destructive" aria-label={`Hapus ${name}`} />}
+      >
+        <Trash2 />
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>

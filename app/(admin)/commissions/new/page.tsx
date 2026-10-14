@@ -1,13 +1,16 @@
 import { CommissionForm } from "@/components/commissions/commission-form";
+import { FormPage } from "@/components/commissions/form-page";
 import { getFormOptions, newCommissionDefaults } from "@/lib/data/commissions";
 
-export default async function NewCommissionPage() {
+async function NewForm() {
   const { types, addons } = await getFormOptions();
+  return <CommissionForm commissionId={null} defaultValues={newCommissionDefaults()} types={types} addons={addons} />;
+}
 
+export default function NewCommissionPage() {
   return (
-    <div className="mx-auto grid max-w-3xl gap-6">
-      <h1 className="text-2xl font-semibold">Tambah commission</h1>
-      <CommissionForm commissionId={null} defaultValues={newCommissionDefaults()} types={types} addons={addons} />
-    </div>
+    <FormPage title="Tambah commission">
+      <NewForm />
+    </FormPage>
   );
 }

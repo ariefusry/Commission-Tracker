@@ -21,8 +21,9 @@ import {
   STATUS_LABEL,
   STATUSES,
 } from "@/lib/commission";
+import { localToday } from "@/lib/deadline";
 import { formatRupiah } from "@/lib/format";
-import { priceTotal } from "@/lib/pricing";
+import { amountDue, priceTotal } from "@/lib/pricing";
 import { commissionSchema, type CommissionInput, type CommissionValues } from "@/lib/validators";
 
 export type TypeOption = { id: string; name: string; base_price: number };
@@ -45,28 +46,36 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
   const [pending, startTransition] = useTransition();
   const form = useForm<CommissionInput, unknown, CommissionValues>({
     resolver: zodResolver(commissionSchema),
-    defaultValues,
+    // Tanggal mulai default = hari ini di perangkat user.
+    defaultValues: { ...defaultValues, start_date: defaultValues.start_date || localToday() },
   });
   const { register, handleSubmit, setValue, setError, formState } = form;
   const customAddons = useFieldArray({ control: form.control, name: "custom_addons" });
 
-  const [typeId, addonIds, custom, override, stage, payment] = useWatch({
+  const [typeId, addonIds, custom, override, stage, payment, dpAmount] = useWatch({
     control: form.control,
-    name: ["type_id", "addon_ids", "custom_addons", "price_override", "stage", "payment_status"],
+    name: ["type_id", "addon_ids", "custom_addons", "price_override", "stage", "payment_status", "dp_amount"],
   });
 
+  const typeName = typeId === CUSTOM_TYPE ? "Tipe custom" : types.find((t) => t.id === typeId)?.name;
   const basePrice =
     snapshot && snapshot.typeId === typeId
       ? snapshot.basePrice
       : (types.find((t) => t.id === typeId)?.base_price ?? 0);
-  const preview = priceTotal({
-    basePrice,
-    addonPrices: [
-      ...addonIds.map((id) => snapshot?.addonPrices[id] ?? addons.find((a) => a.id === id)?.price ?? 0),
-      ...custom.map((a) => (Number.isFinite(Number(a.price)) ? Number(a.price) : 0)),
-    ],
-    override: override ?? null,
-  });
+  const addonLines = [
+    ...addonIds.map((id) => ({
+      label: addons.find((a) => a.id === id)?.name ?? "Add-on",
+      price: snapshot?.addonPrices[id] ?? addons.find((a) => a.id === id)?.price ?? 0,
+    })),
+    ...custom.map((a) => ({
+      label: a.name || "Add-on custom",
+      price: Number.isFinite(Number(a.price)) ? Number(a.price) : 0,
+    })),
+  ];
+  const lines = [...(typeName ? [{ label: typeName, price: basePrice }] : []), ...addonLines];
+  const total = priceTotal({ basePrice, addonPrices: addonLines.map((l) => l.price), override: override ?? null });
+  const dp = payment === "dp" && Number.isFinite(Number(dpAmount)) ? Number(dpAmount) : 0;
+  const due = amountDue(total, payment, dp);
 
   const onSubmit = (values: CommissionValues) =>
     startTransition(async () => {
@@ -86,8 +95,14 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
     return (node as { message?: string } | undefined)?.message;
   };
 
-  const field = (name: FieldPath<CommissionInput>, label: string, control: React.ReactNode, hint?: string) => (
-    <div className="grid gap-2">
+  const field = (
+    name: FieldPath<CommissionInput>,
+    label: string,
+    control: React.ReactNode,
+    hint?: string,
+    wide?: boolean,
+  ) => (
+    <div className={`grid content-start gap-2 ${wide ? "sm:col-span-2" : ""}`}>
       <Label htmlFor={name}>{label}</Label>
       {control}
       {err(name) ? (
@@ -101,7 +116,12 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
   const invalid = (name: FieldPath<CommissionInput>) => ({ id: name, "aria-invalid": Boolean(err(name)) });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="grid gap-8" noValidate>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="grid gap-6 pb-24 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start lg:pb-0"
+      noValidate
+    >
+      <div className="grid gap-6">
       <Section title="Client">
         {field("client_username", "Username client", <Input {...invalid("client_username")} {...register("client_username")} />)}
         {field("contact_platform", "Platform", <Input {...invalid("contact_platform")} placeholder="Twitter, Discord, ..." {...register("contact_platform")} />)}
@@ -213,10 +233,6 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
           <Input type="number" inputMode="numeric" min={0} placeholder="Otomatis" {...invalid("price_override")} {...register("price_override", { setValueAs: toIntOrNull })} />,
           "Kosongkan untuk harga otomatis dari tipe + add-on",
         )}
-        <div className="grid content-start gap-1 rounded-lg bg-muted p-3 sm:col-span-2">
-          <span className="text-sm text-muted-foreground">Harga total</span>
-          <span className="text-xl font-semibold">{formatRupiah(preview)}</span>
-        </div>
       </Section>
 
       <Section title="Lainnya">
@@ -224,22 +240,77 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
           "reference_links",
           "Link referensi",
           <Textarea rows={3} placeholder="Satu link per baris" {...invalid("reference_links")} {...register("reference_links")} />,
+          undefined,
+          true,
         )}
-        {field("notes", "Catatan", <Textarea rows={3} {...invalid("notes")} {...register("notes")} />)}
+        {field("notes", "Catatan", <Textarea rows={3} {...invalid("notes")} {...register("notes")} />, undefined, true)}
       </Section>
 
-      {formState.errors.root && (
-        <p className="text-sm text-destructive" role="alert">
-          {formState.errors.root.message}
-        </p>
-      )}
-      <div className="flex gap-2">
-        <Button type="submit" disabled={pending}>
-          {pending ? "Menyimpan..." : "Simpan"}
-        </Button>
-        <Button variant="outline" nativeButton={false} render={<Link href="/commissions" />}>
-          Batal
-        </Button>
+      </div>
+
+      {/* Ringkasan harga: panel kanan di desktop, di bawah form + bar bawah di HP. */}
+      <aside className="grid gap-4 rounded-xl border bg-card p-4 lg:sticky lg:top-20">
+        <h2 className="font-semibold">Ringkasan</h2>
+        {lines.length > 0 ? (
+          <ul className="grid gap-1.5 text-sm">
+            {lines.map((l, i) => (
+              <li key={i} className="flex justify-between gap-3">
+                <span className="truncate text-muted-foreground">{l.label}</span>
+                <span className={`tabular-nums ${override !== null ? "text-muted-foreground line-through" : ""}`}>
+                  {formatRupiah(l.price)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted-foreground">Pilih tipe untuk menghitung harga.</p>
+        )}
+        <div className="grid gap-1.5 border-t pt-3 text-sm">
+          <div className="flex items-baseline justify-between">
+            <span className="font-medium">{override !== null ? "Total (harga manual)" : "Total"}</span>
+            <span className="text-xl font-semibold tabular-nums">{formatRupiah(total)}</span>
+          </div>
+          {payment === "dp" && (
+            <div className="flex justify-between text-muted-foreground">
+              <span>DP</span>
+              <span className="tabular-nums">{formatRupiah(dp)}</span>
+            </div>
+          )}
+          <div className="flex justify-between text-muted-foreground">
+            <span>Sisa bayar</span>
+            <span className="tabular-nums">{formatRupiah(due)}</span>
+          </div>
+        </div>
+        {formState.errors.root && (
+          <p className="text-sm text-destructive" role="alert">
+            {formState.errors.root.message}
+          </p>
+        )}
+        <div className="hidden gap-2 lg:grid">
+          <Button type="submit" disabled={pending}>
+            {pending ? "Menyimpan..." : "Simpan"}
+          </Button>
+          <Button variant="outline" nativeButton={false} render={<Link href="/commissions" />}>
+            Batal
+          </Button>
+        </div>
+      </aside>
+
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 backdrop-blur lg:hidden">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
+          <div className="grid">
+            <span className="text-xs text-muted-foreground">Total</span>
+            <span className="font-semibold tabular-nums">{formatRupiah(total)}</span>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" nativeButton={false} render={<Link href="/commissions" />}>
+              Batal
+            </Button>
+            <Button type="submit" disabled={pending}>
+              {pending ? "Menyimpan..." : "Simpan"}
+            </Button>
+          </div>
+        </div>
       </div>
     </form>
   );
@@ -247,8 +318,8 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="grid gap-4">
-      <h2 className="text-base font-semibold">{title}</h2>
+    <section className="grid gap-4 rounded-xl border bg-card p-4 sm:p-5">
+      <h2 className="font-semibold">{title}</h2>
       <div className="grid gap-4 sm:grid-cols-2">{children}</div>
     </section>
   );

@@ -1,9 +1,8 @@
 import "server-only";
 import type { AddonOption, PriceSnapshot, TypeOption } from "@/components/commissions/commission-form";
-import type { CommissionRow } from "@/components/commissions/commission-table";
+import type { CommissionRow } from "@/components/commissions/commission-list";
 import { CUSTOM_TYPE } from "@/lib/commission";
 import { createClient } from "@/lib/supabase/server";
-import { todayWib } from "@/lib/subscription";
 import type { CommissionInput } from "@/lib/validators";
 
 // Query commission (server). RLS membatasi ke data user yang login.
@@ -52,7 +51,7 @@ export const newCommissionDefaults = (): CommissionInput => ({
   type_custom: "",
   addon_ids: [],
   custom_addons: [],
-  start_date: todayWib(),
+  start_date: "", // diisi tanggal lokal perangkat di form
   deadline: "",
   stage: "queue",
   stage_custom: "",
