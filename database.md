@@ -316,3 +316,7 @@ Kolom lama `commissions.stage` (enum), `stage_custom`, dan enum `commission_stag
 ## Prioritas Manual (drag & drop)
 
 `commissions.queue_order` (double, wajib): urutan prioritas per artist, diatur dengan menggeser kartu di board. Nilai awal mengikuti tanggal pesan (jarak 1000); commission baru otomatis di paling bawah (trigger `set_queue_order`); sisipan memakai nilai tengah dua tetangga (`lib/queue-order.ts`). Antrean di `get_tracking` diurutkan `queue_order`, lalu tanggal pesan, jadi posisi client dan perkiraan selesai mengikuti prioritas artist.
+
+## Aplikasi Gratis (migration `20261015120000`)
+
+Aplikasi tidak berbayar (didukung donasi QRIS). `has_access()` kini hanya `auth.uid() is not null`; semua policy tetap `user_id = auth.uid()`. Tabel `subscriptions` dan trigger trial dibiarkan (tidak dipakai aplikasi); bagian dokumen di atas tentang langganan, Midtrans, `payments`, dan `activate_payment` hanya sebagai riwayat dan tidak dibuat.

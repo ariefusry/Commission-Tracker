@@ -2,7 +2,7 @@
 -- tidak meninggalkan data apa pun. Gagal = raise exception.
 begin;
 
--- Dua user: A trial aktif (dari trigger), B langganan habis.
+-- Dua user: A dan B. Aplikasi gratis: langganan tidak lagi membatasi akses.
 insert into auth.users (id, email, aud, role)
 values ('00000000-0000-0000-0000-00000000000a', 'rls-a@test.local', 'authenticated', 'authenticated'),
        ('00000000-0000-0000-0000-00000000000b', 'rls-b@test.local', 'authenticated', 'authenticated');
@@ -49,18 +49,20 @@ do $$ begin
   end;
 end $$;
 
--- Sebagai user B (langganan habis)
+-- Sebagai user B (langganan lama sudah habis): tetap bisa memakai aplikasi, hanya datanya sendiri.
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000b","role":"authenticated"}', true);
 
 do $$ begin
-  if (select count(*) from public.commissions) <> 0 then raise exception 'B (habis) masih bisa membaca commission'; end if;
-  if (select count(*) from public.subscriptions) <> 1 then raise exception 'B harus tetap bisa membaca status langganannya'; end if;
-  begin
-    insert into public.commissions (user_id, client_username, type_custom, stage_id)
-    values ('00000000-0000-0000-0000-00000000000b', 'x', 'Custom', (select id from public.stages limit 1));
-    raise exception 'B (habis) masih bisa insert';
-  exception when insufficient_privilege then null;
-  end;
+  if (select count(*) from public.commissions) <> 1 then raise exception 'B harus melihat tepat 1 commission (miliknya)'; end if;
+  if exists (select 1 from public.commissions where client_username = 'client-a') then raise exception 'B bisa melihat data A'; end if;
+  insert into public.commissions (user_id, client_username, type_custom, stage_id)
+  values ('00000000-0000-0000-0000-00000000000b', 'x', 'Custom', (select id from public.stages limit 1));
+end $$;
+
+-- Tanpa login (claims kosong) tidak ada akses walau role authenticated.
+select set_config('request.jwt.claims', '{}', true);
+do $$ begin
+  if (select count(*) from public.commissions) <> 0 then raise exception 'tanpa sub bisa membaca commission'; end if;
 end $$;
 
 -- Sebagai anon
