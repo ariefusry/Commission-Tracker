@@ -19,6 +19,7 @@ type Props = {
   queuePosition: number | null;
   waitPosition: number | null;
   waitTotal: number | null;
+  slotLimit: number | null;
   recentCompletions: string[] | null;
   today: string;
 };
@@ -80,9 +81,9 @@ function Estimate({ position, recent, today }: { position: number; recent: strin
 /**
  * Antrean ala board Trello artist:
  * - masih di waiting list → posisi, perkiraan, papan "Sedang dikerjakan" (commission lain) + "Waiting list";
- * - sudah dikerjakan → stepper di atas sudah cukup, cukup info beban kerja artist + perkiraan.
+ * - sudah dikerjakan → perkiraan + commission LAIN yang sedang dikerjakan (miliknya sudah di stepper).
  */
-export function QueueBoard({ queue, queuePosition, waitPosition, waitTotal, recentCompletions, today }: Props) {
+export function QueueBoard({ queue, queuePosition, waitPosition, waitTotal, slotLimit, recentCompletions, today }: Props) {
   const parsed = itemsSchema.safeParse(queue);
   if (!parsed.success || queuePosition === null) return null;
 
@@ -90,13 +91,17 @@ export function QueueBoard({ queue, queuePosition, waitPosition, waitTotal, rece
   const working = parsed.data.filter((i) => i.status !== "queue");
 
   if (waitPosition === null) {
-    const others = working.filter((i) => !i.you).length;
+    // Commission client sudah dikerjakan: stepper sudah menampilkan tahapnya, jadi daftar ini
+    // hanya berisi commission LAIN yang sedang dikerjakan artist (tanpa nama).
+    const others: Item[] = working
+      .filter((i) => !i.you)
+      .map((i) => ({ key: `w${i.pos}`, text: i.stage, sub: i.status === "revision" ? "Revisi" : undefined, you: false }));
     return (
       <div className="grid gap-3 border-t pt-4">
-        {others > 0 && (
-          <p className="text-sm text-muted-foreground">Artist juga sedang mengerjakan {others} commission lain.</p>
-        )}
         <Estimate position={queuePosition} recent={recent} today={today} />
+        {others.length > 0 && (
+          <Column title="Artist juga sedang mengerjakan" icon={Paintbrush} items={others} empty="" />
+        )}
       </div>
     );
   }
@@ -119,6 +124,7 @@ export function QueueBoard({ queue, queuePosition, waitPosition, waitTotal, rece
           Waiting list ke-{waitPosition} dari {waitTotal}
         </p>
         <p className="text-sm text-muted-foreground">
+          {slotLimit ? `Slot artist ${working.length}/${slotLimit} terisi. ` : ""}
           Commission mulai dikerjakan sesuai urutan pesanan, setelah ada slot yang selesai.
         </p>
       </div>

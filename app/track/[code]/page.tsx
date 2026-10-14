@@ -52,7 +52,7 @@ async function Tracking({ params }: { params: PageProps<"/track/[code]">["params
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <span className="text-muted-foreground">{t.type_name}</span>
           <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_TONE[t.status]}`}>
-            {t.status === "queue" ? "Waiting list" : STATUS_LABEL[t.status]}
+            {STATUS_LABEL[t.status]}
           </span>
         </div>
       </header>
@@ -103,6 +103,7 @@ async function Tracking({ params }: { params: PageProps<"/track/[code]">["params
         queuePosition={t.queue_position}
         waitPosition={t.wait_position}
         waitTotal={t.wait_total}
+        slotLimit={t.slot_limit}
         recentCompletions={t.recent_completions}
         today={today}
       />
