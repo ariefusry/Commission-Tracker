@@ -12,7 +12,7 @@ export async function getCommissionRows(): Promise<CommissionRow[]> {
   const { data, error } = await supabase
     .from("commissions")
     .select(
-      "id, client_username, type_custom, start_date, deadline, stage_id, status, payment_status, dp_amount, price_total, commission_types(name)",
+      "id, tracking_code, client_username, type_custom, start_date, deadline, stage_id, status, payment_status, dp_amount, price_total, commission_types(name)",
     )
     .order("start_date", { ascending: false })
     .order("created_at", { ascending: false });
