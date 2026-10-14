@@ -233,6 +233,7 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
             stages.filter((s) => s.is_active || s.id === defaultValues.stage_id).map((s) => ({ value: s.id, label: s.name })),
             "Pilih tahap",
           ),
+          stages.some((s) => s.is_active) ? undefined : "Belum ada tahap aktif. Atur di Pengaturan → Tahap.",
         )}
         {field(
           "status",

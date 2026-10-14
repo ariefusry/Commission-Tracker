@@ -1,9 +1,12 @@
 "use client";
 
+import { ChartNoAxesColumn } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import type { CommissionRow } from "@/components/commissions/commission-list";
 import { RevenueChart, TypeChart } from "@/components/dashboard/charts";
+import { StateMessage } from "@/components/state-message";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { deadlineInfo } from "@/lib/deadline";
@@ -158,12 +161,15 @@ export function DashboardView({ rows: all, today, options, initial }: Props) {
       </div>
 
       {rows.length === 0 ? (
-        <div className="grid justify-items-center gap-2 rounded-xl border border-dashed p-10 text-center">
-          <p className="font-medium">Belum ada commission di periode ini</p>
-          <Link href="/commissions/new" className="text-sm underline underline-offset-4">
+        <StateMessage
+          icon={ChartNoAxesColumn}
+          title="Belum ada commission di periode ini"
+          description="Pilih periode lain atau tambah commission baru."
+        >
+          <Button variant="outline" nativeButton={false} render={<Link href="/commissions/new" />}>
             Tambah commission
-          </Link>
-        </div>
+          </Button>
+        </StateMessage>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <Panel
