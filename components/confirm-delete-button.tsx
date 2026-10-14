@@ -2,7 +2,6 @@
 
 import { Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
-import { deleteCommission } from "@/app/(admin)/commissions/actions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,31 +15,44 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 
-export function DeleteCommissionButton({ id, name }: { id: string; name: string }) {
+type Props = {
+  label: string;
+  title: string;
+  description: string;
+  disabled?: boolean;
+  onConfirm: () => Promise<{ error?: string }>;
+};
+
+export function ConfirmDeleteButton({ label, title, description, disabled, onConfirm }: Props) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const onConfirm = () =>
+  const confirm = () =>
     startTransition(async () => {
-      const result = await deleteCommission(id);
+      const result = await onConfirm();
       if (result.error) setError(result.error);
       else setOpen(false);
     });
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (next) setError(null);
+      }}
+    >
       <AlertDialogTrigger
-        render={<Button variant="ghost" size="icon-sm" className="text-destructive" aria-label={`Hapus ${name}`} />}
+        disabled={disabled}
+        render={<Button type="button" variant="ghost" size="icon-sm" className="text-destructive" aria-label={label} />}
       >
         <Trash2 />
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Hapus commission {name}?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Data commission dan add-on-nya akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.
-          </AlertDialogDescription>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         {error && (
           <p className="text-sm text-destructive" role="alert">
@@ -49,7 +61,7 @@ export function DeleteCommissionButton({ id, name }: { id: string; name: string 
         )}
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>Batal</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" disabled={pending} onClick={onConfirm}>
+          <AlertDialogAction variant="destructive" disabled={pending} onClick={confirm}>
             {pending ? "Menghapus..." : "Hapus"}
           </AlertDialogAction>
         </AlertDialogFooter>

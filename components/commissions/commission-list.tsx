@@ -4,8 +4,8 @@ import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-tab
 import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useMemo, useState, useTransition } from "react";
-import { quickUpdate } from "@/app/(admin)/commissions/actions";
-import { DeleteCommissionButton } from "@/components/commissions/delete-commission-button";
+import { deleteCommission, quickUpdate } from "@/app/(admin)/commissions/actions";
+import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { Button } from "@/components/ui/button";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -130,7 +130,12 @@ function Actions({ row }: { row: CommissionRow }) {
       >
         <Pencil />
       </Button>
-      <DeleteCommissionButton id={row.id} name={row.client_username} />
+      <ConfirmDeleteButton
+        label={`Hapus ${row.client_username}`}
+        title={`Hapus commission ${row.client_username}?`}
+        description="Data commission dan add-on-nya akan dihapus permanen. Tindakan ini tidak bisa dibatalkan."
+        onConfirm={() => deleteCommission(row.id)}
+      />
     </div>
   );
 }
