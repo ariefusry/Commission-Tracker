@@ -113,12 +113,12 @@ TrackerCommis/
 - [ ] Akun demo dengan langganan aktif dan beberapa commission contoh (data fiktif)
 
 ### Milestone 2 — CRUD commission (2 hari)
-- [ ] Halaman daftar commission
-- [ ] Form tambah/edit dengan validasi Zod
-- [ ] Pilihan tipe dan add-on, opsi custom
-- [ ] Harga otomatis di `lib/pricing.ts` + override manual
-- [ ] Update progress dan status pembayaran dari tabel
-- [ ] Hapus (dengan konfirmasi)
+- [x] Halaman daftar commission
+- [x] Form tambah/edit dengan validasi Zod
+- [x] Pilihan tipe dan add-on, opsi custom
+- [x] Harga otomatis di `lib/pricing.ts` + override manual
+- [x] Update progress dan status pembayaran dari tabel
+- [x] Hapus (dengan konfirmasi)
 
 ### Milestone 3 — Dashboard (2 hari)
 - [ ] Kartu ringkasan

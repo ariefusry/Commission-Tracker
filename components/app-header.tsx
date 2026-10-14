@@ -8,9 +8,17 @@ function Shell({ children }: { children?: React.ReactNode }) {
   return (
     <header className="border-b">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
-        <Link href="/dashboard" className="font-semibold">
+        <Link href="/dashboard" className="hidden font-semibold sm:inline">
           Commission Tracker
         </Link>
+        <nav className="mr-auto flex gap-4 text-sm text-muted-foreground">
+          <Link href="/dashboard" className="hover:text-foreground">
+            Dashboard
+          </Link>
+          <Link href="/commissions" className="hover:text-foreground">
+            Commission
+          </Link>
+        </nav>
         {children}
       </div>
     </header>
