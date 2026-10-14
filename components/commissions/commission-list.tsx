@@ -1,13 +1,15 @@
 "use client";
 
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table";
-import { Pencil } from "lucide-react";
+import { Pencil, SearchX } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { deleteCommission, quickUpdate } from "@/app/(admin)/commissions/actions";
 import { AppSelect } from "@/components/app-select";
 import { CommissionToolbar } from "@/components/commissions/commission-toolbar";
+import { CopyTrackingLink } from "@/components/commissions/copy-tracking-link";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
+import { StateMessage } from "@/components/state-message";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
@@ -27,6 +29,7 @@ import type { QuickUpdate } from "@/lib/validators";
 
 export type CommissionRow = {
   id: string;
+  tracking_code: string;
   client_username: string;
   type_name: string;
   start_date: string;
@@ -116,6 +119,7 @@ function QuickSelects({ row, stages, onUpdate, pending, labelled }: { row: Commi
 function Actions({ row }: { row: CommissionRow }) {
   return (
     <div className="flex justify-end">
+      <CopyTrackingLink code={row.tracking_code} name={row.client_username} />
       <Button
         variant="ghost"
         size="icon-sm"
@@ -200,7 +204,7 @@ export function CommissionList({ data, today, stages }: { data: CommissionRow[];
   const table = useTable({ features, columns, data: visible });
 
   return (
-    <div className="grid gap-3">
+    <div className="grid min-w-0 gap-3">
       <CommissionToolbar filter={filter} onFilter={setFilter} sort={sort} onSort={setSort} types={types} today={today} />
       {visible.length !== data.length && (
         <p className="text-sm text-muted-foreground" aria-live="polite">
@@ -208,12 +212,11 @@ export function CommissionList({ data, today, stages }: { data: CommissionRow[];
         </p>
       )}
       {visible.length === 0 && (
-        <div className="grid justify-items-center gap-2 rounded-xl border border-dashed p-8 text-center">
-          <p className="font-medium">Tidak ada commission yang cocok</p>
+        <StateMessage icon={SearchX} title="Tidak ada commission yang cocok" description="Ubah kata kunci atau filter.">
           <Button variant="outline" size="sm" onClick={() => setFilter(EMPTY_FILTER)}>
             Reset filter
           </Button>
-        </div>
+        </StateMessage>
       )}
       {error && (
         <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
@@ -222,7 +225,8 @@ export function CommissionList({ data, today, stages }: { data: CommissionRow[];
       )}
 
       {/* HP: kartu */}
-      <ul className="grid gap-3 md:hidden">
+      {/* Kartu sampai layar lebar: tabel butuh ~860px, sisa ruang di samping sidebar 1024px hanya ~720px. */}
+      <ul className="grid gap-3 md:grid-cols-2 xl:hidden">
         {visible.map((row) => (
           <li key={row.id} className="grid gap-3 rounded-xl border bg-card p-4">
             <div className="flex items-start justify-between gap-3">
@@ -246,7 +250,7 @@ export function CommissionList({ data, today, stages }: { data: CommissionRow[];
       </ul>
 
       {/* Desktop: tabel */}
-      <div className={visible.length ? "hidden rounded-xl border md:block" : "hidden"}>
+      <div className={visible.length ? "hidden rounded-xl border xl:block" : "hidden"}>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((group) => (
