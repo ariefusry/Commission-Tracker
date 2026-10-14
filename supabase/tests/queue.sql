@@ -12,8 +12,8 @@ select '00000000-0000-0000-0000-00000000000a', v.name, 'X',
 from (values
   ('rahasia-1', 'aaaa0001', '2026-09-01', 'in_progress', 'Coloring'),
   ('rahasia-2', 'aaaa0002', '2026-09-05', 'revision',    'Sketsa'),
-  ('saya',      'aaaa0003', '2026-09-10', 'queue',       'Antrean'),
-  ('rahasia-4', 'aaaa0004', '2026-09-20', 'queue',       'Antrean'),
+  ('saya',      'aaaa0003', '2026-09-10', 'queue',       'Dikonfirmasi'),
+  ('rahasia-4', 'aaaa0004', '2026-09-20', 'queue',       'Dikonfirmasi'),
   ('selesai',   'aaaa0005', '2026-08-01', 'done',        'Finishing'),
   ('batal',     'aaaa0006', '2026-08-02', 'cancelled',   'Sketsa')
 ) as v(name, code, start, status, stage);
@@ -43,6 +43,7 @@ begin
   -- 'saya' antre ke-1 (rahasia-1 & -2 sedang dikerjakan), dari 2 yang antre.
   if r.wait_position is distinct from 1 then raise exception 'posisi antre salah: %', r.wait_position; end if;
   if r.wait_total is distinct from 2 then raise exception 'total antre salah: %', r.wait_total; end if;
+  if r.slot_limit is distinct from 5 then raise exception 'slot_limit salah: %', r.slot_limit; end if;
   if jsonb_array_length(r.queue) <> 4 then raise exception 'isi papan antrean salah: %', r.queue; end if;
   if r.queue::text ~ 'rahasia' then raise exception 'nama client lain bocor: %', r.queue; end if;
   if r.queue::text ~ 'aaaa000' then raise exception 'kode tracking lain bocor'; end if;
@@ -57,6 +58,30 @@ begin
   -- Commission selesai: tanpa antrean.
   select * into r from public.get_tracking('aaaa0005');
   if r.queue_position is not null or r.queue is not null then raise exception 'commission selesai masih menampilkan antrean'; end if;
+end $$;
+
+-- Prioritas manual: rahasia-4 didahulukan di atas 'saya'.
+reset role;
+update public.commissions set queue_order = (select queue_order from public.commissions where tracking_code = 'aaaa0003') - 1
+where tracking_code = 'aaaa0004';
+set local role anon;
+do $$
+declare r record;
+begin
+  select * into r from public.get_tracking('aaaa0003');
+  if r.wait_position is distinct from 2 then raise exception 'prioritas manual diabaikan: wait %', r.wait_position; end if;
+  if r.queue_position is distinct from 4 then raise exception 'prioritas manual diabaikan: pos %', r.queue_position; end if;
+end $$;
+
+-- Commission baru masuk paling bawah.
+reset role;
+do $$ begin
+  insert into public.commissions (user_id, client_username, type_custom, stage_id, tracking_code)
+  values ('00000000-0000-0000-0000-00000000000a', 'baru', 'X',
+          (select id from public.stages where user_id = '00000000-0000-0000-0000-00000000000a' limit 1), 'aaaa0007');
+  if (select queue_order from public.commissions where tracking_code = 'aaaa0007')
+     <= (select max(queue_order) from public.commissions where tracking_code <> 'aaaa0007' and user_id = '00000000-0000-0000-0000-00000000000a')
+  then raise exception 'commission baru tidak di urutan paling bawah'; end if;
 end $$;
 
 -- Artist menyembunyikan antrean.

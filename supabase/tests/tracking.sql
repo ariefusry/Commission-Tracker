@@ -26,7 +26,7 @@ begin
   if r.artist_name is distinct from 'Studio A' then raise exception 'nama artist salah'; end if;
   if r.type_name is distinct from 'Chibi' then raise exception 'tipe salah'; end if;
   -- Lineart nonaktif tapi dipakai → ikut; Coloring nonaktif & tidak dipakai → tidak ikut.
-  if r.stages is distinct from array['Antrean', 'Sketsa', 'Lineart', 'Finishing'] then raise exception 'daftar tahap salah: %', r.stages; end if;
+  if r.stages is distinct from array['Dikonfirmasi', 'Sketsa', 'Lineart', 'Finishing'] then raise exception 'daftar tahap salah: %', r.stages; end if;
   if r.current_stage is distinct from 2 then raise exception 'indeks tahap salah: %', r.current_stage; end if;
 
   if exists (select 1 from public.get_tracking('ABCD1234')) then raise exception 'kode harus persis (huruf kecil)'; end if;

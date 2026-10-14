@@ -35,7 +35,7 @@ begin
       ('sora.vt',      'Twitter',   '@sora_vtuber',  'Full body', 150000, 'dc', 25000, -15,  10,  'Lineart',   'in_progress', 'dp',     85000, 175000),
       ('hanabi',       'Instagram', '@hanabi.oc',    'Headshot',  50000,  null, 0,     -8,   5,   'Sketsa',    'revision',    'paid',   0,     50000),
       ('tetsu',        'Discord',   'tetsu_oc',      'Bust up',   75000,  'dc', 25000, -3,   18,  'Sketsa',    'in_progress', 'unpaid', 0,     100000),
-      ('miko_chan',    'Twitter',   '@mikochan',     'Knee up',   125000, null, 0,     -1,   25,  'Antrean',   'queue',       'unpaid', 0,     125000)
+      ('miko_chan',    'Twitter',   '@mikochan',     'Knee up',   125000, null, 0,     -1,   25,  'Dikonfirmasi', 'queue',       'unpaid', 0,     125000)
     ) as v(client, platform, handle, type_name, base, addon, addon_price, start_off, deadline_off, stage, status, pay, dp, total)
   loop
     perform public.save_commission(

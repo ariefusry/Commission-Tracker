@@ -293,7 +293,7 @@ Snapshot harga: `commissions.base_price` dan `commission_addons.price` diambil d
 
 ## Tahap per User
 
-Tahap pengerjaan disimpan di tabel `stages` (per user: `name`, `sort_order`, `is_active`), sama seperti tipe pesanan. `commissions.stage_id` (wajib) menunjuk ke tahap; tahap yang dipakai tidak bisa dihapus (`on delete restrict`), cukup dinonaktifkan. User baru mendapat 5 tahap default: Antrean, Sketsa, Lineart, Coloring, Finishing.
+Tahap pengerjaan disimpan di tabel `stages` (per user: `name`, `sort_order`, `is_active`), sama seperti tipe pesanan. `commissions.stage_id` (wajib) menunjuk ke tahap; tahap yang dipakai tidak bisa dihapus (`on delete restrict`), cukup dinonaktifkan. User baru mendapat 5 tahap default: Dikonfirmasi, Sketsa, Lineart, Coloring, Finishing (sebelum migration `20261015100000` tahap pertama bernama Antrean).
 
 Kolom lama `commissions.stage` (enum), `stage_custom`, dan enum `commission_stage` sudah dihapus (migration `20261015040000`). `wip_images` juga memakai `stage_id`.
 
@@ -308,3 +308,11 @@ Kolom lama `commissions.stage` (enum), `stage_custom`, dan enum `commission_stag
 - `get_tracking` mengembalikan `queue_position` (urutan keseluruhan), `wait_position`/`wait_total` (urutan di antrean tunggu, status `queue`), `queue` (papan: posisi, tahap, status, penanda "kamu"; **tanpa nama/kode client lain**), dan `recent_completions` (10 tanggal selesai terakhir).
 - Perkiraan selesai dihitung di `lib/queue.ts`: hari per commission = rentang sejak selesai tertua (≤90 hari) ÷ jumlah selesai; minimal 3 data; ditampilkan sebagai rentang ±25%.
 - `settings.show_queue` (default `true`): artist bisa menyembunyikan antrean & perkiraan dari client.
+
+## Slot
+
+`settings.slot_limit` (default 5, diatur di Pengaturan → Umum): jumlah commission yang dikerjakan bersamaan (status `in_progress`/`revision`). Commission baru otomatis `queue` (Waiting list) jika slot penuh. `get_tracking` mengembalikan `slot_limit` agar client melihat "Slot artist X/Y terisi".
+
+## Prioritas Manual (drag & drop)
+
+`commissions.queue_order` (double, wajib): urutan prioritas per artist, diatur dengan menggeser kartu di board. Nilai awal mengikuti tanggal pesan (jarak 1000); commission baru otomatis di paling bawah (trigger `set_queue_order`); sisipan memakai nilai tengah dua tetangga (`lib/queue-order.ts`). Antrean di `get_tracking` diurutkan `queue_order`, lalu tanggal pesan, jadi posisi client dan perkiraan selesai mengikuti prioritas artist.
