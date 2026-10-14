@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Logo } from "@/components/logo";
 import { SkeletonBlock } from "@/components/skeleton-block";
 import { QueueBoard } from "@/components/tracking/queue-board";
+import { WipGallery } from "@/components/tracking/wip-gallery";
 import { STATUS_LABEL } from "@/lib/commission";
 import { getTracking } from "@/lib/data/tracking";
 import { deadlineInfo } from "@/lib/deadline";
@@ -98,12 +99,15 @@ async function Tracking({ params }: { params: PageProps<"/track/[code]">["params
         })}
       </ol>
 
+      <WipGallery wip={t.wip} />
+
       <QueueBoard
         queue={t.queue}
         queuePosition={t.queue_position}
         waitPosition={t.wait_position}
         waitTotal={t.wait_total}
         slotLimit={t.slot_limit}
+        stages={stages}
         recentCompletions={t.recent_completions}
         today={today}
       />

@@ -3,7 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database";
 
 // UX saja: gerbang sebenarnya ada di RLS (user_id = auth.uid()).
-const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password", "/auth", "/track", "/donasi"];
+// /api/cron dilindungi CRON_SECRET di route-nya sendiri.
+const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password", "/auth", "/track", "/donasi", "/api/cron"];
 
 const matches = (path: string, list: string[]) =>
   list.some((p) => path === p || path.startsWith(`${p}/`));

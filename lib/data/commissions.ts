@@ -2,6 +2,7 @@ import "server-only";
 import type { AddonOption, PriceSnapshot, TypeOption } from "@/components/commissions/commission-form";
 import type { CommissionRow } from "@/components/commissions/commission-list";
 import { CUSTOM_TYPE, type StageOption } from "@/lib/commission";
+import { wipUrl } from "@/lib/storage";
 import { createClient } from "@/lib/supabase/server";
 import type { CommissionInput } from "@/lib/validators";
 
@@ -123,4 +124,18 @@ export async function getCommissionForEdit(
       addonPrices: Object.fromEntries(catalog.map((a) => [a.addon_id!, a.price])),
     },
   };
+}
+
+export type WipImage = { id: string; url: string; stage: string | null; created_at: string };
+
+/** Gambar WIP satu commission (milik user, RLS), terbaru dulu. */
+export async function getWipImages(commissionId: string): Promise<WipImage[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("wip_images")
+    .select("id, storage_path, created_at, stages(name)")
+    .eq("commission_id", commissionId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data.map((w) => ({ id: w.id, url: wipUrl(w.storage_path), stage: w.stages?.name ?? null, created_at: w.created_at }));
 }

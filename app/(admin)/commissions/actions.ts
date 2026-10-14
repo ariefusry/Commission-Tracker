@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { CUSTOM_TYPE } from "@/lib/commission";
 import { priceTotal } from "@/lib/pricing";
+import { WIP_BUCKET } from "@/lib/storage";
 import { createClient } from "@/lib/supabase/server";
 import {
   commissionSchema,
@@ -135,6 +136,18 @@ export async function quickUpdate(id: string, update: QuickUpdate): Promise<Acti
 export async function deleteCommission(id: string): Promise<ActionResult> {
   if (!idSchema.safeParse(id).success) return { error: "ID tidak valid." };
   const supabase = await createClient();
+
+  // File WIP dihapus dulu: cascade hanya menghapus baris, file di Storage akan tertinggal.
+  const { data: wip } = await supabase.from("wip_images").select("storage_path").eq("commission_id", id);
+  if (wip?.length) {
+    const removed = await supabase.storage.from(WIP_BUCKET).remove(wip.map((w) => w.storage_path));
+    // remove() tidak error bila file tak terhapus (mis. policy) → cek jumlahnya.
+    if (removed.error || removed.data.length < wip.length) {
+      console.error("deleteCommission wip", removed.error);
+      return { error: "Gagal menghapus gambar WIP. Coba lagi." };
+    }
+  }
+
   const { data, error } = await supabase.from("commissions").delete().eq("id", id).select("id");
   if (error || !data?.length) {
     if (error) console.error("deleteCommission", error);
