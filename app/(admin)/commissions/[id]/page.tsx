@@ -11,7 +11,7 @@ async function EditForm({ params }: { params: PageProps<"/commissions/[id]">["pa
   const commission = await getCommissionForEdit(id);
   if (!commission) notFound();
 
-  const { types, addons } = await getFormOptions({
+  const { types, addons, stages } = await getFormOptions({
     typeId: commission.snapshot.typeId,
     addonIds: commission.values.addon_ids,
   });
@@ -23,6 +23,7 @@ async function EditForm({ params }: { params: PageProps<"/commissions/[id]">["pa
       snapshot={commission.snapshot}
       types={types}
       addons={addons}
+      stages={stages}
     />
   );
 }

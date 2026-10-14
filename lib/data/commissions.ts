@@ -1,7 +1,7 @@
 import "server-only";
 import type { AddonOption, PriceSnapshot, TypeOption } from "@/components/commissions/commission-form";
 import type { CommissionRow } from "@/components/commissions/commission-list";
-import { CUSTOM_TYPE } from "@/lib/commission";
+import { CUSTOM_TYPE, type StageOption } from "@/lib/commission";
 import { createClient } from "@/lib/supabase/server";
 import type { CommissionInput } from "@/lib/validators";
 
@@ -12,7 +12,7 @@ export async function getCommissionRows(): Promise<CommissionRow[]> {
   const { data, error } = await supabase
     .from("commissions")
     .select(
-      "id, client_username, type_custom, deadline, stage, stage_custom, status, payment_status, dp_amount, price_total, commission_types(name)",
+      "id, client_username, type_custom, start_date, deadline, stage_id, status, payment_status, dp_amount, price_total, commission_types(name)",
     )
     .order("start_date", { ascending: false })
     .order("created_at", { ascending: false });
@@ -24,11 +24,20 @@ export async function getCommissionRows(): Promise<CommissionRow[]> {
   }));
 }
 
+/** Semua tahap user (termasuk nonaktif; komponen yang menyaring). */
+export async function getStages(): Promise<StageOption[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("stages").select("id, name, is_active").order("sort_order").order("name");
+  if (error) throw error;
+  return data;
+}
+
 export async function getFormOptions(include?: { typeId: string | null; addonIds: string[] }) {
   const supabase = await createClient();
-  const [types, addons] = await Promise.all([
+  const [types, addons, stages] = await Promise.all([
     supabase.from("commission_types").select("id, name, base_price, is_active").order("sort_order"),
     supabase.from("addons").select("id, name, price, is_active").order("name"),
+    getStages(),
   ]);
   if (types.error) throw types.error;
   if (addons.error) throw addons.error;
@@ -40,7 +49,7 @@ export async function getFormOptions(include?: { typeId: string | null; addonIds
   const addonOptions: AddonOption[] = addons.data
     .filter((a) => a.is_active || include?.addonIds.includes(a.id))
     .map(({ id, name, price }) => ({ id, name, price }));
-  return { types: typeOptions, addons: addonOptions };
+  return { types: typeOptions, addons: addonOptions, stages };
 }
 
 export const newCommissionDefaults = (): CommissionInput => ({
@@ -53,8 +62,7 @@ export const newCommissionDefaults = (): CommissionInput => ({
   custom_addons: [],
   start_date: "", // diisi tanggal lokal perangkat di form
   deadline: "",
-  stage: "queue",
-  stage_custom: "",
+  stage_id: "", // diisi tahap aktif pertama di halaman
   status: "queue",
   revision_count: 0,
   payment_status: "unpaid",
@@ -89,8 +97,7 @@ export async function getCommissionForEdit(
         .map((a) => ({ name: a.custom_name ?? "", price: a.price })),
       start_date: c.start_date,
       deadline: c.deadline ?? "",
-      stage: c.stage,
-      stage_custom: c.stage_custom ?? "",
+      stage_id: c.stage_id,
       status: c.status,
       revision_count: c.revision_count,
       payment_status: c.payment_status,

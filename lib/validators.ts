@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CUSTOM_TYPE, PAYMENT_STATUSES, STAGES, STATUSES } from "@/lib/commission";
+import { CUSTOM_TYPE, PAYMENT_STATUSES, STATUSES } from "@/lib/commission";
 
 const email = z.email("Email tidak valid").trim().toLowerCase();
 const password = z.string().min(8, "Password minimal 8 karakter").max(72, "Password terlalu panjang");
@@ -48,8 +48,7 @@ export const commissionSchema = z
       .max(20),
     start_date: z.iso.date("Tanggal tidak valid"),
     deadline: z.union([z.iso.date("Tanggal tidak valid"), z.literal("")]),
-    stage: z.enum(STAGES),
-    stage_custom: z.string().trim().max(100),
+    stage_id: z.uuid("Pilih tahap"),
     status: z.enum(STATUSES),
     revision_count: z.number({ error: "Harus berupa angka" }).int().min(0).max(999),
     payment_status: z.enum(PAYMENT_STATUSES),
@@ -67,7 +66,6 @@ export const commissionSchema = z
     } else if (!z.uuid().safeParse(v.type_id).success) {
       issue("type_id", "Pilih tipe");
     }
-    if (v.stage === "custom" && !v.stage_custom) issue("stage_custom", "Isi nama tahap custom");
     if (v.payment_status === "dp" && v.dp_amount <= 0) issue("dp_amount", "Isi nominal DP");
     if (v.deadline && v.deadline < v.start_date) issue("deadline", "Deadline sebelum tanggal mulai");
     if (!parseLinks(v.reference_links).every(isHttpUrl)) {
@@ -80,7 +78,7 @@ export type CommissionValues = z.output<typeof commissionSchema>;
 
 /** Ubah cepat dari tabel. */
 export const quickUpdateSchema = z.discriminatedUnion("field", [
-  z.object({ field: z.literal("stage"), value: z.enum(STAGES) }),
+  z.object({ field: z.literal("stage_id"), value: z.uuid() }),
   z.object({ field: z.literal("status"), value: z.enum(STATUSES) }),
   z.object({ field: z.literal("payment_status"), value: z.enum(PAYMENT_STATUSES) }),
 ]);

@@ -43,6 +43,10 @@ export async function saveCommission(id: string | null, input: CommissionInput):
     existing = { type_id: data.type_id, base_price: data.base_price, addons: data.commission_addons };
   }
 
+  // FK tidak memeriksa kepemilikan: pastikan tahap milik user (RLS).
+  const { data: stage } = await supabase.from("stages").select("id").eq("id", v.stage_id).maybeSingle();
+  if (!stage) return { fieldErrors: { stage_id: ["Tahap tidak ditemukan"] } };
+
   const typeId = v.type_id === CUSTOM_TYPE ? null : v.type_id;
   let basePrice = 0;
   if (typeId) {
@@ -85,8 +89,7 @@ export async function saveCommission(id: string | null, input: CommissionInput):
       type_custom: typeId ? null : v.type_custom,
       start_date: v.start_date,
       deadline: v.deadline || null,
-      stage: v.stage,
-      stage_custom: v.stage === "custom" ? v.stage_custom : null,
+      stage_id: v.stage_id,
       status: v.status,
       revision_count: v.revision_count,
       payment_status: v.payment_status,
@@ -111,13 +114,12 @@ export async function quickUpdate(id: string, update: QuickUpdate): Promise<Acti
   const u = parsed.data;
 
   if (u.field === "payment_status" && u.value === "dp") return { error: "Isi nominal DP lewat tombol Edit." };
-  if (u.field === "stage" && u.value === "custom") return { error: "Tahap custom diisi lewat tombol Edit." };
 
   const patch =
     u.field === "payment_status"
       ? { payment_status: u.value, dp_amount: 0 }
-      : u.field === "stage"
-        ? { stage: u.value, stage_custom: null }
+      : u.field === "stage_id"
+        ? { stage_id: u.value }
         : { status: u.value };
 
   const supabase = await createClient();

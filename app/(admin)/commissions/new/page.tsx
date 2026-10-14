@@ -3,8 +3,9 @@ import { FormPage } from "@/components/commissions/form-page";
 import { getFormOptions, newCommissionDefaults } from "@/lib/data/commissions";
 
 async function NewForm() {
-  const { types, addons } = await getFormOptions();
-  return <CommissionForm commissionId={null} defaultValues={newCommissionDefaults()} types={types} addons={addons} />;
+  const { types, addons, stages } = await getFormOptions();
+  const defaults = { ...newCommissionDefaults(), stage_id: stages.find((s) => s.is_active)?.id ?? "" };
+  return <CommissionForm commissionId={null} defaultValues={defaults} types={types} addons={addons} stages={stages} />;
 }
 
 export default function NewCommissionPage() {

@@ -4,12 +4,12 @@ import { Suspense } from "react";
 import { CommissionList } from "@/components/commissions/commission-list";
 import { SkeletonBlock } from "@/components/skeleton-block";
 import { Button } from "@/components/ui/button";
-import { getCommissionRows } from "@/lib/data/commissions";
+import { getCommissionRows, getStages } from "@/lib/data/commissions";
 import { deadlineInfo } from "@/lib/deadline";
 import { todayWib } from "@/lib/subscription";
 
 async function Content() {
-  const rows = await getCommissionRows();
+  const [rows, stages] = await Promise.all([getCommissionRows(), getStages()]);
   const today = todayWib();
   const active = rows.filter((r) => r.status !== "done" && r.status !== "cancelled").length;
   const late = rows.filter((r) => deadlineInfo(r.deadline, r.status, today).tone === "late").length;
@@ -32,7 +32,7 @@ async function Content() {
         {active} aktif dari {rows.length}
         {late > 0 && <span className="text-destructive"> · {late} terlambat</span>}
       </p>
-      <CommissionList data={rows} today={today} />
+      <CommissionList data={rows} today={today} stages={stages} />
     </div>
   );
 }

@@ -3,24 +3,24 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useTransition } from "react";
-import { useFieldArray, useForm, useWatch, type FieldPath } from "react-hook-form";
+import { useState, useTransition } from "react";
+import { Controller, useFieldArray, useForm, useWatch, type FieldPath } from "react-hook-form";
+import { AppSelect, type SelectOption } from "@/components/app-select";
+import { InlineAddType } from "@/components/commissions/inline-add-type";
 import { saveCommission } from "@/app/(admin)/commissions/actions";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PriceInput } from "@/components/price-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   CUSTOM_TYPE,
   PAYMENT_LABEL,
   PAYMENT_STATUSES,
-  STAGE_LABEL,
-  STAGES,
   STATUS_LABEL,
   STATUSES,
+  type StageOption,
 } from "@/lib/commission";
 import { localToday } from "@/lib/deadline";
 import { formatRupiah } from "@/lib/format";
@@ -38,13 +38,17 @@ type Props = {
   types: TypeOption[];
   addons: AddonOption[];
   snapshot?: PriceSnapshot;
+  stages: StageOption[];
 };
 
 const toInt = (v: unknown) => (v === "" || v === null ? 0 : Number(v));
 const toIntOrNull = (v: unknown) => (v === "" || v === null ? null : Number(v));
 
-export function CommissionForm({ commissionId, defaultValues, types, addons, snapshot }: Props) {
+export function CommissionForm({ commissionId, defaultValues, types, addons, snapshot, stages }: Props) {
   const [pending, startTransition] = useTransition();
+  // Tipe yang baru dibuat dari form ini (belum ada di props sampai server refresh).
+  const [createdTypes, setCreatedTypes] = useState<TypeOption[]>([]);
+  const allTypes = [...types, ...createdTypes.filter((c) => !types.some((t) => t.id === c.id))];
   const form = useForm<CommissionInput, unknown, CommissionValues>({
     resolver: zodResolver(commissionSchema),
     // Tanggal mulai default = hari ini di perangkat user.
@@ -53,16 +57,16 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
   const { register, handleSubmit, setValue, setError, formState } = form;
   const customAddons = useFieldArray({ control: form.control, name: "custom_addons" });
 
-  const [typeId, addonIds, custom, override, stage, payment, dpAmount] = useWatch({
+  const [typeId, addonIds, custom, override, payment, dpAmount] = useWatch({
     control: form.control,
-    name: ["type_id", "addon_ids", "custom_addons", "price_override", "stage", "payment_status", "dp_amount"],
+    name: ["type_id", "addon_ids", "custom_addons", "price_override", "payment_status", "dp_amount"],
   });
 
-  const typeName = typeId === CUSTOM_TYPE ? "Tipe custom" : types.find((t) => t.id === typeId)?.name;
+  const typeName = typeId === CUSTOM_TYPE ? "Tipe custom" : allTypes.find((t) => t.id === typeId)?.name;
   const basePrice =
     snapshot && snapshot.typeId === typeId
       ? snapshot.basePrice
-      : (types.find((t) => t.id === typeId)?.base_price ?? 0);
+      : (allTypes.find((t) => t.id === typeId)?.base_price ?? 0);
   const addonLines = [
     ...addonIds.map((id) => ({
       label: addons.find((a) => a.id === id)?.name ?? "Add-on",
@@ -116,6 +120,29 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
 
   const invalid = (name: FieldPath<CommissionInput>) => ({ id: name, "aria-invalid": Boolean(err(name)) });
 
+  const select = (
+    name: "type_id" | "stage_id" | "status" | "payment_status",
+    options: SelectOption[],
+    placeholder?: string,
+  ) => (
+    <Controller
+      control={form.control}
+      name={name}
+      render={({ field }) => (
+        <AppSelect
+          id={name}
+          value={field.value}
+          onValueChange={field.onChange}
+          onBlur={field.onBlur}
+          triggerRef={field.ref}
+          options={options}
+          placeholder={placeholder}
+          invalid={Boolean(err(name))}
+        />
+      )}
+    />
+  );
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -133,15 +160,25 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
         {field(
           "type_id",
           "Tipe",
-          <NativeSelect className="w-full" {...invalid("type_id")} {...register("type_id")}>
-            <NativeSelectOption value="">Pilih tipe</NativeSelectOption>
-            {types.map((t) => (
-              <NativeSelectOption key={t.id} value={t.id}>
-                {t.name} ({formatRupiah(t.base_price)})
-              </NativeSelectOption>
-            ))}
-            <NativeSelectOption value={CUSTOM_TYPE}>Custom</NativeSelectOption>
-          </NativeSelect>,
+          <div className="grid gap-2">
+            {select(
+              "type_id",
+              [
+                ...allTypes.map((t) => ({ value: t.id, label: `${t.name} (${formatRupiah(t.base_price)})` })),
+                // "Custom" hanya untuk commission lama yang sudah memakainya.
+                ...(defaultValues.type_id === CUSTOM_TYPE
+                  ? [{ value: CUSTOM_TYPE, label: `Custom: ${defaultValues.type_custom}` }]
+                  : []),
+              ],
+              "Pilih tipe",
+            )}
+            <InlineAddType
+              onCreated={(t) => {
+                setCreatedTypes((prev) => [...prev, t]);
+                setValue("type_id", t.id, { shouldDirty: true, shouldValidate: true });
+              }}
+            />
+          </div>,
         )}
         {typeId === CUSTOM_TYPE &&
           field("type_custom", "Nama tipe custom", <Input {...invalid("type_custom")} {...register("type_custom")} />)}
@@ -188,28 +225,19 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
         {field("start_date", "Tanggal mulai", <Input type="date" {...invalid("start_date")} {...register("start_date")} />)}
         {field("deadline", "Deadline", <Input type="date" {...invalid("deadline")} {...register("deadline")} />, "Kosongkan jika belum ada")}
         {field(
-          "stage",
+          "stage_id",
           "Tahap",
-          <NativeSelect className="w-full" {...invalid("stage")} {...register("stage")}>
-            {STAGES.map((s) => (
-              <NativeSelectOption key={s} value={s}>
-                {STAGE_LABEL[s]}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>,
+          select(
+            "stage_id",
+            // Tahap nonaktif tetap tampil untuk commission yang sedang memakainya.
+            stages.filter((s) => s.is_active || s.id === defaultValues.stage_id).map((s) => ({ value: s.id, label: s.name })),
+            "Pilih tahap",
+          ),
         )}
-        {stage === "custom" &&
-          field("stage_custom", "Nama tahap custom", <Input {...invalid("stage_custom")} {...register("stage_custom")} />)}
         {field(
           "status",
           "Status",
-          <NativeSelect className="w-full" {...invalid("status")} {...register("status")}>
-            {STATUSES.map((s) => (
-              <NativeSelectOption key={s} value={s}>
-                {STATUS_LABEL[s]}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>,
+          select("status", STATUSES.map((s) => ({ value: s, label: STATUS_LABEL[s] }))),
         )}
         {field("revision_count", "Jumlah revisi", <Input type="number" inputMode="numeric" min={0} {...invalid("revision_count")} {...register("revision_count", { setValueAs: toInt })} />)}
       </Section>
@@ -218,13 +246,7 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
         {field(
           "payment_status",
           "Status bayar",
-          <NativeSelect className="w-full" {...invalid("payment_status")} {...register("payment_status")}>
-            {PAYMENT_STATUSES.map((s) => (
-              <NativeSelectOption key={s} value={s}>
-                {PAYMENT_LABEL[s]}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>,
+          select("payment_status", PAYMENT_STATUSES.map((s) => ({ value: s, label: PAYMENT_LABEL[s] }))),
         )}
         {payment === "dp" &&
           field("dp_amount", "Nominal DP", <PriceInput {...invalid("dp_amount")} {...register("dp_amount", { setValueAs: toInt })} />)}
@@ -250,7 +272,7 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
       </div>
 
       {/* Ringkasan harga: panel kanan di desktop, di bawah form + bar bawah di HP. */}
-      <aside className="grid gap-4 rounded-xl border bg-card p-4 lg:sticky lg:top-20">
+      <aside className="grid gap-4 rounded-xl border bg-card p-4 lg:sticky lg:top-8">
         <h2 className="font-semibold">Ringkasan</h2>
         {lines.length > 0 ? (
           <ul className="grid gap-1.5 text-sm">
