@@ -320,3 +320,11 @@ Kolom lama `commissions.stage` (enum), `stage_custom`, dan enum `commission_stag
 ## Aplikasi Gratis (migration `20261015120000`)
 
 Aplikasi tidak berbayar (didukung donasi QRIS). `has_access()` kini hanya `auth.uid() is not null`; semua policy tetap `user_id = auth.uid()`. Tabel `subscriptions` dan trigger trial dibiarkan (tidak dipakai aplikasi); bagian dokumen di atas tentang langganan, Midtrans, `payments`, dan `activate_payment` hanya sebagai riwayat dan tidak dibuat.
+
+## Gambar WIP (migration `20261015130000`, `20261015140000`)
+
+- Bucket Storage publik `wip` (≤ 1 MB, WebP/JPEG). Path `{user_id}/{commission_id}/{uuid}.webp`; policy storage: artist hanya boleh insert/select/delete di folder `{user_id}` miliknya. **Select wajib ada**: tanpa itu `remove()` tidak menghapus apa pun dan tidak error.
+- Tabel `wip_images` (`commission_id`, `stage_id`, `storage_path`): policy pemilik + path harus di folder milik artist; trigger membatasi maks. 10 per commission.
+- `get_tracking` mengembalikan `wip` (path, nama tahap, waktu; terbaru dulu). URL publik dibangun di `lib/storage.ts`.
+- Hapus commission/gambar: file di Storage dihapus lebih dulu (cascade hanya menghapus baris).
+- Pembersihan: Vercel Cron harian `/api/cron/cleanup-wip` (dilindungi `CRON_SECRET`, memakai `SUPABASE_SECRET_KEY` di server) menghapus WIP dari commission yang selesai > 30 hari.

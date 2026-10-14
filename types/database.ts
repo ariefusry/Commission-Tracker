@@ -161,7 +161,7 @@ isOneToOne: false
           Functions: {
             "get_tracking":
 { Args: { "p_code": string }; Returns: {
-              "artist_name": string,"client_username": string,"current_stage": number,"deadline": string,"queue": Json,"queue_position": number,"queue_total": number,"recent_completions": (string)[],"slot_limit": number,"stages": (string)[],"start_date": string,"status": Database["public"]['Enums']["commission_status"],"type_name": string,"updated_at": string,"wait_position": number,"wait_total": number
+              "artist_name": string,"client_username": string,"current_stage": number,"deadline": string,"queue": Json,"queue_position": number,"queue_total": number,"recent_completions": (string)[],"slot_limit": number,"stages": (string)[],"start_date": string,"status": Database["public"]['Enums']["commission_status"],"type_name": string,"updated_at": string,"wait_position": number,"wait_total": number,"wip": Json
             }[]
                            },
 "has_access":
