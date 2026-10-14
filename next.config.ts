@@ -1,9 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   cacheComponents: true,
+  // "/" langsung ke dashboard (belum login → proxy mengarahkan ke /login).
+  // Lewat config, bukan halaman redirect(): tidak ada yang perlu di-prerender.
+  redirects: async () => [{ source: "/", destination: "/dashboard", permanent: false }],
   partialPrefetching: true,
+  experimental: {
+    // Upload gambar WIP lewat Server Action: file ≤ 1 MB (dikompres di browser) + overhead multipart.
+    serverActions: { bodySizeLimit: "1100kb" },
+  },
   turbopack: {
     rules: {
       "*.css": {
