@@ -12,7 +12,7 @@ const itemsSchema = z.array(
 
 const VISIBLE = 8; // sisanya diringkas "+N lainnya"
 
-type Item = { key: string; text: string; sub?: string; you: boolean };
+type Item = { key: string; text: string; sub?: string; you: boolean; step?: { index: number; total: number } };
 
 type Props = {
   queue: Json | null;
@@ -20,6 +20,7 @@ type Props = {
   waitPosition: number | null;
   waitTotal: number | null;
   slotLimit: number | null;
+  stages: string[];
   recentCompletions: string[] | null;
   today: string;
 };
@@ -41,18 +42,48 @@ function Column({ title, icon: Icon, items, empty }: { title: string; icon: type
           {[...shown, ...(youHidden ? [youHidden] : [])].map((i) => (
             <li
               key={i.key}
-              className={`flex items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-sm ${
+              className={`grid gap-1.5 rounded-md px-2.5 py-2 text-sm ${
                 i.you ? "bg-primary font-medium text-primary-foreground" : "bg-background"
               }`}
             >
-              <span>{i.you ? `${i.text} · Kamu` : i.text}</span>
-              {i.sub && <span className="text-xs text-muted-foreground">{i.sub}</span>}
+              <span className="flex items-center justify-between gap-2">
+                <span>{i.you ? `${i.text} · Kamu` : i.text}</span>
+                {i.sub && (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                    {i.sub}
+                  </span>
+                )}
+                {!i.sub && i.step && (
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    Tahap {i.step.index + 1} dari {i.step.total}
+                  </span>
+                )}
+              </span>
+              {i.step && <StepBar step={i.step} />}
             </li>
           ))}
           {rest > 0 && <li className="px-2.5 text-xs text-muted-foreground">+{rest} lainnya</li>}
         </ul>
       )}
     </section>
+  );
+}
+
+/** Progress tahap: segmen per tahap sesuai urutan di Pengaturan, terisi sampai tahap sekarang. */
+function StepBar({ step }: { step: { index: number; total: number } }) {
+  return (
+    <span
+      className="flex gap-1"
+      role="progressbar"
+      aria-valuemin={1}
+      aria-valuemax={step.total}
+      aria-valuenow={step.index + 1}
+      aria-label={`Tahap ${step.index + 1} dari ${step.total}`}
+    >
+      {Array.from({ length: step.total }, (_, n) => (
+        <span key={n} className={`h-1.5 flex-1 rounded-full ${n <= step.index ? "bg-primary" : "bg-muted"}`} />
+      ))}
+    </span>
   );
 }
 
@@ -83,19 +114,30 @@ function Estimate({ position, recent, today }: { position: number; recent: strin
  * - masih di waiting list → posisi, perkiraan, papan "Sedang dikerjakan" (commission lain) + "Waiting list";
  * - sudah dikerjakan → perkiraan + commission LAIN yang sedang dikerjakan (miliknya sudah di stepper).
  */
-export function QueueBoard({ queue, queuePosition, waitPosition, waitTotal, slotLimit, recentCompletions, today }: Props) {
+export function QueueBoard({ queue, queuePosition, waitPosition, waitTotal, slotLimit, stages, recentCompletions, today }: Props) {
   const parsed = itemsSchema.safeParse(queue);
   if (!parsed.success || queuePosition === null) return null;
 
   const recent = recentCompletions ?? [];
   const working = parsed.data.filter((i) => i.status !== "queue");
+  // Nama tahap unik per artist → posisi di urutan Pengaturan. Tahap nonaktif: tanpa bar.
+  const stepOf = (stage: string) => {
+    const index = stages.indexOf(stage);
+    return index < 0 ? undefined : { index, total: stages.length };
+  };
 
   if (waitPosition === null) {
     // Commission client sudah dikerjakan: stepper sudah menampilkan tahapnya, jadi daftar ini
     // hanya berisi commission LAIN yang sedang dikerjakan artist (tanpa nama).
     const others: Item[] = working
       .filter((i) => !i.you)
-      .map((i) => ({ key: `w${i.pos}`, text: i.stage, sub: i.status === "revision" ? "Revisi" : undefined, you: false }));
+      .map((i) => ({
+        key: `w${i.pos}`,
+        text: i.stage,
+        sub: i.status === "revision" ? "Revisi" : undefined,
+        you: false,
+        step: stepOf(i.stage),
+      }));
     return (
       <div className="grid gap-3 border-t pt-4">
         <Estimate position={queuePosition} recent={recent} today={today} />
@@ -111,6 +153,7 @@ export function QueueBoard({ queue, queuePosition, waitPosition, waitTotal, slot
     text: i.stage,
     sub: i.status === "revision" ? "Revisi" : undefined,
     you: false,
+    step: stepOf(i.stage),
   }));
   const waitingItems: Item[] = parsed.data
     .filter((i) => i.status === "queue")
