@@ -10,6 +10,7 @@ Next.js (App Router), TypeScript, Tailwind, shadcn/ui, TanStack Table, Recharts,
 - `npm run build` — build produksi
 - `npm run lint` — lint
 - `npm test` — unit test (fokus `lib/pricing.ts` dan `lib/billing.ts`)
+- Tipe DB: `types/database.ts` hasil generate, jangan diedit manual (lihat `database.md` → Tooling)
 
 ## Aturan Kode
 - Next.js 16 (banyak breaking change): baca `AGENTS.md` dan `node_modules/next/dist/docs/` sebelum menulis kode Next.

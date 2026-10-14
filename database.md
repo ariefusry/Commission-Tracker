@@ -81,7 +81,8 @@ create table commissions (
   payment_status payment_status not null default 'unpaid',
   dp_amount integer not null default 0,
   price_override integer,                       -- null = pakai harga otomatis
-  price_total integer not null default 0,       -- hasil hitung, disimpan agar mudah di-query
+  base_price integer not null default 0,        -- snapshot harga tipe saat dipesan
+  price_total integer not null default 0,       -- hasil hitung lib/pricing.ts, disimpan agar mudah di-query
 
   reference_links text[] default '{}',
   notes text,
@@ -278,3 +279,14 @@ select coalesce(t.name, c.type_custom, 'Custom') as type, count(*)
 from commissions c left join commission_types t on t.id = c.type_id
 group by 1;
 ```
+
+## Simpan Commission
+
+`save_commission(p_data jsonb, p_addons jsonb, p_id uuid default null)` menyimpan commission + add-on dalam satu transaksi (`p_id` null = buat baru). `security invoker`, jadi RLS tetap berlaku. Harga dihitung di aplikasi (`lib/pricing.ts`), fungsi hanya menulis.
+
+Snapshot harga: `commissions.base_price` dan `commission_addons.price` diambil dari price list saat dipesan. Edit commission memakai snapshot lama kecuali tipe/add-on diganti.
+
+## Tooling
+
+- Regenerate tipe setelah migration: `npx supabase@2.121.0 gen types typescript --db-url "$SUPABASE_DB_URL" --schema public > types/database.ts` (CLI lama butuh Docker).
+- Tes SQL di `supabase/tests/*.sql` berjalan dalam transaksi yang di-rollback; tidak meninggalkan data.

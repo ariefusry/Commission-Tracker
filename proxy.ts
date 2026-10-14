@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isActive } from "@/lib/subscription";
+import type { Database } from "@/types/database";
 
 // UX saja: gerbang sebenarnya ada di RLS (has_access()).
 const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password", "/auth", "/track"];
@@ -12,7 +13,7 @@ const matches = (path: string, list: string[]) =>
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
