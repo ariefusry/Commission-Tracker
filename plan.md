@@ -106,10 +106,10 @@ TrackerCommis/
 ### Milestone 1 — Database dan auth (1 hari)
 - [x] Jalankan migration dari `database.md`
 - [x] Trigger user baru: buat `subscriptions`, `settings`, tipe dan add-on default
-- [ ] Halaman daftar, login, logout, lupa password (Supabase Auth)
+- [x] Halaman daftar, login, logout, lupa password (Supabase Auth)
 - [x] Proxy (`proxy.ts`): belum login → `/login`; langganan tidak aktif → `/billing`
 - [x] Aktifkan RLS per user + `has_access()`; uji akses langsung lewat API dengan akun tanpa langganan (harus ditolak)
-- [ ] Halaman `/billing`: status langganan / sisa hari trial (tombol bayar menyusul di Milestone 7)
+- [x] Halaman `/billing`: status langganan / sisa hari trial (tombol bayar menyusul di Milestone 7)
 - [ ] Akun demo dengan langganan aktif dan beberapa commission contoh (data fiktif)
 
 ### Milestone 2 — CRUD commission (2 hari)
