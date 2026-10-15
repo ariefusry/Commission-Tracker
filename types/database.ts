@@ -87,14 +87,14 @@ isOneToOne: false
                   ]
                 },"settings": {
                   Row: {
-                    "count_cancelled_paid": boolean,"display_name": string | null,"is_open": boolean,"show_queue": boolean,"slot_limit": number,"user_id": string
+                    "count_cancelled_paid": boolean,"discord_webhook_url": string | null,"display_name": string | null,"is_open": boolean,"last_reminded_on": string | null,"reminder_channel": string,"reminder_days": number,"reminder_locale": string,"show_queue": boolean,"slot_limit": number,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "count_cancelled_paid"?: boolean,"display_name"?: string | null,"is_open"?: boolean,"show_queue"?: boolean,"slot_limit"?: number,"user_id"?: string
+                    "count_cancelled_paid"?: boolean,"discord_webhook_url"?: string | null,"display_name"?: string | null,"is_open"?: boolean,"last_reminded_on"?: string | null,"reminder_channel"?: string,"reminder_days"?: number,"reminder_locale"?: string,"show_queue"?: boolean,"slot_limit"?: number,"user_id"?: string
                   }
                   Update: {
-                    "count_cancelled_paid"?: boolean,"display_name"?: string | null,"is_open"?: boolean,"show_queue"?: boolean,"slot_limit"?: number,"user_id"?: string
+                    "count_cancelled_paid"?: boolean,"discord_webhook_url"?: string | null,"display_name"?: string | null,"is_open"?: boolean,"last_reminded_on"?: string | null,"reminder_channel"?: string,"reminder_days"?: number,"reminder_locale"?: string,"show_queue"?: boolean,"slot_limit"?: number,"user_id"?: string
                   }
                   Relationships: [
                     

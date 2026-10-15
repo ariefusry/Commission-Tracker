@@ -1,12 +1,16 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { actionDict } from "@/lib/i18n/action";
+import { todayWib } from "@/lib/date";
+import { actionDict, actionLocale } from "@/lib/i18n/action";
+import { emailAvailable, sendDiscord, sendEmail } from "@/lib/notify";
+import { reminderText } from "@/lib/reminders";
 import { WIP_BUCKET } from "@/lib/storage";
 import { createClient } from "@/lib/supabase/server";
-import { catalogItemSchema, type CatalogItemInput } from "@/lib/validators";
+import { catalogItemSchema, reminderSchema, type CatalogItemInput, type ReminderInput } from "@/lib/validators";
 
 /** type = tipe pesanan, addon = add-on, stage = tahap pengerjaan (tanpa harga). */
 export type CatalogKind = "type" | "addon" | "stage";
@@ -185,4 +189,66 @@ export async function deleteAccount(confirm: string): Promise<CatalogResult> {
   // User sudah tidak ada: cukup hapus cookie sesi di browser ini.
   await supabase.auth.signOut({ scope: "local" });
   redirect("/");
+}
+
+/** Simpan pengingat deadline. Bahasa pesan = bahasa UI saat menyimpan. */
+export async function saveReminders(input: ReminderInput): Promise<CatalogResult> {
+  const t = await actionDict();
+  const parsed = reminderSchema.safeParse(input);
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  const v = parsed.data;
+  if (v.reminder_channel === "email" && !emailAvailable()) return { error: t.actions.invalidData };
+
+  const supabase = await createClient();
+  const { data: claims } = await supabase.auth.getClaims();
+  const userId = claims?.claims.sub;
+  if (!userId) return { error: t.actions.sessionExpired };
+
+  const { data, error } = await supabase
+    .from("settings")
+    .update({
+      reminder_channel: v.reminder_channel,
+      discord_webhook_url: v.discord_webhook_url || null,
+      reminder_days: v.reminder_days,
+      reminder_locale: await actionLocale(),
+    })
+    .eq("user_id", userId)
+    .select("user_id");
+  if (error || !data?.length) {
+    if (error) console.error("saveReminders", error);
+    return { error: t.actions.saveFailed };
+  }
+  refresh();
+  return {};
+}
+
+/** Kirim pengingat hari ini (atau pesan tes jika belum ada yang jatuh tempo) ke saluran yang sedang diisi. */
+export async function sendTestReminder(input: ReminderInput): Promise<CatalogResult> {
+  const t = await actionDict();
+  const parsed = reminderSchema.safeParse(input);
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  const v = parsed.data;
+  if (v.reminder_channel === "off") return { error: t.actions.invalidData };
+
+  const supabase = await createClient();
+  const { data: claims } = await supabase.auth.getClaims();
+  if (!claims?.claims.sub) return { error: t.actions.sessionExpired };
+
+  // RLS: hanya commission milik user ini.
+  const { data: rows, error } = await supabase
+    .from("commissions")
+    .select("client_username, deadline, status, type_custom, commission_types(name)")
+    .not("status", "in", "(done,cancelled)")
+    .not("deadline", "is", null);
+  if (error) return { error: t.actions.reminderSendFailed };
+
+  const origin = (await headers()).get("origin") ?? "";
+  const list = rows.map((r) => ({ ...r, type_name: r.commission_types?.name ?? r.type_custom ?? "Custom" }));
+  const text = reminderText(list, todayWib(), v.reminder_days, t, origin) ?? `**${t.reminders.messageTitle}**\n${t.reminders.messageTestEmpty}`;
+
+  const ok =
+    v.reminder_channel === "discord"
+      ? await sendDiscord(v.discord_webhook_url, text)
+      : await sendEmail(claims.claims.email as string, t.reminders.messageTitle, text);
+  return ok ? {} : { error: t.actions.reminderSendFailed };
 }

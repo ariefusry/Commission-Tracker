@@ -95,3 +95,21 @@ export const catalogItemSchema = z.object({
   is_active: z.boolean(),
 });
 export type CatalogItemInput = z.input<typeof catalogItemSchema>;
+
+/** Sama dengan check constraint settings.discord_webhook_url: hanya webhook resmi Discord. */
+export const DISCORD_WEBHOOK_RE = /^https:\/\/(ptb\.|canary\.)?(discord|discordapp)\.com\/api\/webhooks\/[0-9]+\/[A-Za-z0-9_-]+$/;
+
+/** Pengingat deadline (Pengaturan → Umum). */
+export const reminderSchema = z
+  .object({
+    reminder_channel: z.enum(["off", "discord", "email"]),
+    discord_webhook_url: z.string().trim().max(300),
+    reminder_days: z.number().int().min(1).max(14),
+  })
+  .superRefine((v, ctx) => {
+    const url = v.discord_webhook_url;
+    if ((v.reminder_channel === "discord" || url) && !DISCORD_WEBHOOK_RE.test(url)) {
+      ctx.addIssue({ code: "custom", path: ["discord_webhook_url"], message: e("invalidWebhook") });
+    }
+  });
+export type ReminderInput = z.input<typeof reminderSchema>;

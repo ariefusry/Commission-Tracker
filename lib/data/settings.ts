@@ -1,5 +1,6 @@
 import "server-only";
 import type { CatalogItem } from "@/components/settings/catalog-editor";
+import { emailAvailable } from "@/lib/notify";
 import { createClient } from "@/lib/supabase/server";
 
 const countBy = (ids: (string | null)[]) => {
@@ -8,17 +9,40 @@ const countBy = (ids: (string | null)[]) => {
   return m;
 };
 
-export type Preferences = { display_name: string; count_cancelled_paid: boolean; show_queue: boolean; slot_limit: number };
+export type ReminderChannel = "off" | "discord" | "email";
+export type Preferences = {
+  display_name: string;
+  count_cancelled_paid: boolean;
+  show_queue: boolean;
+  slot_limit: number;
+  reminder_channel: ReminderChannel;
+  discord_webhook_url: string;
+  reminder_days: number;
+  /** Email pengingat bisa dipilih (layanan pengirim sudah dipasang) + alamat tujuan. */
+  email_available: boolean;
+  email: string;
+};
 
 export async function getPreferences(): Promise<Preferences> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("settings").select("display_name, count_cancelled_paid, show_queue, slot_limit").maybeSingle();
+  const [{ data, error }, { data: claims }] = await Promise.all([
+    supabase
+      .from("settings")
+      .select("display_name, count_cancelled_paid, show_queue, slot_limit, reminder_channel, discord_webhook_url, reminder_days")
+      .maybeSingle(),
+    supabase.auth.getClaims(),
+  ]);
   if (error) throw error;
   return {
     display_name: data?.display_name ?? "",
     count_cancelled_paid: data?.count_cancelled_paid ?? true,
     show_queue: data?.show_queue ?? true,
     slot_limit: data?.slot_limit ?? 5,
+    reminder_channel: (data?.reminder_channel as ReminderChannel | undefined) ?? "off",
+    discord_webhook_url: data?.discord_webhook_url ?? "",
+    reminder_days: data?.reminder_days ?? 3,
+    email_available: emailAvailable(),
+    email: (claims?.claims.email as string | undefined) ?? "",
   };
 }
 
