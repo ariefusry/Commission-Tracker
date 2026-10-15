@@ -140,15 +140,15 @@ TrackerCommis/
 - [ ] Tombol buka/tutup commission (`settings.is_open`), ditunda sampai form order publik (Fase 3)
 
 ### Milestone 6 — Portofolio (1 hari)
-- [ ] README: fitur, screenshot, cara menjalankan
-- [ ] Demo live dengan data dummy (jangan pakai data client asli)
-- [ ] Studi kasus singkat: masalah, keputusan teknis, hasil
+- [x] README: fitur, screenshot, cara menjalankan
+- [x] Demo live dengan data dummy (jangan pakai data client asli)
+- [x] Studi kasus singkat: masalah, keputusan teknis, hasil (`docs/case-study.md`)
 - [ ] Tambahkan ke ariefusry.me
 
 ### Milestone 7 — Donasi
 - [x] Hapus gerbang langganan/trial (aplikasi gratis)
 - [x] Halaman `/donasi` dengan QRIS
-- [ ] Pasang gambar QRIS di `public/qris.png`
+- [x] Pasang gambar QRIS di `public/qris.png`
 
 ### Milestone 8 — Tampilan & bahasa
 - [x] Dark mode (terang / gelap / ikuti sistem)
