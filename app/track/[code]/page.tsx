@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "@/components/logo";
 import { SkeletonBlock } from "@/components/skeleton-block";
 import { QueueBoard } from "@/components/tracking/queue-board";
@@ -133,7 +134,10 @@ async function Tracking({ params }: { params: PageProps<"/track/[code]">["params
 
 export default function TrackPage({ params }: PageProps<"/track/[code]">) {
   return (
-    <main className="flex flex-1 justify-center bg-muted/40 px-4 py-10">
+    <main className="relative flex flex-1 justify-center bg-muted/40 px-4 py-10">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
       <div className="grid w-full max-w-xl content-start gap-6">
         <div className="justify-self-center">
           <Logo href={null} />

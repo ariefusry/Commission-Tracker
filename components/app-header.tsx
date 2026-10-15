@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { logout } from "@/app/auth/actions";
 import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { NavLinks } from "@/components/nav-links";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
@@ -30,6 +31,7 @@ async function Account({ variant }: { variant: "sidebar" | "header" }) {
     return (
       <div className="flex items-center gap-2">
         <DonateLink compact />
+        <ThemeToggle />
         <form action={logout}>
           <Button type="submit" variant="ghost" size="icon-sm" aria-label="Keluar">
             <LogOut />
@@ -46,11 +48,14 @@ async function Account({ variant }: { variant: "sidebar" | "header" }) {
         <span className="truncate text-sm text-muted-foreground" title={email}>
           {email}
         </span>
-        <form action={logout}>
-          <Button type="submit" variant="ghost" size="icon-sm" aria-label="Keluar">
-            <LogOut />
-          </Button>
-        </form>
+        <div className="flex items-center">
+          <ThemeToggle />
+          <form action={logout}>
+            <Button type="submit" variant="ghost" size="icon-sm" aria-label="Keluar">
+              <LogOut />
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );

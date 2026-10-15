@@ -4,6 +4,7 @@ import { Heart } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "@/components/logo";
 
 export const metadata: Metadata = {
@@ -17,7 +18,10 @@ const hasQris = existsSync(path.join(process.cwd(), "public", QRIS_FILE));
 
 export default function DonasiPage() {
   return (
-    <main className="flex flex-1 justify-center bg-muted/40 px-4 py-10">
+    <main className="relative flex flex-1 justify-center bg-muted/40 px-4 py-10">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
       <div className="grid w-full max-w-sm content-start gap-6">
         <div className="justify-self-center">
           <Logo href={null} />
