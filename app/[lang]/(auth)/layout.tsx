@@ -14,9 +14,14 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
           <Logo />
         </div>
         {children}
-        <Link href="/donasi" className="justify-self-center text-xs text-muted-foreground hover:text-foreground">
-          {t.auth.footer}
-        </Link>
+        <div className="flex justify-center gap-3 text-xs text-muted-foreground">
+          <Link href="/donasi" className="hover:text-foreground">
+            {t.auth.footer}
+          </Link>
+          <Link href="/privacy" className="hover:text-foreground">
+            {t.nav.privacy}
+          </Link>
+        </div>
       </div>
     </main>
   );

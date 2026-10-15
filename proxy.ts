@@ -5,7 +5,7 @@ import type { Database } from "@/types/database";
 
 // UX saja: gerbang sebenarnya ada di RLS (user_id = auth.uid()).
 // /api/cron dilindungi CRON_SECRET di route-nya sendiri.
-const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password", "/auth", "/track", "/donasi", "/api/cron"];
+const PUBLIC_PATHS = ["/", "/login", "/signup", "/forgot-password", "/auth", "/track", "/donasi", "/privacy", "/api/cron"];
 // Route handler di luar app/[lang]: tidak di-rewrite.
 const NO_LOCALE_PATHS = ["/api", "/auth/confirm"];
 
@@ -52,7 +52,8 @@ export async function proxy(request: NextRequest) {
   };
 
   if (matches(path, PUBLIC_PATHS)) {
-    if (loggedIn && (path === "/login" || path === "/signup")) return redirect("/dashboard");
+    // Landing, login, dan daftar tidak berguna bagi yang sudah login.
+    if (loggedIn && (path === "/" || path === "/login" || path === "/signup")) return redirect("/dashboard");
     return response;
   }
 

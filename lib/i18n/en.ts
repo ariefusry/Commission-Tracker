@@ -49,6 +49,7 @@ const en: Dict = {
     donate: "Support this app",
     logout: "Log out",
     preferences: "Language & theme",
+    privacy: "Privacy",
   },
   theme: {
     system: "Theme: system",
@@ -107,6 +108,7 @@ const en: Dict = {
     imageSaveFailed: "Could not save the image.",
     imageNotFound: "Image not found.",
     imageDeleteFailed: "Could not delete the image.",
+    accountDeleteFailed: "Could not delete the account. Try again.",
   },
   states: {
     errorTitle: "Something went wrong",
@@ -367,6 +369,14 @@ const en: Dict = {
     countCancelled: "Count deposits from cancelled commissions as income",
     countCancelledHint:
       'Turn this on if you keep the deposit when a client cancels. The money goes to "Paid" on the dashboard, but not to order value. If you refund a deposit for a commission, set its payment status to "Unpaid".',
+    account: "Account",
+    deleteAccount: "Delete account",
+    deleteAccountHint: "Deletes your account, every commission, your settings, and your WIP images for good. Client tracking links stop working.",
+    deleteAccountTitle: "Delete this account?",
+    deleteAccountBody: "All your data will be deleted for good and cannot be restored.",
+    deleteAccountWord: "DELETE",
+    deleteAccountConfirm: (word) => `Type ${word} to confirm`,
+    deleteAccountButton: "Delete account for good",
   },
   tracking: {
     notFound: "Tracking code not found",
@@ -398,6 +408,78 @@ const en: Dict = {
     nth: (n) => `#${n}`,
     none: "None yet",
     empty: "Empty",
+  },
+  landing: {
+    title: "Track every commission in one place",
+    subtitle:
+      "Queue, deadlines, payments, and income in one dashboard. Clients follow their own progress through one link, so you stop answering \"how far along is it?\" one message at a time.",
+    signup: "Sign up free",
+    login: "Log in",
+    free: "Free for every artist. Supported by donations.",
+    featuresTitle: "Made for artists who open commissions",
+    features: [
+      { title: "Queue board", body: "Waiting list, in progress, and done. Drag cards to set priority, and cap how many slots you take." },
+      { title: "Prices & payments", body: "Price per type and add-ons, deposits, balances due. Old prices stay put when your price list changes." },
+      { title: "Tracking link for clients", body: "Clients see the stage, their place in the queue, and an estimated finish date. Prices and contacts stay hidden." },
+      { title: "Income dashboard", body: "Money in and unpaid per month, late commissions, and your best-selling types." },
+    ],
+    clientTitle: "Clients know their turn without asking",
+    clientBody:
+      "Send one link to your client. They see the current stage, their place in the waiting list, WIP images, and an estimated finish date based on your pace.",
+    extras: "Indonesian & English · Light & dark theme · Works on phones",
+    shotDashboard: "Commission Tracker dashboard",
+    shotTracking: "Client tracking page on a phone",
+  },
+  privacy: {
+    title: "Privacy policy",
+    updated: "Last updated 15 October 2026",
+    sections: [
+      {
+        title: "What we store",
+        items: [
+          "Your account email.",
+          "Your price list, add-ons, workflow stages, and settings.",
+          "The commissions you record: client username and contact, prices, payments, deadlines, reference links, and notes.",
+          "The WIP images you upload.",
+        ],
+      },
+      {
+        title: "Who can see it",
+        items: [
+          "Only you. Database rules limit every record to the account that owns it.",
+          "A client with a tracking link sees the progress of their own commission only: username, type, stage, deadline, queue position, and WIP images. Prices, contacts, and notes stay hidden.",
+        ],
+      },
+      {
+        title: "How long we keep it",
+        items: [
+          "Your data stays as long as your account exists.",
+          "WIP images are deleted 30 days after a commission is done, or when you delete the commission.",
+          "When you delete your account in Settings → General, all data and images are deleted right away.",
+        ],
+      },
+      {
+        title: "Cookies and browser storage",
+        items: [
+          "A login session cookie and a language cookie.",
+          "Your theme choice is saved in your browser.",
+          "No ads and no analytics trackers.",
+        ],
+      },
+      {
+        title: "Services we use",
+        items: [
+          "Supabase (database, login, and image storage; servers in Singapore).",
+          "Vercel (app hosting).",
+        ],
+      },
+      {
+        title: "Your clients' data",
+        items: [
+          "Record only what you need. If a client asks you to remove their data, delete that commission.",
+        ],
+      },
+    ],
   },
   donate: {
     title: "Support this app",

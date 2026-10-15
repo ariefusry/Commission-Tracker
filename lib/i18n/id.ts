@@ -46,6 +46,7 @@ const id = {
     donate: "Dukung aplikasi ini",
     logout: "Keluar",
     preferences: "Bahasa & tema",
+    privacy: "Privasi",
   },
   theme: {
     system: "Tema: ikuti sistem",
@@ -105,6 +106,7 @@ const id = {
     imageSaveFailed: "Gagal menyimpan gambar.",
     imageNotFound: "Gambar tidak ditemukan.",
     imageDeleteFailed: "Gagal menghapus gambar.",
+    accountDeleteFailed: "Gagal menghapus akun. Coba lagi.",
   },
   states: {
     errorTitle: "Terjadi kesalahan",
@@ -367,6 +369,14 @@ const id = {
     countCancelled: "Hitung DP dari commission yang dibatalkan sebagai uang masuk",
     countCancelledHint:
       'Aktifkan jika DP tidak dikembalikan saat client membatalkan. Uangnya masuk ke "Sudah dibayar" di dashboard, tapi tidak ke nilai order. Jika kamu mengembalikan DP untuk commission tertentu, ubah status bayarnya ke "Belum bayar".',
+    account: "Akun",
+    deleteAccount: "Hapus akun",
+    deleteAccountHint: "Menghapus akun, semua commission, pengaturan, dan gambar WIP secara permanen. Link tracking client ikut berhenti bekerja.",
+    deleteAccountTitle: "Hapus akun ini?",
+    deleteAccountBody: "Semua data kamu terhapus permanen dan tidak bisa dikembalikan.",
+    deleteAccountWord: "HAPUS",
+    deleteAccountConfirm: (word: string) => `Ketik ${word} untuk konfirmasi`,
+    deleteAccountButton: "Hapus akun permanen",
   },
   tracking: {
     notFound: "Kode tracking tidak ditemukan",
@@ -398,6 +408,78 @@ const id = {
     nth: (n: number) => `Urutan ${n}`,
     none: "Belum ada",
     empty: "Kosong",
+  },
+  landing: {
+    title: "Lacak semua commission kamu di satu tempat",
+    subtitle:
+      "Antrean, deadline, pembayaran, dan pendapatan dalam satu dashboard. Client memantau progresnya sendiri lewat satu link, jadi kamu tidak perlu menjawab \"sudah sampai mana?\" satu per satu.",
+    signup: "Daftar gratis",
+    login: "Masuk",
+    free: "Gratis untuk semua artist. Didukung donasi.",
+    featuresTitle: "Dibuat untuk artist yang membuka commission",
+    features: [
+      { title: "Board antrean", body: "Waiting list, sedang dikerjakan, dan selesai. Geser kartu untuk mengatur prioritas, dan batasi jumlah slot." },
+      { title: "Harga & pembayaran", body: "Harga per tipe dan add-on, DP, sisa tagihan. Harga lama tetap tersimpan walau price list berubah." },
+      { title: "Link tracking untuk client", body: "Client melihat tahap, giliran di antrean, dan perkiraan selesai. Harga dan kontak tidak ikut tampil." },
+      { title: "Dashboard pendapatan", body: "Uang masuk dan belum dibayar per bulan, commission yang terlambat, dan tipe yang paling laku." },
+    ],
+    clientTitle: "Client tahu gilirannya tanpa bertanya",
+    clientBody:
+      "Kirim satu link ke client. Mereka melihat tahap pengerjaan, posisi di waiting list, progress gambar WIP, dan perkiraan tanggal selesai dari kecepatan kerja kamu.",
+    extras: "Bahasa Indonesia & English · Tema terang & gelap · Nyaman di HP",
+    shotDashboard: "Dashboard Commission Tracker",
+    shotTracking: "Halaman tracking client di HP",
+  },
+  privacy: {
+    title: "Kebijakan privasi",
+    updated: "Terakhir diperbarui 15 Oktober 2026",
+    sections: [
+      {
+        title: "Data yang disimpan",
+        items: [
+          "Email akun kamu.",
+          "Price list, add-on, tahap pengerjaan, dan pengaturan kamu.",
+          "Commission yang kamu catat: username dan kontak client, harga, pembayaran, deadline, link referensi, dan catatan.",
+          "Gambar WIP yang kamu unggah.",
+        ],
+      },
+      {
+        title: "Siapa yang bisa melihat",
+        items: [
+          "Hanya kamu. Aturan di database membatasi setiap data ke pemilik akunnya.",
+          "Client yang memegang link tracking hanya melihat progress commission miliknya: username, tipe, tahap, deadline, posisi antrean, dan gambar WIP. Harga, kontak, dan catatan tidak tampil.",
+        ],
+      },
+      {
+        title: "Berapa lama disimpan",
+        items: [
+          "Data tersimpan selama akun kamu ada.",
+          "Gambar WIP terhapus otomatis 30 hari setelah commission selesai, atau saat commission dihapus.",
+          "Saat kamu menghapus akun di Pengaturan → Umum, semua data dan gambar terhapus saat itu juga.",
+        ],
+      },
+      {
+        title: "Cookie dan penyimpanan browser",
+        items: [
+          "Cookie sesi login dan cookie pilihan bahasa.",
+          "Pilihan tema tersimpan di browser kamu.",
+          "Tidak ada iklan dan tidak ada pelacak analitik.",
+        ],
+      },
+      {
+        title: "Layanan yang dipakai",
+        items: [
+          "Supabase (database, login, dan penyimpanan gambar; server di Singapura).",
+          "Vercel (hosting aplikasi).",
+        ],
+      },
+      {
+        title: "Data client kamu",
+        items: [
+          "Catat seperlunya. Jika client meminta datanya dihapus, hapus commission tersebut dari daftar.",
+        ],
+      },
+    ],
   },
   donate: {
     title: "Dukung aplikasi ini",
