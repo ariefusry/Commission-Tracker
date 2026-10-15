@@ -10,18 +10,6 @@ export const PAYMENT_STATUSES = Constants.public.Enums.payment_status;
 /** Tahap pengerjaan milik user (tabel `stages`). */
 export type StageOption = { id: string; name: string; is_active: boolean };
 
-export const STATUS_LABEL: Record<Status, string> = {
-  queue: "Waiting list",
-  in_progress: "Dikerjakan",
-  revision: "Revisi",
-  done: "Selesai",
-  cancelled: "Batal",
-};
-
-export const PAYMENT_LABEL: Record<PaymentStatus, string> = {
-  unpaid: "Belum bayar",
-  dp: "DP",
-  paid: "Lunas",
-};
+// Label status/bayar ada di kamus: t.status, t.payment (lib/i18n).
 
 export const CUSTOM_TYPE = "custom";

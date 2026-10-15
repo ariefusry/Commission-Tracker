@@ -1,30 +1,34 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updatePreferences } from "@/app/(admin)/settings/actions";
+import { updatePreferences } from "@/app/[lang]/(admin)/settings/actions";
+import { useDict } from "@/components/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Preferences } from "@/lib/data/settings";
+import { translateError } from "@/lib/i18n";
 
 type Status = { error?: string; saved?: boolean };
 
 function StatusText({ pending, status }: { pending: boolean; status: Status }) {
+  const { t } = useDict();
   return (
     <p className="min-h-5 text-sm" aria-live="polite">
       {pending ? (
-        <span className="text-muted-foreground">Menyimpan...</span>
+        <span className="text-muted-foreground">{t.common.saving}</span>
       ) : status.error ? (
-        <span className="text-destructive">{status.error}</span>
+        <span className="text-destructive">{translateError(t, status.error)}</span>
       ) : status.saved ? (
-        <span className="text-muted-foreground">Tersimpan.</span>
+        <span className="text-muted-foreground">{t.common.saved}</span>
       ) : null}
     </p>
   );
 }
 
 function DisplayName({ initial }: { initial: string }) {
+  const { t } = useDict();
   const [saved, setSaved] = useState(initial);
   const [value, setValue] = useState(initial);
   const [status, setStatus] = useState<Status>({});
@@ -46,21 +50,21 @@ function DisplayName({ initial }: { initial: string }) {
         save();
       }}
     >
-      <Label htmlFor="display_name">Nama artist</Label>
+      <Label htmlFor="display_name">{t.settings.artistName}</Label>
       <div className="flex gap-2">
         <Input
           id="display_name"
-          placeholder="Nama yang dilihat client"
+          placeholder={t.settings.artistNamePlaceholder}
           maxLength={60}
           value={value}
           onChange={(e) => setValue(e.target.value)}
         />
         <Button type="submit" disabled={pending || value.trim() === saved}>
-          Simpan
+          {t.common.save}
         </Button>
       </div>
       <p className="text-sm text-muted-foreground">
-        Tampil sebagai &quot;Commission oleh {value.trim() || "…"}&quot; di halaman tracking. Kosongkan untuk menyembunyikan.
+        {t.settings.artistNameHint(value.trim() || "…")}
       </p>
       <StatusText pending={pending} status={status} />
     </form>
@@ -68,6 +72,7 @@ function DisplayName({ initial }: { initial: string }) {
 }
 
 function SlotLimit({ initial }: { initial: number }) {
+  const { t } = useDict();
   const [saved, setSaved] = useState(String(initial));
   const [value, setValue] = useState(String(initial));
   const [status, setStatus] = useState<Status>({});
@@ -89,7 +94,7 @@ function SlotLimit({ initial }: { initial: number }) {
         save();
       }}
     >
-      <Label htmlFor="slot_limit">Jumlah slot</Label>
+      <Label htmlFor="slot_limit">{t.settings.slots}</Label>
       <div className="flex gap-2">
         <Input
           id="slot_limit"
@@ -102,11 +107,11 @@ function SlotLimit({ initial }: { initial: number }) {
           onChange={(e) => setValue(e.target.value)}
         />
         <Button type="submit" disabled={pending || value === saved}>
-          Simpan
+          {t.common.save}
         </Button>
       </div>
       <p className="text-sm text-muted-foreground">
-        Berapa commission yang kamu kerjakan bersamaan. Jika slot penuh, commission baru otomatis masuk waiting list.
+        {t.settings.slotsHint}
       </p>
       <StatusText pending={pending} status={status} />
     </form>
@@ -152,27 +157,25 @@ function PreferenceToggle({
 }
 
 export function GeneralSettings({ initial }: { initial: Preferences }) {
+  const { t } = useDict();
   return (
     <div className="grid gap-6">
       <DisplayName initial={initial.display_name} />
       <SlotLimit initial={initial.slot_limit} />
       <div className="grid gap-2">
-        <h3 className="text-sm font-semibold">Halaman tracking client</h3>
-        <PreferenceToggle field="show_queue" initial={initial.show_queue} title="Tampilkan antrean dan perkiraan selesai">
-          Client melihat posisinya di antrean, papan &quot;Sedang dikerjakan&quot; / &quot;Waiting list&quot; (tanpa nama client
-          lain), dan perkiraan tanggal selesai dari kecepatan kerja kamu.
+        <h3 className="text-sm font-semibold">{t.settings.trackingPage}</h3>
+        <PreferenceToggle field="show_queue" initial={initial.show_queue} title={t.settings.showQueue}>
+          {t.settings.showQueueHint}
         </PreferenceToggle>
       </div>
       <div className="grid gap-2">
-        <h3 className="text-sm font-semibold">Pembayaran</h3>
+        <h3 className="text-sm font-semibold">{t.settings.payments}</h3>
         <PreferenceToggle
           field="count_cancelled_paid"
           initial={initial.count_cancelled_paid}
-          title="Hitung DP dari commission yang dibatalkan sebagai uang masuk"
+          title={t.settings.countCancelled}
         >
-          Aktifkan jika DP tidak dikembalikan saat client membatalkan. Uangnya masuk ke &quot;Sudah dibayar&quot; di
-          dashboard, tapi tidak ke nilai order. Jika kamu mengembalikan DP untuk commission tertentu, ubah status bayarnya
-          ke &quot;Belum bayar&quot;.
+          {t.settings.countCancelledHint}
         </PreferenceToggle>
       </div>
     </div>

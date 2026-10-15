@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useDict } from "@/components/i18n-provider";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -27,6 +28,7 @@ export function ConfirmDeleteButton({ label, title, description, disabled, onCon
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const { t } = useDict();
 
   const confirm = () =>
     startTransition(async () => {
@@ -60,9 +62,9 @@ export function ConfirmDeleteButton({ label, title, description, disabled, onCon
           </p>
         )}
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending}>Batal</AlertDialogCancel>
+          <AlertDialogCancel disabled={pending}>{t.common.cancel}</AlertDialogCancel>
           <AlertDialogAction variant="destructive" disabled={pending} onClick={confirm}>
-            {pending ? "Menghapus..." : "Hapus"}
+            {pending ? t.common.deleting : t.common.delete}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

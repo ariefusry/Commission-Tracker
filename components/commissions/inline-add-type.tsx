@@ -3,10 +3,12 @@
 import { Plus } from "lucide-react";
 import { useState, useTransition } from "react";
 import { z } from "zod";
-import { saveCatalogItem } from "@/app/(admin)/settings/actions";
+import { saveCatalogItem } from "@/app/[lang]/(admin)/settings/actions";
+import { useDict } from "@/components/i18n-provider";
 import { PriceInput } from "@/components/price-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { translateError } from "@/lib/i18n";
 import { catalogItemSchema } from "@/lib/validators";
 
 type Created = { id: string; name: string; base_price: number };
@@ -21,11 +23,12 @@ export function InlineAddType({ onCreated }: { onCreated: (t: Created) => void }
   const [price, setPrice] = useState("");
   const [errors, setErrors] = useState<{ name?: string; price?: string; form?: string }>({});
   const [pending, startTransition] = useTransition();
+  const { t } = useDict();
 
   if (!open) {
     return (
       <Button type="button" variant="ghost" size="sm" className="w-fit" onClick={() => setOpen(true)}>
-        <Plus /> Tipe baru
+        <Plus /> {t.form.newType}
       </Button>
     );
   }
@@ -68,25 +71,25 @@ export function InlineAddType({ onCreated }: { onCreated: (t: Created) => void }
         <div className="grid gap-1">
           <Input
             autoFocus
-            aria-label="Nama tipe baru"
-            placeholder="Nama tipe baru"
+            aria-label={t.form.newTypeName}
+            placeholder={t.form.newTypeName}
             value={name}
             aria-invalid={Boolean(errors.name)}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={onEnter}
           />
-          {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+          {errors.name && <p className="text-sm text-destructive">{translateError(t, errors.name)}</p>}
         </div>
         <div className="grid gap-1">
           <PriceInput
-            aria-label="Harga tipe baru"
-            placeholder="Harga"
+            aria-label={t.form.newTypePrice}
+            placeholder={t.common.price}
             value={price}
             aria-invalid={Boolean(errors.price)}
             onChange={(e) => setPrice(e.target.value)}
             onKeyDown={onEnter}
           />
-          {errors.price && <p className="text-sm text-destructive">{errors.price}</p>}
+          {errors.price && <p className="text-sm text-destructive">{translateError(t, errors.price)}</p>}
         </div>
       </div>
       {errors.form && (
@@ -96,10 +99,10 @@ export function InlineAddType({ onCreated }: { onCreated: (t: Created) => void }
       )}
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)} disabled={pending}>
-          Batal
+          {t.common.cancel}
         </Button>
         <Button type="button" size="sm" onClick={add} disabled={pending}>
-          {pending ? "Menyimpan..." : "Tambah & pilih"}
+          {pending ? t.common.saving : t.form.addAndSelect}
         </Button>
       </div>
     </div>

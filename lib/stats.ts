@@ -1,5 +1,7 @@
-import type { PaymentStatus, Status } from "@/lib/commission";
-import { amountPaid } from "@/lib/pricing";
+import { STATUSES, type PaymentStatus, type Status } from "@/lib/commission";
+import { todayWib } from "@/lib/date";
+import { deadlineInfo } from "@/lib/deadline";
+import { amountDue, amountPaid } from "@/lib/pricing";
 
 // Statistik dashboard. Commission `cancelled` tidak dihitung ke nilai order / sisa tagihan.
 // Uang yang sudah diterima dari commission batal (DP yang tidak dikembalikan) ikut
@@ -17,20 +19,6 @@ export type StatRow = {
 
 export const PERIODS = ["week", "month", "3m", "all", "custom"] as const;
 export type Period = (typeof PERIODS)[number];
-export const PERIOD_LABEL: Record<Period, string> = {
-  week: "Minggu ini",
-  month: "Bulan ini",
-  "3m": "3 bulan",
-  all: "Semua",
-  custom: "Pilih tanggal",
-};
-export const PERIOD_SHORT: Record<Period, string> = {
-  week: "Minggu",
-  month: "Bulan",
-  "3m": "3 bln",
-  all: "Semua",
-  custom: "Tanggal",
-};
 
 export const parsePeriod = (v: unknown): Period => (PERIODS.includes(v as Period) ? (v as Period) : "3m");
 
@@ -38,7 +26,6 @@ export const parsePeriod = (v: unknown): Period => (PERIODS.includes(v as Period
 export type DateRange = { from: string | null; to: string | null };
 
 const DAY_MS = 86_400_000;
-const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
 
 export const isIsoDate = (v: unknown): v is string =>
   typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
@@ -106,7 +93,8 @@ export function summarize(rows: StatRow[], options: StatOptions = DEFAULT_OPTION
   };
 }
 
-export type SeriesPoint = { key: string; label: string; paid: number; due: number };
+/** key = `YYYY-MM-DD` (harian) atau `YYYY-MM` (bulanan); label sumbu lewat formatPeriodKey. */
+export type SeriesPoint = { key: string; paid: number; due: number; count: number };
 const MAX_DAILY_POINTS = 31;
 
 /**
@@ -121,11 +109,11 @@ export function revenueSeries(rows: StatRow[], range: DateRange, today: string, 
   const points: SeriesPoint[] = [];
   if (daily) {
     for (let d = start; d <= end; d = addDays(d, 1)) {
-      points.push({ key: d, label: `${Number(d.slice(8))} ${MONTH_SHORT[Number(d.slice(5, 7)) - 1]}`, paid: 0, due: 0 });
+      points.push({ key: d, paid: 0, due: 0, count: 0 });
     }
   } else {
     for (let k = monthKey(start); k <= monthKey(end); k = addMonths(k, 1)) {
-      points.push({ key: k, label: `${MONTH_SHORT[Number(k.slice(5)) - 1]} ${k.slice(2, 4)}`, paid: 0, due: 0 });
+      points.push({ key: k, paid: 0, due: 0, count: 0 });
     }
   }
 
@@ -138,16 +126,76 @@ export function revenueSeries(rows: StatRow[], range: DateRange, today: string, 
       continue;
     }
     const paid = paidOf(r);
+    p.count += 1;
     p.paid += paid;
     p.due += r.price_total - paid;
   }
   return { granularity: daily ? ("day" as const) : ("month" as const), points };
 }
 
+/** Jumlah dan nilai order per tipe (tanpa cancelled), urut terbanyak. */
 export function typeDistribution(rows: StatRow[]) {
-  const counts = new Map<string, number>();
-  for (const r of counted(rows)) counts.set(r.type_name, (counts.get(r.type_name) ?? 0) + 1);
-  return [...counts]
-    .map(([type, count]) => ({ type, count }))
+  const totals = new Map<string, { count: number; revenue: number }>();
+  for (const r of counted(rows)) {
+    const t = totals.get(r.type_name) ?? { count: 0, revenue: 0 };
+    totals.set(r.type_name, { count: t.count + 1, revenue: t.revenue + r.price_total });
+  }
+  return [...totals]
+    .map(([type, t]) => ({ type, ...t }))
     .sort((a, b) => b.count - a.count || a.type.localeCompare(b.type));
+}
+
+/**
+ * Periode pembanding: panjang sama, tepat sebelum `range`. null untuk "semua".
+ * Rentang terbuka (to = null) dihitung sampai hari ini.
+ */
+export function previousRange(range: DateRange, today: string): DateRange | null {
+  if (!range.from) return null;
+  const days = (Date.parse(range.to ?? today) - Date.parse(range.from)) / DAY_MS + 1;
+  return { from: addDays(range.from, -days), to: addDays(range.from, -1) };
+}
+
+/** Perubahan dalam persen (dibulatkan); null jika pembanding 0 (tidak bermakna). */
+export function percentChange(current: number, previous: number): number | null {
+  return previous === 0 ? null : Math.round(((current - previous) / previous) * 100);
+}
+
+export function statusCounts(rows: { status: Status }[]): Record<Status, number> {
+  const counts = Object.fromEntries(STATUSES.map((s) => [s, 0])) as Record<Status, number>;
+  for (const r of rows) counts[r.status]++;
+  return counts;
+}
+
+type WorkRow = { start_date: string; deadline: string | null; status: Status; completed_at: string | null };
+
+/** Commission selesai: rata-rata hari kerja (mulai → selesai, WIB) dan % selesai ≤ deadline. */
+export function workPace(rows: WorkRow[]) {
+  const finished = rows
+    .filter((r) => r.status === "done" && r.completed_at)
+    .map((r) => ({ ...r, finished: todayWib(new Date(r.completed_at!)) }));
+  const withDeadline = finished.filter((r) => r.deadline);
+  const days = finished.map((r) => Math.max(0, (Date.parse(r.finished) - Date.parse(r.start_date)) / DAY_MS));
+  return {
+    done: finished.length,
+    avgDays: days.length ? Math.round(days.reduce((a, b) => a + b, 0) / days.length) : null,
+    onTimePct: withDeadline.length
+      ? Math.round((withDeadline.filter((r) => r.finished <= r.deadline!).length / withDeadline.length) * 100)
+      : null,
+  };
+}
+
+/**
+ * Yang perlu ditindaklanjuti sekarang (semua periode): terlambat, deadline ≤ 3 hari,
+ * dan sudah selesai tapi belum lunas. Urut deadline / tanggal terdekat.
+ */
+export function needsAttention<T extends StatRow & { deadline: string | null }>(rows: T[], today: string) {
+  const tone = (r: T) => deadlineInfo(r.deadline, r.status, today).tone;
+  const byDeadline = (a: T, b: T) => (a.deadline ?? "").localeCompare(b.deadline ?? "");
+  return {
+    late: rows.filter((r) => tone(r) === "late").sort(byDeadline),
+    soon: rows.filter((r) => tone(r) === "soon").sort(byDeadline),
+    unpaid: rows
+      .filter((r) => r.status === "done" && amountDue(r.price_total, r.payment_status, r.dp_amount) > 0)
+      .sort((a, b) => a.start_date.localeCompare(b.start_date)),
+  };
 }

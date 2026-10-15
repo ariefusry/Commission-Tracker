@@ -4,27 +4,27 @@ import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-tab
 import { Pencil, SearchX } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useMemo, useState, useTransition } from "react";
-import { deleteCommission, quickUpdate } from "@/app/(admin)/commissions/actions";
+import { deleteCommission, quickUpdate } from "@/app/[lang]/(admin)/commissions/actions";
 import { AppSelect } from "@/components/app-select";
 import { CommissionToolbar } from "@/components/commissions/commission-toolbar";
 import { CopyTrackingLink } from "@/components/commissions/copy-tracking-link";
+import { useDict } from "@/components/i18n-provider";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { StateMessage } from "@/components/state-message";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
-  PAYMENT_LABEL,
   PAYMENT_STATUSES,
-  STATUS_LABEL,
   STATUSES,
   type PaymentStatus,
   type StageOption,
   type Status,
 } from "@/lib/commission";
 import { applyFilter, EMPTY_FILTER, type CommissionFilter, type SortKey } from "@/lib/commission-filter";
-import { deadlineInfo, type DeadlineTone } from "@/lib/deadline";
+import { deadlineInfo, deadlineLabel, type DeadlineTone } from "@/lib/deadline";
 import { formatDate, formatRupiah } from "@/lib/format";
 import { amountDue } from "@/lib/pricing";
+import type { Dict } from "@/lib/i18n";
 import type { QuickUpdate } from "@/lib/validators";
 
 export type CommissionRow = {
@@ -53,32 +53,36 @@ const TONE_CLASS: Record<DeadlineTone, string> = {
 };
 
 export function Deadline({ row, today }: { row: CommissionRow; today: string }) {
+  const { t } = useDict();
   const info = deadlineInfo(row.deadline, row.status, today);
+  const label = deadlineLabel(info, t);
   return (
     <div className="grid">
-      <span>{formatDate(row.deadline)}</span>
-      {info.label && <span className={`text-xs ${TONE_CLASS[info.tone]}`}>{info.label}</span>}
+      <span>{formatDate(row.deadline, t.intl)}</span>
+      {label && <span className={`text-xs ${TONE_CLASS[info.tone]}`}>{label}</span>}
     </div>
   );
 }
 
 export function Total({ row }: { row: CommissionRow }) {
+  const { t } = useDict();
   const due = row.status === "cancelled" ? 0 : amountDue(row.price_total, row.payment_status, row.dp_amount);
   return (
     <div className="grid justify-items-end tabular-nums">
       <span className={row.status === "cancelled" ? "text-muted-foreground line-through" : "font-medium"}>
         {formatRupiah(row.price_total)}
       </span>
-      {due > 0 && <span className="text-xs text-muted-foreground">Sisa {formatRupiah(due)}</span>}
+      {due > 0 && <span className="text-xs text-muted-foreground">{t.commissions.due(formatRupiah(due))}</span>}
     </div>
   );
 }
 
 function QuickSelects({ row, stages, onUpdate, pending, labelled }: { row: CommissionRow; stages: StageOption[]; onUpdate: OnUpdate; pending: boolean; labelled?: boolean }) {
+  const { t } = useDict();
   const selects = [
     {
       key: "stage_id" as const,
-      label: "Tahap",
+      label: t.commissions.stage,
       value: row.stage_id,
       // Tahap nonaktif tetap tampil untuk commission yang sedang memakainya.
       options: stages.filter((st) => st.is_active || st.id === row.stage_id).map((st) => st.id),
@@ -87,19 +91,19 @@ function QuickSelects({ row, stages, onUpdate, pending, labelled }: { row: Commi
     },
     {
       key: "status" as const,
-      label: "Status",
+      label: t.commissions.status,
       value: row.status,
       options: STATUSES,
-      labels: STATUS_LABEL as Record<string, string>,
+      labels: t.status as Record<string, string>,
       custom: null,
     },
     {
       key: "payment_status" as const,
-      label: "Bayar",
+      label: t.commissions.payment,
       value: row.payment_status,
       options: PAYMENT_STATUSES,
-      labels: PAYMENT_LABEL as Record<string, string>,
-      custom: row.payment_status === "dp" ? `DP ${formatRupiah(row.dp_amount)}` : null,
+      labels: t.payment as Record<string, string>,
+      custom: row.payment_status === "dp" ? `${t.payment.dp} ${formatRupiah(row.dp_amount)}` : null,
     },
   ];
 
@@ -119,22 +123,23 @@ function QuickSelects({ row, stages, onUpdate, pending, labelled }: { row: Commi
 }
 
 export function Actions({ row }: { row: CommissionRow }) {
+  const { t } = useDict();
   return (
     <div className="flex justify-end">
       <CopyTrackingLink code={row.tracking_code} name={row.client_username} />
       <Button
         variant="ghost"
         size="icon-sm"
-        aria-label={`Edit ${row.client_username}`}
+        aria-label={t.common.edit(row.client_username)}
         nativeButton={false}
         render={<Link href={`/commissions/${row.id}`} />}
       >
         <Pencil />
       </Button>
       <ConfirmDeleteButton
-        label={`Hapus ${row.client_username}`}
-        title={`Hapus commission ${row.client_username}?`}
-        description="Data commission dan add-on-nya akan dihapus permanen. Tindakan ini tidak bisa dibatalkan."
+        label={t.common.deleteNamed(row.client_username)}
+        title={t.commissions.deleteTitle(row.client_username)}
+        description={t.commissions.deleteBody}
         onConfirm={() => deleteCommission(row.id)}
       />
     </div>
@@ -144,10 +149,10 @@ export function Actions({ row }: { row: CommissionRow }) {
 const features = tableFeatures({});
 const helper = createColumnHelper<typeof features, CommissionRow>();
 
-function buildColumns(onUpdate: OnUpdate, pending: boolean, today: string, stages: StageOption[]) {
+function buildColumns(onUpdate: OnUpdate, pending: boolean, today: string, stages: StageOption[], t: Dict) {
   return helper.columns([
     helper.accessor("client_username", {
-      header: "Client",
+      header: t.commissions.client,
       cell: ({ row }) => (
         <div className="grid">
           <Link href={`/commissions/${row.original.id}`} className="font-medium underline-offset-4 hover:underline">
@@ -157,14 +162,14 @@ function buildColumns(onUpdate: OnUpdate, pending: boolean, today: string, stage
         </div>
       ),
     }),
-    helper.accessor("deadline", { header: "Deadline", cell: ({ row }) => <Deadline row={row.original} today={today} /> }),
+    helper.accessor("deadline", { header: t.commissions.deadline, cell: ({ row }) => <Deadline row={row.original} today={today} /> }),
     helper.display({
       id: "progress",
       header: () => (
         <div className="grid grid-cols-3 gap-2">
-          <span>Tahap</span>
-          <span>Status</span>
-          <span>Bayar</span>
+          <span>{t.commissions.stage}</span>
+          <span>{t.commissions.status}</span>
+          <span>{t.commissions.payment}</span>
         </div>
       ),
       cell: ({ row }) => (
@@ -174,12 +179,12 @@ function buildColumns(onUpdate: OnUpdate, pending: boolean, today: string, stage
       ),
     }),
     helper.accessor("price_total", {
-      header: () => <div className="text-right">Total</div>,
+      header: () => <div className="text-right">{t.common.total}</div>,
       cell: ({ row }) => <Total row={row.original} />,
     }),
     helper.display({
       id: "actions",
-      header: () => <span className="sr-only">Aksi</span>,
+      header: () => <span className="sr-only">{t.commissions.actions}</span>,
       cell: ({ row }) => <Actions row={row.original} />,
     }),
   ]);
@@ -188,6 +193,7 @@ function buildColumns(onUpdate: OnUpdate, pending: boolean, today: string, stage
 export function CommissionList({ data, today, stages }: { data: CommissionRow[]; today: string; stages: StageOption[] }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const { t } = useDict();
 
   const onUpdate = useCallback<OnUpdate>(
     (id, update) =>
@@ -202,7 +208,7 @@ export function CommissionList({ data, today, stages }: { data: CommissionRow[];
   const visible = useMemo(() => applyFilter(data, filter, sort), [data, filter, sort]);
   const types = useMemo(() => [...new Set(data.map((r) => r.type_name))].sort(), [data]);
 
-  const columns = useMemo(() => buildColumns(onUpdate, pending, today, stages), [onUpdate, pending, today, stages]);
+  const columns = useMemo(() => buildColumns(onUpdate, pending, today, stages, t), [onUpdate, pending, today, stages, t]);
   const table = useTable({ features, columns, data: visible });
 
   return (
@@ -210,13 +216,13 @@ export function CommissionList({ data, today, stages }: { data: CommissionRow[];
       <CommissionToolbar filter={filter} onFilter={setFilter} sort={sort} onSort={setSort} types={types} today={today} />
       {visible.length !== data.length && (
         <p className="text-sm text-muted-foreground" aria-live="polite">
-          Menampilkan {visible.length} dari {data.length}
+          {t.commissions.showing(visible.length, data.length)}
         </p>
       )}
       {visible.length === 0 && (
-        <StateMessage icon={SearchX} title="Tidak ada commission yang cocok" description="Ubah kata kunci atau filter.">
+        <StateMessage icon={SearchX} title={t.commissions.noMatch} description={t.commissions.noMatchBody}>
           <Button variant="outline" size="sm" onClick={() => setFilter(EMPTY_FILTER)}>
-            Reset filter
+            {t.commissions.resetFilter}
           </Button>
         </StateMessage>
       )}

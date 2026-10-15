@@ -2,18 +2,19 @@ import Image from "next/image";
 import { z } from "zod";
 import { todayWib } from "@/lib/date";
 import { formatDate } from "@/lib/format";
+import type { Dict } from "@/lib/i18n";
 import { wipUrl } from "@/lib/storage";
 import type { Json } from "@/types/database";
 
 const wipSchema = z.array(z.object({ path: z.string(), stage: z.string().nullable(), created_at: z.string() }));
 
 /** Galeri WIP di halaman tracking client, terbaru dulu. */
-export function WipGallery({ wip }: { wip: Json | null }) {
+export function WipGallery({ wip, t }: { wip: Json | null; t: Dict }) {
   const parsed = wipSchema.safeParse(wip);
   if (!parsed.success || parsed.data.length === 0) return null;
   return (
-    <section className="grid gap-3 border-t pt-4" aria-label="Gambar WIP">
-      <h2 className="text-sm font-medium">Progress gambar ({parsed.data.length})</h2>
+    <section className="grid gap-3 border-t pt-4" aria-label={t.tracking.galleryLabel}>
+      <h2 className="text-sm font-medium">{t.tracking.gallery(parsed.data.length)}</h2>
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {parsed.data.map((w) => (
           <li key={w.path} className="grid gap-1">
@@ -33,7 +34,7 @@ export function WipGallery({ wip }: { wip: Json | null }) {
               />
             </a>
             <span className="text-xs text-muted-foreground">
-              {w.stage ?? "WIP"} · {formatDate(todayWib(new Date(w.created_at)))}
+              {w.stage ?? "WIP"} · {formatDate(todayWib(new Date(w.created_at)), t.intl)}
             </span>
           </li>
         ))}

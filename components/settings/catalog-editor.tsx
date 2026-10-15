@@ -3,12 +3,14 @@
 import { ArrowDown, ArrowUp, Plus } from "lucide-react";
 import { useState, useTransition } from "react";
 import { z } from "zod";
-import { deleteCatalogItem, moveItem, saveCatalogItem, type CatalogKind } from "@/app/(admin)/settings/actions";
+import { deleteCatalogItem, moveItem, saveCatalogItem, type CatalogKind } from "@/app/[lang]/(admin)/settings/actions";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
+import { useDict } from "@/components/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PriceInput } from "@/components/price-input";
 import { Input } from "@/components/ui/input";
+import { translateError } from "@/lib/i18n";
 import { catalogItemSchema } from "@/lib/validators";
 
 export type CatalogItem = { id: string; name: string; price: number; is_active: boolean; used: number };
@@ -45,6 +47,7 @@ function useItemForm(initial: { name: string; price: string; is_active: boolean 
 function Row({ kind, item, first, last }: { kind: CatalogKind; item: CatalogItem; first: boolean; last: boolean }) {
   const initial = { name: item.name, price: String(item.price), is_active: item.is_active };
   const f = useItemForm(initial);
+  const { t } = useDict();
   const dirty =
     f.values.name !== item.name || f.values.price !== String(item.price) || f.values.is_active !== item.is_active;
 
@@ -65,23 +68,23 @@ function Row({ kind, item, first, last }: { kind: CatalogKind; item: CatalogItem
       >
         <div className="col-span-2 grid gap-1 sm:col-span-1">
           <Input
-            aria-label="Nama"
+            aria-label={t.common.name}
             value={f.values.name}
             aria-invalid={Boolean(f.errors.name)}
             onChange={(e) => f.setValues({ ...f.values, name: e.target.value })}
           />
-          {f.errors.name && <p className="text-sm text-destructive">{f.errors.name}</p>}
-          {item.used > 0 && <p className="text-xs text-muted-foreground">Dipakai {item.used} commission</p>}
+          {f.errors.name && <p className="text-sm text-destructive">{translateError(t, f.errors.name)}</p>}
+          {item.used > 0 && <p className="text-xs text-muted-foreground">{t.settings.usedBy(item.used)}</p>}
         </div>
         {hasPrice(kind) && (
           <div className="grid gap-1">
             <PriceInput
-              aria-label="Harga"
+              aria-label={t.common.price}
               value={f.values.price}
               aria-invalid={Boolean(f.errors.price)}
               onChange={(e) => f.setValues({ ...f.values, price: e.target.value })}
             />
-            {f.errors.price && <p className="text-sm text-destructive">{f.errors.price}</p>}
+            {f.errors.price && <p className="text-sm text-destructive">{translateError(t, f.errors.price)}</p>}
           </div>
         )}
         <label className="flex h-8 items-center gap-2 text-sm">
@@ -89,32 +92,28 @@ function Row({ kind, item, first, last }: { kind: CatalogKind; item: CatalogItem
             checked={f.values.is_active}
             onCheckedChange={(checked) => f.setValues({ ...f.values, is_active: checked })}
           />
-          Aktif
+          {t.common.active}
         </label>
         <div className={`flex items-center justify-end gap-1 sm:col-span-1 ${hasPrice(kind) ? "col-span-2" : ""}`}>
           {sortable(kind) && (
             <>
-              <Button type="button" variant="ghost" size="icon-sm" aria-label={`Naikkan ${item.name}`} disabled={first || f.pending} onClick={() => run(() => moveItem(kind, item.id, "up"))}>
+              <Button type="button" variant="ghost" size="icon-sm" aria-label={t.settings.moveUp(item.name)} disabled={first || f.pending} onClick={() => run(() => moveItem(kind, item.id, "up"))}>
                 <ArrowUp />
               </Button>
-              <Button type="button" variant="ghost" size="icon-sm" aria-label={`Turunkan ${item.name}`} disabled={last || f.pending} onClick={() => run(() => moveItem(kind, item.id, "down"))}>
+              <Button type="button" variant="ghost" size="icon-sm" aria-label={t.settings.moveDown(item.name)} disabled={last || f.pending} onClick={() => run(() => moveItem(kind, item.id, "down"))}>
                 <ArrowDown />
               </Button>
             </>
           )}
           <ConfirmDeleteButton
-            label={`Hapus ${item.name}`}
-            title={`Hapus "${item.name}"?`}
-            description={
-              item.used > 0
-                ? `Dipakai ${item.used} commission, jadi tidak bisa dihapus. Hilangkan centang Aktif agar tidak muncul di form baru.`
-                : "Item ini akan dihapus permanen."
-            }
+            label={t.common.deleteNamed(item.name)}
+            title={t.settings.deleteTitle(item.name)}
+            description={item.used > 0 ? t.settings.deleteInUse(item.used) : t.settings.deleteBody}
             disabled={f.pending}
             onConfirm={() => deleteCatalogItem(kind, item.id)}
           />
           <Button type="submit" size="sm" disabled={!dirty || f.pending}>
-            {f.pending ? "..." : "Simpan"}
+            {f.pending ? "..." : t.common.save}
           </Button>
         </div>
       </form>
@@ -130,6 +129,7 @@ function Row({ kind, item, first, last }: { kind: CatalogKind; item: CatalogItem
 function AddRow({ kind, label }: { kind: CatalogKind; label: string }) {
   const empty = { name: "", price: hasPrice(kind) ? "" : "0", is_active: true };
   const f = useItemForm(empty);
+  const { t } = useDict();
 
   return (
     <form
@@ -141,28 +141,28 @@ function AddRow({ kind, label }: { kind: CatalogKind; label: string }) {
     >
       <div className={`grid gap-1 ${hasPrice(kind) ? "col-span-2 sm:col-span-1" : ""}`}>
         <Input
-          aria-label={`Nama ${label} baru`}
-          placeholder={`Nama ${label} baru`}
+          aria-label={t.settings.newName(label)}
+          placeholder={t.settings.newName(label)}
           value={f.values.name}
           aria-invalid={Boolean(f.errors.name)}
           onChange={(e) => f.setValues({ ...f.values, name: e.target.value })}
         />
-        {f.errors.name && <p className="text-sm text-destructive">{f.errors.name}</p>}
+        {f.errors.name && <p className="text-sm text-destructive">{translateError(t, f.errors.name)}</p>}
       </div>
       {hasPrice(kind) && (
         <div className="grid gap-1">
           <PriceInput
-            aria-label="Harga"
-            placeholder="Harga"
+            aria-label={t.common.price}
+            placeholder={t.common.price}
             value={f.values.price}
             aria-invalid={Boolean(f.errors.price)}
             onChange={(e) => f.setValues({ ...f.values, price: e.target.value })}
           />
-          {f.errors.price && <p className="text-sm text-destructive">{f.errors.price}</p>}
+          {f.errors.price && <p className="text-sm text-destructive">{translateError(t, f.errors.price)}</p>}
         </div>
       )}
       <Button type="submit" disabled={f.pending}>
-        <Plus /> Tambah
+        <Plus /> {t.common.add}
       </Button>
       {f.errors.form && (
         <p className="col-span-full text-sm text-destructive" role="alert">
@@ -174,6 +174,7 @@ function AddRow({ kind, label }: { kind: CatalogKind; label: string }) {
 }
 
 export function CatalogEditor({ kind, label, items }: { kind: CatalogKind; label: string; items: CatalogItem[] }) {
+  const { t } = useDict();
   return (
     <div className="grid gap-3">
       {items.length > 0 ? (
@@ -184,7 +185,7 @@ export function CatalogEditor({ kind, label, items }: { kind: CatalogKind; label
           ))}
         </ul>
       ) : (
-        <p className="py-3 text-sm text-muted-foreground">Belum ada {label}.</p>
+        <p className="py-3 text-sm text-muted-foreground">{t.settings.empty(label)}</p>
       )}
       <AddRow kind={kind} label={label} />
     </div>

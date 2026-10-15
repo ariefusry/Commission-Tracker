@@ -1,9 +1,11 @@
 import type { Status } from "@/lib/commission";
+import type { Dict } from "@/lib/i18n";
 
 const DAY_MS = 86_400_000;
 
 export type DeadlineTone = "late" | "soon" | "normal" | "none";
-export type DeadlineInfo = { tone: DeadlineTone; label: string | null };
+/** days = sisa hari (negatif = terlambat); null jika tidak relevan. */
+export type DeadlineInfo = { tone: DeadlineTone; days: number | null };
 
 /** Tanggal lokal perangkat `YYYY-MM-DD`. */
 export function localToday(now = new Date()): string {
@@ -16,10 +18,12 @@ export function localToday(now = new Date()): string {
  * "soon" = jatuh tempo dalam 3 hari.
  */
 export function deadlineInfo(deadline: string | null, status: Status, today: string): DeadlineInfo {
-  if (!deadline || status === "done" || status === "cancelled") return { tone: "none", label: null };
+  if (!deadline || status === "done" || status === "cancelled") return { tone: "none", days: null };
   const days = Math.round((Date.parse(deadline) - Date.parse(today)) / DAY_MS);
-  if (days < 0) return { tone: "late", label: `Terlambat ${-days} hari` };
-  if (days === 0) return { tone: "soon", label: "Hari ini" };
-  if (days <= 3) return { tone: "soon", label: `${days} hari lagi` };
-  return { tone: "normal", label: `${days} hari lagi` };
+  return { tone: days < 0 ? "late" : days <= 3 ? "soon" : "normal", days };
+}
+
+export function deadlineLabel({ days }: DeadlineInfo, t: Dict): string | null {
+  if (days === null) return null;
+  return days < 0 ? t.deadline.late(-days) : days === 0 ? t.deadline.today : t.deadline.left(days);
 }

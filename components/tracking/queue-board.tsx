@@ -2,6 +2,7 @@ import { CalendarClock, Hourglass, Paintbrush } from "lucide-react";
 import { z } from "zod";
 import { STATUSES } from "@/lib/commission";
 import { formatDate } from "@/lib/format";
+import type { Dict } from "@/lib/i18n";
 import { estimateFinish } from "@/lib/queue";
 import type { Json } from "@/types/database";
 
@@ -23,9 +24,10 @@ type Props = {
   stages: string[];
   recentCompletions: string[] | null;
   today: string;
+  t: Dict;
 };
 
-function Column({ title, icon: Icon, items, empty }: { title: string; icon: typeof Paintbrush; items: Item[]; empty: string }) {
+function Column({ title, icon: Icon, items, empty, t }: { title: string; icon: typeof Paintbrush; items: Item[]; empty: string; t: Dict }) {
   const shown = items.slice(0, VISIBLE);
   const youHidden = items.slice(VISIBLE).find((i) => i.you);
   const rest = items.length - shown.length - (youHidden ? 1 : 0);
@@ -47,7 +49,7 @@ function Column({ title, icon: Icon, items, empty }: { title: string; icon: type
               }`}
             >
               <span className="flex items-center justify-between gap-2">
-                <span>{i.you ? `${i.text} · Kamu` : i.text}</span>
+                <span>{i.you ? `${i.text} · ${t.tracking.you}` : i.text}</span>
                 {i.sub && (
                   <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-300">
                     {i.sub}
@@ -55,14 +57,14 @@ function Column({ title, icon: Icon, items, empty }: { title: string; icon: type
                 )}
                 {!i.sub && i.step && (
                   <span className="text-xs text-muted-foreground tabular-nums">
-                    Tahap {i.step.index + 1} dari {i.step.total}
+                    {t.tracking.stepOf(i.step.index + 1, i.step.total)}
                   </span>
                 )}
               </span>
-              {i.step && <StepBar step={i.step} />}
+              {i.step && <StepBar step={i.step} label={t.tracking.stepOf(i.step.index + 1, i.step.total)} />}
             </li>
           ))}
-          {rest > 0 && <li className="px-2.5 text-xs text-muted-foreground">+{rest} lainnya</li>}
+          {rest > 0 && <li className="px-2.5 text-xs text-muted-foreground">{t.tracking.more(rest)}</li>}
         </ul>
       )}
     </section>
@@ -70,7 +72,7 @@ function Column({ title, icon: Icon, items, empty }: { title: string; icon: type
 }
 
 /** Progress tahap: segmen per tahap sesuai urutan di Pengaturan, terisi sampai tahap sekarang. */
-function StepBar({ step }: { step: { index: number; total: number } }) {
+function StepBar({ step, label }: { step: { index: number; total: number }; label: string }) {
   return (
     <span
       className="flex gap-1"
@@ -78,7 +80,7 @@ function StepBar({ step }: { step: { index: number; total: number } }) {
       aria-valuemin={1}
       aria-valuemax={step.total}
       aria-valuenow={step.index + 1}
-      aria-label={`Tahap ${step.index + 1} dari ${step.total}`}
+      aria-label={label}
     >
       {Array.from({ length: step.total }, (_, n) => (
         <span key={n} className={`h-1.5 flex-1 rounded-full ${n <= step.index ? "bg-primary" : "bg-muted"}`} />
@@ -87,7 +89,7 @@ function StepBar({ step }: { step: { index: number; total: number } }) {
   );
 }
 
-function Estimate({ position, recent, today }: { position: number; recent: string[]; today: string }) {
+function Estimate({ position, recent, today, t }: { position: number; recent: string[]; today: string; t: Dict }) {
   const e = estimateFinish(position, recent, today);
   if (!e) return null;
   return (
@@ -95,14 +97,13 @@ function Estimate({ position, recent, today }: { position: number; recent: strin
       <CalendarClock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
       <div className="grid gap-0.5">
         <p className="text-sm">
-          Perkiraan selesai{" "}
+          {t.tracking.estimate}{" "}
           <span className="font-medium">
-            {formatDate(e.from)} – {formatDate(e.to)}
+            {formatDate(e.from, t.intl)} – {formatDate(e.to, t.intl)}
           </span>
         </p>
         <p className="text-xs text-muted-foreground">
-          Dihitung dari kecepatan artist 90 hari terakhir (±{Math.round(e.pace)} hari per commission). Ini perkiraan, bukan
-          janji.
+          {t.tracking.estimateNote(Math.round(e.pace))}
         </p>
       </div>
     </div>
@@ -114,7 +115,7 @@ function Estimate({ position, recent, today }: { position: number; recent: strin
  * - masih di waiting list → posisi, perkiraan, papan "Sedang dikerjakan" (commission lain) + "Waiting list";
  * - sudah dikerjakan → perkiraan + commission LAIN yang sedang dikerjakan (miliknya sudah di stepper).
  */
-export function QueueBoard({ queue, queuePosition, waitPosition, waitTotal, slotLimit, stages, recentCompletions, today }: Props) {
+export function QueueBoard({ queue, queuePosition, waitPosition, waitTotal, slotLimit, stages, recentCompletions, today, t }: Props) {
   const parsed = itemsSchema.safeParse(queue);
   if (!parsed.success || queuePosition === null) return null;
 
@@ -134,15 +135,15 @@ export function QueueBoard({ queue, queuePosition, waitPosition, waitTotal, slot
       .map((i) => ({
         key: `w${i.pos}`,
         text: i.stage,
-        sub: i.status === "revision" ? "Revisi" : undefined,
+        sub: i.status === "revision" ? t.status.revision : undefined,
         you: false,
         step: stepOf(i.stage),
       }));
     return (
       <div className="grid gap-3 border-t pt-4">
-        <Estimate position={queuePosition} recent={recent} today={today} />
+        <Estimate position={queuePosition} recent={recent} today={today} t={t} />
         {others.length > 0 && (
-          <Column title="Artist juga sedang mengerjakan" icon={Paintbrush} items={others} empty="" />
+          <Column title={t.tracking.alsoWorking} icon={Paintbrush} items={others} empty="" t={t} />
         )}
       </div>
     );
@@ -151,30 +152,30 @@ export function QueueBoard({ queue, queuePosition, waitPosition, waitTotal, slot
   const workingItems: Item[] = working.map((i) => ({
     key: `w${i.pos}`,
     text: i.stage,
-    sub: i.status === "revision" ? "Revisi" : undefined,
+    sub: i.status === "revision" ? t.status.revision : undefined,
     you: false,
     step: stepOf(i.stage),
   }));
   const waitingItems: Item[] = parsed.data
     .filter((i) => i.status === "queue")
-    .map((i, idx) => ({ key: `q${i.pos}`, text: `Urutan ${idx + 1}`, you: i.you }));
+    .map((i, idx) => ({ key: `q${i.pos}`, text: t.tracking.nth(idx + 1), you: i.you }));
 
   return (
     <div className="grid gap-3 border-t pt-4">
       <div className="grid gap-1">
-        <p className="text-sm text-muted-foreground">Giliran kamu</p>
+        <p className="text-sm text-muted-foreground">{t.tracking.yourTurn}</p>
         <p className="text-lg font-semibold">
-          Waiting list ke-{waitPosition} dari {waitTotal}
+          {t.tracking.position(waitPosition, waitTotal ?? waitPosition)}
         </p>
         <p className="text-sm text-muted-foreground">
-          {slotLimit ? `Slot artist ${working.length}/${slotLimit} terisi. ` : ""}
-          Commission mulai dikerjakan sesuai urutan pesanan, setelah ada slot yang selesai.
+          {slotLimit ? t.tracking.slots(working.length, slotLimit) : ""}
+          {t.tracking.order}
         </p>
       </div>
-      <Estimate position={queuePosition} recent={recent} today={today} />
+      <Estimate position={queuePosition} recent={recent} today={today} t={t} />
       <div className="grid gap-3 sm:grid-cols-2">
-        <Column title="Sedang dikerjakan" icon={Paintbrush} items={workingItems} empty="Belum ada" />
-        <Column title="Waiting list" icon={Hourglass} items={waitingItems} empty="Kosong" />
+        <Column title={t.tracking.working} icon={Paintbrush} items={workingItems} empty={t.tracking.none} t={t} />
+        <Column title={t.status.queue} icon={Hourglass} items={waitingItems} empty={t.tracking.empty} t={t} />
       </div>
     </div>
   );

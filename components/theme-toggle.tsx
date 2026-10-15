@@ -2,12 +2,12 @@
 
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useSyncExternalStore } from "react";
+import { useDict } from "@/components/i18n-provider";
 import { Button } from "@/components/ui/button";
 
 export type Theme = "light" | "dark" | "system";
 const KEY = "theme";
 const ORDER: Theme[] = ["system", "light", "dark"];
-const LABEL: Record<Theme, string> = { system: "Tema: ikuti sistem", light: "Tema: terang", dark: "Tema: gelap" };
 
 const media = () => window.matchMedia("(prefers-color-scheme: dark)");
 
@@ -56,13 +56,14 @@ export function ThemeToggle() {
   const theme = useSyncExternalStore(subscribe, read, () => "system" as Theme);
   const next = ORDER[(ORDER.indexOf(theme) + 1) % ORDER.length];
   const Icon = theme === "light" ? Sun : theme === "dark" ? Moon : Monitor;
+  const { t } = useDict();
   return (
     <Button
       type="button"
       variant="ghost"
       size="icon-sm"
-      aria-label={`${LABEL[theme]}. Klik untuk ganti.`}
-      title={LABEL[theme]}
+      aria-label={`${t.theme[theme]}. ${t.theme.change}`}
+      title={t.theme[theme]}
       onClick={() => setTheme(next)}
     >
       <Icon />

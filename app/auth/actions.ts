@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { actionDict } from "@/lib/i18n/action";
 import { createClient } from "@/lib/supabase/server";
 import {
   forgotPasswordSchema,
@@ -34,12 +35,8 @@ export async function login(_: AuthState, formData: FormData): Promise<AuthState
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
-    return {
-      error:
-        error.code === "email_not_confirmed"
-          ? "Email belum dikonfirmasi. Cek inbox kamu."
-          : "Email atau password salah.",
-    };
+    const t = await actionDict();
+    return { error: error.code === "email_not_confirmed" ? t.auth.emailNotConfirmed : t.auth.wrongCredentials };
   }
   redirect("/dashboard");
 }
@@ -55,7 +52,7 @@ export async function signup(_: AuthState, formData: FormData): Promise<AuthStat
     options: { emailRedirectTo: `${await origin()}/auth/confirm?next=/dashboard` },
   });
   if (error) return { error: error.message };
-  return { message: "Cek email kamu untuk konfirmasi akun." };
+  return { message: (await actionDict()).auth.checkEmail };
 }
 
 export async function forgotPassword(_: AuthState, formData: FormData): Promise<AuthState> {
@@ -67,7 +64,7 @@ export async function forgotPassword(_: AuthState, formData: FormData): Promise<
     redirectTo: `${await origin()}/auth/confirm?next=/reset-password`,
   });
   // Pesan sama apa pun hasilnya, agar tidak membocorkan email terdaftar.
-  return { message: "Jika email terdaftar, link reset password sudah dikirim." };
+  return { message: (await actionDict()).auth.resetSent };
 }
 
 export async function resetPassword(_: AuthState, formData: FormData): Promise<AuthState> {

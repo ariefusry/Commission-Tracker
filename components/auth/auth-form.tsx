@@ -2,9 +2,11 @@
 
 import { useActionState } from "react";
 import type { AuthState } from "@/app/auth/actions";
+import { useDict } from "@/components/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { translateError } from "@/lib/i18n";
 
 type Field = {
   name: string;
@@ -22,6 +24,7 @@ type Props = {
 
 export function AuthForm({ action, fields, submitLabel, initialError }: Props) {
   const [state, formAction, pending] = useActionState(action, { error: initialError });
+  const { t } = useDict();
 
   if (state.message) {
     return <p className="text-sm text-muted-foreground" role="status">{state.message}</p>;
@@ -45,7 +48,7 @@ export function AuthForm({ action, fields, submitLabel, initialError }: Props) {
             />
             {errors && (
               <p id={`${f.name}-error`} className="text-sm text-destructive">
-                {errors[0]}
+                {translateError(t, errors[0])}
               </p>
             )}
           </div>
@@ -57,7 +60,7 @@ export function AuthForm({ action, fields, submitLabel, initialError }: Props) {
         </p>
       )}
       <Button type="submit" disabled={pending} className="w-full">
-        {pending ? "Memproses..." : submitLabel}
+        {pending ? t.auth.processing : submitLabel}
       </Button>
     </form>
   );

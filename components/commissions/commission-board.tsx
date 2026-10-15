@@ -19,9 +19,10 @@ import { CSS } from "@dnd-kit/utilities";
 import { CheckCircle2, GripVertical, Hourglass, Paintbrush, Play, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useOptimistic, useState, useTransition } from "react";
-import { moveCommission, quickUpdate } from "@/app/(admin)/commissions/actions";
+import { moveCommission, quickUpdate } from "@/app/[lang]/(admin)/commissions/actions";
 import { AppSelect } from "@/components/app-select";
 import { Actions, Deadline, Total, type CommissionRow } from "@/components/commissions/commission-list";
+import { useDict } from "@/components/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Status, StageOption } from "@/lib/commission";
@@ -61,6 +62,7 @@ type CardProps = {
 };
 
 function CardBody({ row, column, stages, today, pending, slotFull, onUpdate, onMove, handle }: CardProps & { handle: React.ReactNode }) {
+  const { t } = useDict();
   const stageOptions = stages
     .filter((s) => s.is_active || s.id === row.stage_id)
     .map((s) => ({ value: s.id, label: s.name }));
@@ -84,7 +86,7 @@ function CardBody({ row, column, stages, today, pending, slotFull, onUpdate, onM
         <div className="grid grid-cols-[1fr_auto] items-center gap-2">
           <AppSelect
             size="sm"
-            aria-label={`Tahap ${row.client_username}`}
+            aria-label={`${t.commissions.stage} ${row.client_username}`}
             value={row.stage_id}
             disabled={pending}
             onValueChange={(value) => value !== row.stage_id && onUpdate({ field: "stage_id", value })}
@@ -94,15 +96,15 @@ function CardBody({ row, column, stages, today, pending, slotFull, onUpdate, onM
             <AppSelect
               size="sm"
               className="w-28"
-              aria-label={`Status ${row.client_username}`}
+              aria-label={`${t.commissions.status} ${row.client_username}`}
               value={row.status}
               disabled={pending}
               onValueChange={(value) =>
                 value !== row.status && onUpdate({ field: "status", value: value as "in_progress" | "revision" })
               }
               options={[
-                { value: "in_progress", label: "Dikerjakan" },
-                { value: "revision", label: "Revisi" },
+                { value: "in_progress", label: t.status.in_progress },
+                { value: "revision", label: t.status.revision },
               ]}
             />
           )}
@@ -119,20 +121,20 @@ function CardBody({ row, column, stages, today, pending, slotFull, onUpdate, onM
           size="sm"
           variant={slotFull ? "outline" : "default"}
           disabled={pending}
-          title={slotFull ? "Semua slot terisi, tetap bisa dimulai" : undefined}
+          title={slotFull ? t.board.slotFullHint : undefined}
           onClick={() => onMove("in_progress")}
         >
-          <Play /> {slotFull ? "Mulai (slot penuh)" : "Mulai kerjakan"}
+          <Play /> {slotFull ? t.board.startFull : t.board.start}
         </Button>
       )}
       {column === "working" && (
         <Button size="sm" variant="outline" disabled={pending} onClick={() => onMove("done")}>
-          <CheckCircle2 /> Selesai
+          <CheckCircle2 /> {t.board.finish}
         </Button>
       )}
       {column === "done" && (
         <Button size="sm" variant="ghost" disabled={pending} onClick={() => onMove("in_progress")}>
-          <RotateCcw /> Buka lagi
+          <RotateCcw /> {t.board.reopen}
         </Button>
       )}
     </>
@@ -142,6 +144,7 @@ function CardBody({ row, column, stages, today, pending, slotFull, onUpdate, onM
 const CARD_CLASS = "grid gap-3 rounded-lg border bg-card p-3 shadow-xs";
 
 function SortableCard(props: CardProps) {
+  const { t } = useDict();
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
     id: props.row.id,
   });
@@ -157,7 +160,7 @@ function SortableCard(props: CardProps) {
           <button
             ref={setActivatorNodeRef}
             type="button"
-            aria-label={`Geser ${props.row.client_username}`}
+            aria-label={t.board.drag(props.row.client_username)}
             className="-ml-1 mt-0.5 cursor-grab touch-none rounded p-0.5 text-muted-foreground hover:bg-muted active:cursor-grabbing"
             {...attributes}
             {...listeners}
@@ -170,11 +173,11 @@ function SortableCard(props: CardProps) {
   );
 }
 
-const COLUMNS: { key: ColumnKey; title: string; icon: typeof Hourglass; empty: string }[] = [
-  { key: "waiting", title: "Waiting list", icon: Hourglass, empty: "Tidak ada yang menunggu." },
-  { key: "working", title: "Sedang dikerjakan", icon: Paintbrush, empty: "Belum ada yang dikerjakan." },
-  { key: "done", title: "Selesai", icon: CheckCircle2, empty: "Belum ada yang selesai." },
-];
+const COLUMNS = [
+  { key: "waiting", icon: Hourglass, empty: "emptyWaiting" },
+  { key: "working", icon: Paintbrush, empty: "emptyWorking" },
+  { key: "done", icon: CheckCircle2, empty: "emptyDone" },
+] as const;
 
 function Column({ id, highlight, children }: { id: ColumnKey; highlight: boolean; children: React.ReactNode }) {
   const { setNodeRef } = useDroppable({ id });
@@ -207,6 +210,7 @@ export function CommissionBoard({
   const [suggest, setSuggest] = useState<CommissionRow | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overColumn, setOverColumn] = useState<ColumnKey | null>(null);
+  const { t } = useDict();
 
   // Tampilkan hasil geser segera; otomatis kembali jika server gagal.
   const [rows, applyMove] = useOptimistic(data, (current: CommissionRow[], m: Move) =>
@@ -321,21 +325,20 @@ export function CommissionBoard({
       {suggest && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-sm" role="status">
           <span>
-            Slot kosong. Mulai <span className="font-medium">{suggest.client_username}</span> (urutan 1 di waiting list)?
+            {t.board.slotFree} <span className="font-medium">{suggest.client_username}</span> {t.board.firstInLine}
           </span>
           <span className="flex gap-2">
             <Button size="sm" variant="ghost" onClick={() => setSuggest(null)}>
-              Nanti
+              {t.board.later}
             </Button>
             <Button size="sm" disabled={pending} onClick={() => moveByButton(suggest)("in_progress")}>
-              <Play /> Mulai
+              <Play /> {t.board.startShort}
             </Button>
           </span>
         </div>
       )}
       <p className="text-xs text-muted-foreground">
-        Geser kartu lewat <GripVertical className="inline size-3.5 align-text-bottom" /> untuk mengatur prioritas atau pindah
-        kolom. Urutan waiting list menentukan giliran yang dilihat client.
+        {t.board.hintBefore} <GripVertical className="inline size-3.5 align-text-bottom" /> {t.board.hintAfter}
       </p>
 
       {/* Di bawah lg: satu kolom per tab. */}
@@ -343,7 +346,7 @@ export function CommissionBoard({
         <TabsList className="w-full">
           {COLUMNS.map((c) => (
             <TabsTrigger key={c.key} value={c.key}>
-              {c.title} ({c.key === "working" ? `${columns.working.length}/${slotLimit}` : columns[c.key].length})
+              {t.board[c.key]} ({c.key === "working" ? `${columns.working.length}/${slotLimit}` : columns[c.key].length})
             </TabsTrigger>
           ))}
         </TabsList>
@@ -351,7 +354,8 @@ export function CommissionBoard({
 
       <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={() => { setActiveId(null); setOverColumn(null); }}>
         <div className="grid gap-4 lg:grid-cols-3 lg:items-start">
-          {COLUMNS.map(({ key, title, icon: Icon, empty }) => {
+          {COLUMNS.map(({ key, icon: Icon, empty }) => {
+            const title = t.board[key];
             const items = key === "done" ? columns.done.slice(0, DONE_LIMIT) : columns[key];
             return (
               <section
@@ -363,13 +367,13 @@ export function CommissionBoard({
                   <Icon className="size-4 text-muted-foreground" />
                   {title}
                   <span className={`font-normal ${key === "working" && slotFull ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground"}`}>
-                    ({key === "working" ? `${columns.working.length}/${slotLimit} slot` : key === "done" ? doneTotal : items.length})
+                    ({key === "working" ? `${columns.working.length}/${slotLimit} ${t.board.slot}` : key === "done" ? doneTotal : items.length})
                   </span>
                 </h2>
                 <SortableContext items={items.map((r) => r.id)} strategy={verticalListSortingStrategy}>
                   <Column id={key} highlight={overColumn === key && findColumn(activeId ?? "") !== key}>
                     {items.length === 0 ? (
-                      <p className="px-1 py-4 text-sm text-muted-foreground">{empty}</p>
+                      <p className="px-1 py-4 text-sm text-muted-foreground">{t.board[empty]}</p>
                     ) : (
                       <ul className="grid gap-2">
                         {items.map((row) => (
@@ -381,7 +385,7 @@ export function CommissionBoard({
                 </SortableContext>
                 {key === "done" && doneTotal > DONE_LIMIT && (
                   <p className="px-1 text-xs text-muted-foreground">
-                    Menampilkan {DONE_LIMIT} terbaru dari {doneTotal}. Lihat semua di tampilan Daftar.
+                    {t.board.doneLimited(DONE_LIMIT, doneTotal)}
                   </p>
                 )}
               </section>

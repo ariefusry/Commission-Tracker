@@ -1,16 +1,26 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { LANG_COOKIE, toLocale } from "@/lib/i18n";
 import type { Database } from "@/types/database";
 
 // UX saja: gerbang sebenarnya ada di RLS (user_id = auth.uid()).
 // /api/cron dilindungi CRON_SECRET di route-nya sendiri.
 const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password", "/auth", "/track", "/donasi", "/api/cron"];
+// Route handler di luar app/[lang]: tidak di-rewrite.
+const NO_LOCALE_PATHS = ["/api", "/auth/confirm"];
 
 const matches = (path: string, list: string[]) =>
   list.some((p) => path === p || path.startsWith(`${p}/`));
 
 export async function proxy(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  const path = request.nextUrl.pathname;
+  // Bahasa dari cookie, URL tetap tanpa prefix: /dashboard → app/[lang]/dashboard.
+  const locale = toLocale(request.cookies.get(LANG_COOKIE)?.value);
+  const pass = () =>
+    matches(path, NO_LOCALE_PATHS)
+      ? NextResponse.next({ request })
+      : NextResponse.rewrite(new URL(`/${locale}${path}${request.nextUrl.search}`, request.url), { request });
+  let response = pass();
 
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,7 +32,7 @@ export async function proxy(request: NextRequest) {
         },
         setAll(cookiesToSet, headers) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
+          response = pass();
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options),
           );
@@ -34,7 +44,6 @@ export async function proxy(request: NextRequest) {
 
   const { data } = await supabase.auth.getClaims();
   const loggedIn = Boolean(data?.claims);
-  const path = request.nextUrl.pathname;
 
   const redirect = (to: string) => {
     const res = NextResponse.redirect(new URL(to, request.url));

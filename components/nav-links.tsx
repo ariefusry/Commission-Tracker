@@ -4,17 +4,23 @@ import { ClipboardList, LayoutDashboard, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
+import { useDict } from "@/components/i18n-provider";
+import { LOCALES } from "@/lib/i18n";
+
+const LOCALE_PREFIX = new RegExp(`^/(?:${LOCALES.join("|")})(?=/|$)`);
 
 const LINKS = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/commissions", label: "Commission", icon: ClipboardList },
-  { href: "/settings", label: "Pengaturan", icon: Settings },
-];
+  { href: "/dashboard", key: "dashboard", icon: LayoutDashboard },
+  { href: "/commissions", key: "commissions", icon: ClipboardList },
+  { href: "/settings", key: "settings", icon: Settings },
+] as const;
 
 type Props = { vertical?: boolean };
 
 function Links({ pathname, vertical }: Props & { pathname: string | null }) {
-  return LINKS.map(({ href, label, icon: Icon }) => {
+  const { t } = useDict();
+  return LINKS.map(({ href, key, icon: Icon }) => {
+    const label = t.nav[key];
     const active = pathname !== null && (pathname === href || pathname.startsWith(`${href}/`));
     return (
       <Link
@@ -27,15 +33,17 @@ function Links({ pathname, vertical }: Props & { pathname: string | null }) {
         }`}
       >
         <Icon className="size-4" aria-hidden />
-        {/* Bar atas HP sempit: link non-aktif cukup ikon. */}
-        <span className={vertical || active ? undefined : "sr-only sm:not-sr-only"}>{label}</span>
+        {/* Bar atas HP sempit: cukup ikon (halaman aktif ditandai latar). */}
+        <span className={vertical ? undefined : "sr-only sm:not-sr-only"}>{label}</span>
       </Link>
     );
   });
 }
 
 function ActiveLinks({ vertical }: Props) {
-  return <Links pathname={usePathname()} vertical={vertical} />;
+  // URL hasil rewrite proxy berisi segmen bahasa (/en/dashboard): buang dulu.
+  const pathname = usePathname().replace(LOCALE_PREFIX, "") || "/";
+  return <Links pathname={pathname} vertical={vertical} />;
 }
 
 export function NavLinks({ vertical }: Props) {

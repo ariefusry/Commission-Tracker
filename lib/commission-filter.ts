@@ -21,13 +21,9 @@ export type CommissionFilter = {
 
 export const EMPTY_FILTER: CommissionFilter = { q: "", status: "", payment: "", type: "", from: "", to: "" };
 
-export const SORTS = {
-  newest: "Terbaru",
-  deadline: "Deadline terdekat",
-  total: "Total tertinggi",
-  client: "Client A-Z",
-} as const;
-export type SortKey = keyof typeof SORTS;
+// Label urutan di kamus: t.sorts.
+export const SORT_KEYS = ["newest", "deadline", "total", "client"] as const;
+export type SortKey = (typeof SORT_KEYS)[number];
 
 export function activeFilterCount(f: CommissionFilter): number {
   return Object.values(f).filter(Boolean).length;

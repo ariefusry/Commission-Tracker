@@ -3,8 +3,9 @@
 import { ImagePlus, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
-import { deleteWip, uploadWip } from "@/app/(admin)/commissions/wip-actions";
+import { deleteWip, uploadWip } from "@/app/[lang]/(admin)/commissions/wip-actions";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
+import { useDict } from "@/components/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { todayWib } from "@/lib/date";
 import type { WipImage } from "@/lib/data/commissions";
@@ -17,6 +18,8 @@ export function WipManager({ commissionId, images }: { commissionId: string; ima
   const input = useRef<HTMLInputElement>(null);
   const [pending, startTransition] = useTransition();
   const [status, setStatus] = useState<{ error?: string; info?: string }>({});
+  const { t } = useDict();
+  const w = t.wip;
   const remaining = WIP_MAX_PER_COMMISSION - images.length;
 
   const onFiles = (files: FileList | null) => {
@@ -26,7 +29,7 @@ export function WipManager({ commissionId, images }: { commissionId: string; ima
     startTransition(async () => {
       let done = 0;
       for (const file of list) {
-        setStatus({ info: `Mengompres & mengunggah ${done + 1} dari ${list.length}...` });
+        setStatus({ info: w.uploading(done + 1, list.length) });
         try {
           const compressed = await compressImage(file);
           const form = new FormData();
@@ -39,12 +42,12 @@ export function WipManager({ commissionId, images }: { commissionId: string; ima
           }
           done++;
         } catch {
-          setStatus({ error: `"${file.name}" bukan gambar yang bisa dibaca.` });
+          setStatus({ error: w.unreadable(file.name) });
           return;
         }
       }
       setStatus({
-        info: `${done} gambar terunggah.${skipped ? ` ${skipped} dilewati (maks. ${WIP_MAX_PER_COMMISSION}).` : ""}`,
+        info: w.uploaded(done) + (skipped ? w.skipped(skipped, WIP_MAX_PER_COMMISSION) : ""),
       });
     });
     if (input.current) input.current.value = "";
@@ -55,15 +58,15 @@ export function WipManager({ commissionId, images }: { commissionId: string; ima
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="grid gap-1">
           <h2 className="font-semibold">
-            Gambar WIP <span className="font-normal text-muted-foreground">({images.length}/{WIP_MAX_PER_COMMISSION})</span>
+            {w.title} <span className="font-normal text-muted-foreground">({images.length}/{WIP_MAX_PER_COMMISSION})</span>
           </h2>
           <p className="text-sm text-muted-foreground">
-            Tampil di halaman tracking client. Dikompres otomatis; dihapus 30 hari setelah commission selesai.
+            {w.description}
           </p>
         </div>
         <Button type="button" variant="outline" disabled={pending || remaining <= 0} onClick={() => input.current?.click()}>
           {pending ? <Loader2 className="animate-spin" /> : <ImagePlus />}
-          {remaining <= 0 ? "Batas tercapai" : "Tambah gambar"}
+          {remaining <= 0 ? w.limitReached : w.add}
         </Button>
         <input
           ref={input}
@@ -71,7 +74,7 @@ export function WipManager({ commissionId, images }: { commissionId: string; ima
           accept="image/*"
           multiple
           hidden
-          aria-label="Pilih gambar WIP"
+          aria-label={w.pick}
           onChange={(e) => onFiles(e.target.files)}
         />
       </div>
@@ -87,7 +90,7 @@ export function WipManager({ commissionId, images }: { commissionId: string; ima
 
       {images.length === 0 ? (
         <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-          Belum ada gambar. Unggah sketsa atau progress agar client bisa melihatnya.
+          {w.empty}
         </p>
       ) : (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -103,12 +106,12 @@ export function WipManager({ commissionId, images }: { commissionId: string; ima
               </a>
               <div className="flex items-center justify-between gap-1 text-xs">
                 <span className="truncate text-muted-foreground">
-                  {img.stage ?? "WIP"} · {formatDate(todayWib(new Date(img.created_at)))}
+                  {img.stage ?? "WIP"} · {formatDate(todayWib(new Date(img.created_at)), t.intl)}
                 </span>
                 <ConfirmDeleteButton
-                  label="Hapus gambar WIP"
-                  title="Hapus gambar ini?"
-                  description="Gambar akan dihapus permanen dan tidak tampil lagi di halaman tracking client."
+                  label={w.deleteLabel}
+                  title={w.deleteTitle}
+                  description={w.deleteBody}
                   disabled={pending}
                   onConfirm={() => deleteWip(img.id)}
                 />

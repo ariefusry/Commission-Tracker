@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
   filterByRange,
+  needsAttention,
   parsePeriod,
+  percentChange,
+  previousRange,
   resolveRange,
   revenueSeries,
+  statusCounts,
   summarize,
   typeDistribution,
   weekStart,
+  workPace,
   type StatRow,
 } from "./stats";
 
@@ -90,7 +95,7 @@ describe("revenueSeries", () => {
       today,
     );
     expect(s.granularity).toBe("day");
-    expect(s.points.map((p) => p.label)).toEqual(["12 Okt", "13 Okt", "14 Okt", "15 Okt"]);
+    expect(s.points.map((p) => p.key)).toEqual(["2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15"]);
     expect(s.points[1]).toMatchObject({ paid: 50000, due: 0 });
   });
 
@@ -106,9 +111,9 @@ describe("revenueSeries", () => {
     );
     expect(s.granularity).toBe("month");
     expect(s.points).toEqual([
-      { key: "2026-08", label: "Agu 26", paid: 100000, due: 0 },
-      { key: "2026-09", label: "Sep 26", paid: 0, due: 0 },
-      { key: "2026-10", label: "Okt 26", paid: 25000, due: 75000 },
+      { key: "2026-08", paid: 100000, due: 0, count: 1 },
+      { key: "2026-09", paid: 0, due: 0, count: 0 },
+      { key: "2026-10", paid: 25000, due: 75000, count: 1 },
     ]);
   });
 
@@ -135,8 +140,63 @@ describe("typeDistribution", () => {
         row({ type_name: "Full body", status: "cancelled" }),
       ]),
     ).toEqual([
-      { type: "Halfbody", count: 2 },
-      { type: "Headshot", count: 1 },
+      { type: "Halfbody", count: 2, revenue: 200000 },
+      { type: "Headshot", count: 1, revenue: 100000 },
     ]);
+  });
+});
+
+describe("previousRange & percentChange", () => {
+  it("periode sebelumnya sama panjang, tepat sebelum", () => {
+    // Bulan ini s/d hari ini (15 hari) → 15 hari sebelumnya.
+    expect(previousRange({ from: "2026-10-01", to: null }, today)).toEqual({ from: "2026-09-16", to: "2026-09-30" });
+    expect(previousRange({ from: "2026-10-01", to: "2026-10-07" }, today)).toEqual({ from: "2026-09-24", to: "2026-09-30" });
+    expect(previousRange({ from: null, to: null }, today)).toBeNull();
+  });
+
+  it("persen berubah; pembanding 0 → null", () => {
+    expect(percentChange(150, 100)).toBe(50);
+    expect(percentChange(50, 100)).toBe(-50);
+    expect(percentChange(10, 0)).toBeNull();
+  });
+});
+
+describe("statusCounts & workPace", () => {
+  it("hitung per status", () => {
+    expect(statusCounts([row({ status: "queue" }), row({ status: "queue" }), row({ status: "done" })])).toEqual({
+      queue: 2,
+      in_progress: 0,
+      revision: 0,
+      done: 1,
+      cancelled: 0,
+    });
+  });
+
+  it("rata-rata hari kerja dan % tepat waktu (tanggal selesai WIB)", () => {
+    const w = workPace([
+      // 17:00 UTC tgl 10 = 00:00 WIB tgl 11 → lewat deadline tgl 10
+      { start_date: "2026-10-01", deadline: "2026-10-10", status: "done", completed_at: "2026-10-10T17:00:00Z" },
+      { start_date: "2026-10-01", deadline: "2026-10-20", status: "done", completed_at: "2026-10-05T03:00:00Z" },
+      { start_date: "2026-10-01", deadline: null, status: "done", completed_at: "2026-10-07T03:00:00Z" },
+      { start_date: "2026-10-01", deadline: null, status: "in_progress", completed_at: null },
+    ]);
+    expect(w).toEqual({ done: 3, avgDays: 7, onTimePct: 50 });
+    expect(workPace([])).toEqual({ done: 0, avgDays: null, onTimePct: null });
+  });
+});
+
+describe("needsAttention", () => {
+  it("terlambat, segera, dan selesai-belum-lunas", () => {
+    const rows = [
+      { ...row({}), id: "a", deadline: "2026-10-12" },
+      { ...row({}), id: "b", deadline: "2026-10-16" },
+      { ...row({ status: "done", payment_status: "dp", dp_amount: 50000 }), id: "c", deadline: "2026-10-01" },
+      { ...row({ status: "done", payment_status: "paid" }), id: "d", deadline: null },
+      { ...row({ status: "cancelled" }), id: "e", deadline: "2026-10-01" },
+    ];
+    const a = needsAttention(rows, today);
+    expect(a.late.map((r) => r.id)).toEqual(["a"]);
+    expect(a.soon.map((r) => r.id)).toEqual(["b"]);
+    expect(a.unpaid.map((r) => r.id)).toEqual(["c"]);
   });
 });
