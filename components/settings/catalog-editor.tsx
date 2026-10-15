@@ -87,8 +87,12 @@ function Row({ kind, item, first, last }: { kind: CatalogKind; item: CatalogItem
             {f.errors.price && <p className="text-sm text-destructive">{translateError(t, f.errors.price)}</p>}
           </div>
         )}
-        <label className="flex h-8 items-center gap-2 text-sm">
+        {/* Aktif = hijau (centang + label) agar beda jelas dengan yang nonaktif. */}
+        <label
+          className={`flex h-8 items-center gap-2 text-sm ${f.values.is_active ? "font-medium text-emerald-700 dark:text-emerald-400" : "text-muted-foreground"}`}
+        >
           <Checkbox
+            className="data-checked:border-emerald-600 data-checked:bg-emerald-600 data-checked:text-white dark:data-checked:border-emerald-500 dark:data-checked:bg-emerald-500"
             checked={f.values.is_active}
             onCheckedChange={(checked) => f.setValues({ ...f.values, is_active: checked })}
           />
