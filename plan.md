@@ -154,6 +154,13 @@ TrackerCommis/
 - [x] Dark mode (terang / gelap / ikuti sistem)
 - [x] Pilihan bahasa Indonesia / English (termasuk halaman tracking client)
 
+### Milestone 9 — Siap dibagikan
+- [x] Landing page di `/` (user yang sudah login diarahkan ke dashboard)
+- [x] Halaman `/privacy`
+- [x] Hapus akun sendiri (Pengaturan → Umum), termasuk file WIP di Storage
+- [x] Template email konfirmasi & reset password dua bahasa (`supabase/templates/`)
+- [ ] Pasang template email di dashboard Supabase (manual)
+
 Estimasi total: sekitar 11-12 hari kerja santai.
 
 ## 6. Aturan Bisnis

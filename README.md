@@ -21,6 +21,7 @@ A free web app for illustrators who take art commissions. Track every order from
 - A private tracking link per commission: current stage, place in the waiting list, what the artist is working on (without other clients' names), and an estimated finish date based on the artist's pace. No prices or contact details.
 
 **Everywhere**
+- A public landing page, a privacy page, and self-service account deletion (data and images).
 - Indonesian and English, switchable on every page, including the client tracking page.
 - Light, dark, or system theme.
 - Works on phones and desktops.
@@ -29,9 +30,9 @@ A free web app for illustrators who take art commissions. Track every order from
 |---|---|
 | ![Board](docs/screenshots/board.png) | ![Commission form](docs/screenshots/commission-form.png) |
 
-| Dashboard, dark | Client tracking (ID) | Client tracking (EN, dark) |
+| Dashboard, dark | Client tracking | Client tracking, dark |
 |---|---|---|
-| ![Dashboard dark](docs/screenshots/dashboard-dark.png) | ![Tracking ID](docs/screenshots/tracking-mobile-id.png) | ![Tracking EN](docs/screenshots/tracking-mobile-en-dark.png) |
+| ![Dashboard dark](docs/screenshots/dashboard-dark.png) | ![Client tracking](docs/screenshots/tracking-mobile.png) | ![Client tracking dark](docs/screenshots/tracking-mobile-dark.png) |
 
 ## Stack
 
@@ -77,6 +78,10 @@ Open http://localhost:3000 and sign up. New accounts get default order types, ad
 
 **Optional demo data:** sign up as `demo@example.com`, then run `supabase/demo/seed.sql` against your database (for example with `psql "$SUPABASE_DB_URL" -f supabase/demo/seed.sql`). It adds fictional commissions with dates relative to today.
 
+### Auth emails
+
+`supabase/templates/` holds bilingual (Indonesian + English) emails for sign-up confirmation and password reset. Paste each file into Supabase → Authentication → Emails, with the subject line written at the top of the file. In Authentication → URL Configuration, set the Site URL to your deployed URL and add `<your-url>/auth/confirm` to the redirect URLs.
+
 ### Checks
 
 ```bash
@@ -85,7 +90,7 @@ npm test            # unit tests: pricing, stats, queue estimate, dates, formatt
 npm run build
 ```
 
-SQL tests for RLS, saving, tracking, queue, and WIP images are in `supabase/tests/`. Each one runs inside a transaction and rolls back.
+SQL tests for RLS, saving, tracking, queue, WIP images, and account deletion are in `supabase/tests/`. Each one runs inside a transaction and rolls back.
 
 ## Deploy
 

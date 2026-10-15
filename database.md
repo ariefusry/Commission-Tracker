@@ -328,3 +328,7 @@ Aplikasi tidak berbayar (didukung donasi QRIS). `has_access()` kini hanya `auth.
 - `get_tracking` mengembalikan `wip` (path, nama tahap, waktu; terbaru dulu). URL publik dibangun di `lib/storage.ts`.
 - Hapus commission/gambar: file di Storage dihapus lebih dulu (cascade hanya menghapus baris).
 - Pembersihan: Vercel Cron harian `/api/cron/cleanup-wip` (dilindungi `CRON_SECRET`, memakai `SUPABASE_SECRET_KEY` di server) menghapus WIP dari commission yang selesai > 30 hari.
+
+## Hapus Akun
+
+`delete_own_account()` (`security definer`, migration `20261015150000`, hanya role `authenticated`) menghapus commission milik `auth.uid()` lebih dulu, lalu baris `auth.users`; tabel lain ikut terhapus lewat `on delete cascade`. Urutan ini perlu karena `stages` dilindungi `on delete restrict` dari `commissions` dan `wip_images`. File WIP di Storage tidak ikut cascade: server action `deleteAccount` menghapusnya lewat Storage API sebelum memanggil fungsi ini dan mengecek jumlah file terhapus. Tes: `supabase/tests/delete_account.sql`.
