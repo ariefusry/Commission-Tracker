@@ -40,7 +40,7 @@ Web app gratis untuk artist (didukung donasi QRIS): melacak open commission gamb
 - Export CSV/PDF (invoice).
 - Notifikasi deadline (email/Discord webhook).
 - Form order publik untuk client.
-- Dark mode, PWA.
+- PWA.
 
 ### Di luar scope
 - Tim/banyak user dalam satu akun, chat antar pengguna, panel super-admin (kelola user lewat dashboard Supabase).
@@ -149,6 +149,10 @@ TrackerCommis/
 - [x] Hapus gerbang langganan/trial (aplikasi gratis)
 - [x] Halaman `/donasi` dengan QRIS
 - [ ] Pasang gambar QRIS di `public/qris.png`
+
+### Milestone 8 — Tampilan & bahasa
+- [x] Dark mode (terang / gelap / ikuti sistem)
+- [x] Pilihan bahasa Indonesia / English (termasuk halaman tracking client)
 
 Estimasi total: sekitar 11-12 hari kerja santai.
 

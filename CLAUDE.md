@@ -20,6 +20,8 @@ Next.js (App Router), TypeScript, Tailwind, shadcn/ui, TanStack Table, Recharts,
 - Uang = integer rupiah. Format tampilan lewat `lib/format.ts`.
 - Komponen kecil dan fokus; komponen shadcn tetap di `components/ui`.
 - Akses database lewat helper di `lib/supabase`, jangan buat client baru di komponen.
+- Teks UI lewat kamus `lib/i18n` (`id.ts` sumber tipe, `en.ts` wajib punya kunci sama); jangan tulis teks langsung di komponen. Server Component: `getDict()`, Client Component: `useDict()`, Server Action: `actionDict()`. Pesan Zod dan `fieldErrors` = kunci `t.errors`, ditampilkan lewat `translateError`.
+- Route ada di `app/[lang]`; URL tetap tanpa prefix karena `proxy.ts` me-rewrite `/x` → `/{lang}/x` dari cookie `lang` (default `id`). Route handler (`/api`, `/auth/confirm`) di luar `[lang]`.
 
 ## Aturan Bisnis Penting
 - Harga total = harga tipe + add-on, kecuali `price_override` terisi.
