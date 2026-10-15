@@ -38,9 +38,7 @@ Web app gratis untuk artist (didukung donasi QRIS): melacak open commission gamb
 
 ### Fase 3 (opsional)
 - Export CSV/PDF (invoice).
-- Notifikasi deadline (email/Discord webhook).
 - Form order publik untuk client.
-- PWA.
 
 ### Di luar scope
 - Tim/banyak user dalam satu akun, chat antar pengguna, panel super-admin (kelola user lewat dashboard Supabase).
@@ -160,6 +158,12 @@ TrackerCommis/
 - [x] Hapus akun sendiri (Pengaturan → Umum), termasuk file WIP di Storage
 - [x] Template email konfirmasi & reset password dua bahasa (`supabase/templates/`)
 - [ ] Pasang template email di dashboard Supabase (manual)
+
+### Milestone 10 — Aplikasi HP & pengingat
+- [x] PWA: manifest, ikon (termasuk maskable & Apple), theme color; bisa dipasang di layar utama
+- [x] Pengingat deadline harian 08.00 WIB, artist memilih saluran (Pengaturan → Umum)
+- [x] Saluran Discord (webhook milik artist) + tombol "Kirim tes"
+- [ ] Saluran email: buat akun Resend, verifikasi domain, isi `RESEND_API_KEY` & `REMINDER_EMAIL_FROM` di Vercel (manual)
 
 Estimasi total: sekitar 11-12 hari kerja santai.
 

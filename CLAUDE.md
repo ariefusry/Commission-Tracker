@@ -34,6 +34,7 @@ Next.js (App Router), TypeScript, Tailwind, shadcn/ui, TanStack Table, Recharts,
 - Semua route kecuali `/` (landing), `/login`, `/signup`, `/forgot-password`, `/auth/*`, `/track/[code]`, `/donasi`, `/privacy` wajib login. `proxy.ts` (Next 16, pengganti middleware) hanya untuk UX, gerbang sebenarnya di RLS.
 - Secret key (`SUPABASE_SECRET_KEY`) hanya di `lib/supabase/admin.ts` untuk tugas sistem (cron); jangan dipakai untuk request user atau di kode client.
 - Gambar WIP: logika Storage hanya di `lib/storage.ts`; setiap `remove()` cek jumlah file terhapus.
+- Pengingat: pengiriman keluar hanya lewat `lib/notify.ts`. Server hanya POST ke URL webhook resmi Discord (`DISCORD_WEBHOOK_RE` di `lib/validators.ts`, sama dengan check constraint DB); jangan pernah fetch URL bebas dari input user.
 - Halaman publik `/track/[code]` hanya membaca lewat fungsi `get_tracking(code)` (satu commission per kode, tanpa harga/kontak). Jangan beri `anon` akses ke tabel atau view.
 - Jangan commit `.env.local` atau secret key.
 

@@ -332,3 +332,7 @@ Aplikasi tidak berbayar (didukung donasi QRIS). `has_access()` kini hanya `auth.
 ## Hapus Akun
 
 `delete_own_account()` (`security definer`, migration `20261015150000`, hanya role `authenticated`) menghapus commission milik `auth.uid()` lebih dulu, lalu baris `auth.users`; tabel lain ikut terhapus lewat `on delete cascade`. Urutan ini perlu karena `stages` dilindungi `on delete restrict` dari `commissions` dan `wip_images`. File WIP di Storage tidak ikut cascade: server action `deleteAccount` menghapusnya lewat Storage API sebelum memanggil fungsi ini dan mengecek jumlah file terhapus. Tes: `supabase/tests/delete_account.sql`.
+
+## Pengingat Deadline
+
+Kolom `settings` (migration `20261015160000`): `reminder_channel` (`off`/`discord`/`email`, default `off`), `discord_webhook_url` (check constraint: hanya `https://(ptb.|canary.)?(discord|discordapp).com/api/webhooks/<id>/<token>`; wajib jika saluran `discord`), `reminder_days` (1–14, default 3), `reminder_locale` (`id`/`en`, diisi dari bahasa UI saat menyimpan), `last_reminded_on` (tanggal WIB terakhir diperiksa; cron tidak mengirim dua kali sehari). Cron `/api/cron/reminders` (01:00 UTC = 08:00 WIB) memakai secret key; pengiriman yang gagal tidak menandai `last_reminded_on`. Tes: `supabase/tests/reminders.sql`.

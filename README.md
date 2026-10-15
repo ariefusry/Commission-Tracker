@@ -15,6 +15,7 @@ A free web app for illustrators who take art commissions. Track every order from
 - Payment status per commission (unpaid, deposit, paid) and the amount still owed.
 - Your own workflow stages (e.g. Sketch → Lineart → Coloring) and a slot limit. New orders go to the waiting list when your slots are full.
 - WIP images per commission, compressed in the browser and deleted 30 days after the commission is done.
+- Daily deadline reminders at 08:00 WIB through Discord (a webhook in your own server), with email ready to switch on.
 - Dashboard: income vs unpaid per day or month, comparison with the previous period, a "needs attention" list (late, due soon, done but unpaid), work pipeline, average work time, on-time rate, and income per order type. Click a month to zoom in, or a type to filter the whole dashboard. Every chart has a table view.
 
 **For the client**
@@ -24,7 +25,7 @@ A free web app for illustrators who take art commissions. Track every order from
 - A public landing page, a privacy page, and self-service account deletion (data and images).
 - Indonesian and English, switchable on every page, including the client tracking page.
 - Light, dark, or system theme.
-- Works on phones and desktops.
+- Works on phones and desktops, and installs to the home screen as an app (PWA).
 
 | Board | Commission form |
 |---|---|
@@ -45,6 +46,7 @@ Next.js 16 (App Router, Cache Components), React 19, TypeScript, Tailwind CSS 4,
 - **One Zod schema per form**, shared by the browser and the server action.
 - **Language without URL prefixes.** Routes live under `app/[lang]`. `proxy.ts` rewrites `/dashboard` to `/en/dashboard` or `/id/dashboard` from a `lang` cookie, so links stay short and old tracking links keep working. Both languages prerender.
 - **Storage cleanup.** A Vercel Cron job (`/api/cron/cleanup-wip`, protected by `CRON_SECRET`) removes WIP images 30 days after a commission is done.
+- **Reminders.** A second daily cron (`/api/cron/reminders`) sends each artist their late and due-soon commissions through the channel they picked. The server only posts to official Discord webhook URLs (checked in the database and in code), and marks each artist as reminded once per day.
 
 Details: [`plan.md`](plan.md) (scope and milestones), [`database.md`](database.md) (schema and rules), [`docs/case-study.md`](docs/case-study.md) (problem, decisions, results).
 
@@ -66,6 +68,7 @@ cp .env.example .env.local   # then fill it in
 | `SUPABASE_SECRET_KEY` | Supabase → API keys (server only, used by the cleanup cron) |
 | `SUPABASE_DB_URL` | Supabase → Connect → connection string (for migrations) |
 | `CRON_SECRET` | Any long random string |
+| `RESEND_API_KEY`, `REMINDER_EMAIL_FROM` | Optional. A [Resend](https://resend.com) API key and a sender address on a verified domain. Leave empty to keep email reminders off. |
 
 Apply the database migrations, then start the app:
 
@@ -86,15 +89,15 @@ Open http://localhost:3000 and sign up. New accounts get default order types, ad
 
 ```bash
 npm run lint
-npm test            # unit tests: pricing, stats, queue estimate, dates, formatting
+npm test            # unit tests: pricing, stats, queue estimate, reminders, dates, formatting
 npm run build
 ```
 
-SQL tests for RLS, saving, tracking, queue, WIP images, and account deletion are in `supabase/tests/`. Each one runs inside a transaction and rolls back.
+SQL tests for RLS, saving, tracking, queue, WIP images, account deletion, and reminder settings are in `supabase/tests/`. Each one runs inside a transaction and rolls back.
 
 ## Deploy
 
-Import the repo in Vercel, add the five environment variables above, and deploy. `vercel.json` registers the daily cleanup cron.
+Import the repo in Vercel, add the environment variables above, and deploy. `vercel.json` registers the two daily crons (WIP cleanup and reminders).
 
 ## Support
 
