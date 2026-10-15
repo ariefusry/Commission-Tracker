@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { I18nProvider } from "@/components/i18n-provider";
 import { THEME_SCRIPT } from "@/components/theme-toggle";
@@ -23,8 +23,20 @@ export function generateStaticParams() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getDict();
-  return { title: "Commission Tracker", description: t.meta.description };
+  return {
+    title: "Commission Tracker",
+    description: t.meta.description,
+    // Bisa dipasang di layar utama (PWA): manifest di app/manifest.ts.
+    appleWebApp: { capable: true, title: "Commissions", statusBarStyle: "default" },
+  };
 }
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
+};
 
 export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
   const { locale } = await getDict();

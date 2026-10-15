@@ -5,9 +5,9 @@ import type { Database } from "@/types/database";
 
 // UX saja: gerbang sebenarnya ada di RLS (user_id = auth.uid()).
 // /api/cron dilindungi CRON_SECRET di route-nya sendiri.
-const PUBLIC_PATHS = ["/", "/login", "/signup", "/forgot-password", "/auth", "/track", "/donasi", "/privacy", "/api/cron"];
+const PUBLIC_PATHS = ["/", "/manifest.webmanifest", "/login", "/signup", "/forgot-password", "/auth", "/track", "/donasi", "/privacy", "/api/cron"];
 // Route handler di luar app/[lang]: tidak di-rewrite.
-const NO_LOCALE_PATHS = ["/api", "/auth/confirm"];
+const NO_LOCALE_PATHS = ["/api", "/auth/confirm", "/manifest.webmanifest"];
 
 const matches = (path: string, list: string[]) =>
   list.some((p) => path === p || path.startsWith(`${p}/`));
