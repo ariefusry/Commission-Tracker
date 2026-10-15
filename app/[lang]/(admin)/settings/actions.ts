@@ -1,8 +1,10 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { actionDict } from "@/lib/i18n/action";
+import { WIP_BUCKET } from "@/lib/storage";
 import { createClient } from "@/lib/supabase/server";
 import { catalogItemSchema, type CatalogItemInput } from "@/lib/validators";
 
@@ -143,4 +145,44 @@ export async function updatePreferences(input: z.input<typeof preferencesSchema>
   }
   refresh();
   return {};
+}
+
+const REMOVE_BATCH = 100;
+
+/**
+ * Hapus akun sendiri: file WIP di Storage dulu (cascade database tidak menyentuh Storage),
+ * lalu semua data lewat delete_own_account(). `confirm` = kata konfirmasi dari kamus.
+ */
+export async function deleteAccount(confirm: string): Promise<CatalogResult> {
+  const t = await actionDict();
+  if (confirm.trim() !== t.settings.deleteAccountWord) return { error: t.actions.invalidData };
+
+  const supabase = await createClient();
+  const { data: claims } = await supabase.auth.getClaims();
+  if (!claims?.claims.sub) return { error: t.actions.sessionExpired };
+
+  // RLS: hanya gambar milik user ini.
+  const { data: wip, error: wipError } = await supabase.from("wip_images").select("storage_path");
+  if (wipError) {
+    console.error("deleteAccount wip", wipError);
+    return { error: t.actions.accountDeleteFailed };
+  }
+  for (let i = 0; i < wip.length; i += REMOVE_BATCH) {
+    const paths = wip.slice(i, i + REMOVE_BATCH).map((w) => w.storage_path);
+    const removed = await supabase.storage.from(WIP_BUCKET).remove(paths);
+    // remove() tidak error bila file tak terhapus (mis. policy) → cek jumlahnya.
+    if (removed.error || removed.data.length < paths.length) {
+      console.error("deleteAccount storage", removed.error);
+      return { error: t.actions.accountDeleteFailed };
+    }
+  }
+
+  const { error } = await supabase.rpc("delete_own_account");
+  if (error) {
+    console.error("deleteAccount", error);
+    return { error: t.actions.accountDeleteFailed };
+  }
+  // User sudah tidak ada: cukup hapus cookie sesi di browser ini.
+  await supabase.auth.signOut({ scope: "local" });
+  redirect("/");
 }

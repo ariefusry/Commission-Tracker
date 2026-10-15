@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { updatePreferences } from "@/app/[lang]/(admin)/settings/actions";
 import { useDict } from "@/components/i18n-provider";
+import { DeleteAccount } from "@/components/settings/delete-account";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -177,6 +178,10 @@ export function GeneralSettings({ initial }: { initial: Preferences }) {
         >
           {t.settings.countCancelledHint}
         </PreferenceToggle>
+      </div>
+      <div className="grid gap-2">
+        <h3 className="text-sm font-semibold">{t.settings.account}</h3>
+        <DeleteAccount />
       </div>
     </div>
   );
