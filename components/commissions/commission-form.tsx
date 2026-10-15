@@ -39,12 +39,14 @@ type Props = {
   addons: AddonOption[];
   snapshot?: PriceSnapshot;
   stages: StageOption[];
+  /** Bagian tambahan di kolom kiri, setelah "Lainnya" (mis. Gambar WIP). Tanpa <form> di dalamnya. */
+  children?: React.ReactNode;
 };
 
 const toInt = (v: unknown) => (v === "" || v === null ? 0 : Number(v));
 const toIntOrNull = (v: unknown) => (v === "" || v === null ? null : Number(v));
 
-export function CommissionForm({ commissionId, defaultValues, types, addons, snapshot, stages }: Props) {
+export function CommissionForm({ commissionId, defaultValues, types, addons, snapshot, stages, children }: Props) {
   const [pending, startTransition] = useTransition();
   // Tipe yang baru dibuat dari form ini (belum ada di props sampai server refresh).
   const [createdTypes, setCreatedTypes] = useState<TypeOption[]>([]);
@@ -269,7 +271,7 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
         )}
         {field("notes", "Catatan", <Textarea rows={3} {...invalid("notes")} {...register("notes")} />, undefined, true)}
       </Section>
-
+      {children}
       </div>
 
       {/* Ringkasan harga: panel kanan di desktop, di bawah form + bar bawah di HP. */}

@@ -18,17 +18,16 @@ async function EditForm({ params }: { params: PageProps<"/commissions/[id]">["pa
   ]);
 
   return (
-    <div className="grid gap-6">
-      <CommissionForm
+    <CommissionForm
       commissionId={id}
       defaultValues={commission.values}
       snapshot={commission.snapshot}
       types={types}
       addons={addons}
       stages={stages}
-      />
+    >
       <WipManager commissionId={id} images={wip} />
-    </div>
+    </CommissionForm>
   );
 }
 
