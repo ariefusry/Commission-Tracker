@@ -20,13 +20,15 @@ function Links({ pathname, vertical }: Props & { pathname: string | null }) {
       <Link
         key={href}
         href={href}
+        title={label}
         aria-current={active ? "page" : undefined}
         className={`flex items-center gap-2.5 rounded-md transition-colors ${vertical ? "px-3 py-2" : "px-2.5 py-1.5"} ${
           active ? "bg-muted font-medium text-foreground" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
         }`}
       >
-        {vertical && <Icon className="size-4" />}
-        {label}
+        <Icon className="size-4" aria-hidden />
+        {/* Bar atas HP sempit: link non-aktif cukup ikon. */}
+        <span className={vertical || active ? undefined : "sr-only sm:not-sr-only"}>{label}</span>
       </Link>
     );
   });
