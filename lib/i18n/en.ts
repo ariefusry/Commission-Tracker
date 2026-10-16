@@ -288,6 +288,18 @@ const en: Dict = {
     dropped: (name, column) => `Dropped ${name} in ${column}.`,
     cancelled: (name) => `Cancelled. ${name} returned to its place.`,
   },
+  onboarding: {
+    title: "Start here",
+    progress: (done, total) => `${done} of ${total} steps done`,
+    dismiss: "Hide guide",
+    doneLabel: "(done)",
+    prices: "Set your type and add-on prices",
+    pricesHint: "Replace the sample prices with your own.",
+    first: "Add your first commission",
+    firstHint: "Log an order in progress or on the waiting list.",
+    share: "Send a tracking link to a client",
+    shareHint: "Copy it with the link icon in the commission list; clients check progress themselves.",
+  },
   toast: {
     undo: "Undo",
     updated: (name, value) => `${name} → ${value}`,

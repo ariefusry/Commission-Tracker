@@ -1,8 +1,9 @@
 import { Suspense } from "react";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
+import { Onboarding } from "@/components/dashboard/onboarding";
 import { SkeletonBlock } from "@/components/skeleton-block";
 import { getCommissionRows } from "@/lib/data/commissions";
-import { getPreferences } from "@/lib/data/settings";
+import { getPreferences, hasCustomPrices } from "@/lib/data/settings";
 import { isIsoDate, parsePeriod } from "@/lib/stats";
 import { todayWib } from "@/lib/date";
 import { getDict } from "@/lib/i18n/server";
@@ -11,20 +12,23 @@ import { getDict } from "@/lib/i18n/server";
 async function Content({ searchParams }: { searchParams: PageProps<"/[lang]/dashboard">["searchParams"] }) {
   const params = await searchParams;
   // menunggu request (connection) sebelum membaca jam
-  const [rows, preferences] = await Promise.all([getCommissionRows(), getPreferences()]);
+  const [rows, preferences, pricesSet] = await Promise.all([getCommissionRows(), getPreferences(), hasCustomPrices()]);
   const today = todayWib();
   return (
-    <DashboardView
-      rows={rows}
-      today={today}
-      options={{ countCancelledPaid: preferences.count_cancelled_paid }}
-      initial={{
-        period: parsePeriod(params.period),
-        from: isIsoDate(params.from) ? params.from : "",
-        to: isIsoDate(params.to) ? params.to : "",
-        type: typeof params.type === "string" ? params.type : "",
-      }}
-    />
+    <>
+      <Onboarding pricesSet={pricesSet} hasCommission={rows.length > 0} />
+      <DashboardView
+        rows={rows}
+        today={today}
+        options={{ countCancelledPaid: preferences.count_cancelled_paid }}
+        initial={{
+          period: parsePeriod(params.period),
+          from: isIsoDate(params.from) ? params.from : "",
+          to: isIsoDate(params.to) ? params.to : "",
+          type: typeof params.type === "string" ? params.type : "",
+        }}
+      />
+    </>
   );
 }
 

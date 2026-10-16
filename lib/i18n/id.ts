@@ -288,6 +288,18 @@ const id = {
     dropped: (name: string, column: string) => `${name} ditaruh di kolom ${column}.`,
     cancelled: (name: string) => `Batal. ${name} kembali ke tempat semula.`,
   },
+  onboarding: {
+    title: "Mulai di sini",
+    progress: (done: number, total: number) => `${done} dari ${total} langkah selesai`,
+    dismiss: "Sembunyikan panduan",
+    doneLabel: "(selesai)",
+    prices: "Atur harga tipe & add-on",
+    pricesHint: "Ganti harga contoh dengan harga commission kamu.",
+    first: "Tambah commission pertama",
+    firstHint: "Catat pesanan yang sedang berjalan atau di waiting list.",
+    share: "Kirim link tracking ke client",
+    shareHint: "Salin lewat ikon link di daftar commission; client bisa cek progres sendiri.",
+  },
   toast: {
     undo: "Urungkan",
     updated: (name: string, value: string) => `${name} → ${value}`,

@@ -46,6 +46,30 @@ export async function getPreferences(): Promise<Preferences> {
   };
 }
 
+// Harga contoh dari trigger handle_new_user (migration 20261015170000_drop_subscriptions.sql).
+const SAMPLE_PRICES = new Set([
+  "Headshot:50000",
+  "Bust up:75000",
+  "Halfbody:100000",
+  "Knee up:125000",
+  "Full body:150000",
+  "Detailed character:25000",
+  "Detailed background:50000",
+]);
+
+/** Panduan awal: true jika tipe/add-on sudah berbeda dari harga contoh bawaan. */
+export async function hasCustomPrices(): Promise<boolean> {
+  const supabase = await createClient();
+  const [types, addons] = await Promise.all([
+    supabase.from("commission_types").select("name, base_price"),
+    supabase.from("addons").select("name, price"),
+  ]);
+  if (types.error) throw types.error;
+  if (addons.error) throw addons.error;
+  const items = [...types.data.map((t) => `${t.name}:${t.base_price}`), ...addons.data.map((a) => `${a.name}:${a.price}`)];
+  return items.length !== SAMPLE_PRICES.size || items.some((i) => !SAMPLE_PRICES.has(i));
+}
+
 export async function getCatalog(): Promise<{ types: CatalogItem[]; addons: CatalogItem[]; stages: CatalogItem[] }> {
   const supabase = await createClient();
   const [types, addons, stages, used, usedAddons] = await Promise.all([

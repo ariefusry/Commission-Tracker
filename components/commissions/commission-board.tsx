@@ -21,7 +21,7 @@ import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalList
 import { CSS } from "@dnd-kit/utilities";
 import { CheckCircle2, ChevronDown, GripVertical, Hourglass, Paintbrush, Play, RotateCcw, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useOptimistic, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import { moveCommission } from "@/app/[lang]/(admin)/commissions/actions";
 import { AppSelect } from "@/components/app-select";
 import { CopyTrackingLink } from "@/components/commissions/copy-tracking-link";
@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Status, StageOption } from "@/lib/commission";
 import { orderBetween } from "@/lib/queue-order";
+import { FLAGS, setFlag, useFlag } from "@/lib/stored-flag";
 import type { QuickUpdate } from "@/lib/validators";
 
 type ColumnKey = "waiting" | "working" | "done";
@@ -233,26 +234,12 @@ function Column({ id, highlight, children }: { id: ColumnKey; highlight: boolean
   );
 }
 
-const HINT_KEY = "commission-tracker:board-hint-dismissed";
-const readHintDismissed = () => {
-  try {
-    return localStorage.getItem(HINT_KEY) === "1";
-  } catch {
-    return false;
-  }
-};
-const subscribeStorage = (onChange: () => void) => {
-  window.addEventListener("storage", onChange);
-  return () => window.removeEventListener("storage", onChange);
-};
-
 /** Petunjuk geser kartu: tampil sampai ditutup, lalu diingat di perangkat ini. */
 function BoardHint() {
   const { t } = useDict();
   // Server dan render pertama: anggap sudah ditutup, agar tidak berkedip muncul lalu hilang.
-  const dismissed = useSyncExternalStore(subscribeStorage, readHintDismissed, () => true);
-  const [closed, setClosed] = useState(false);
-  if (dismissed || closed) return null;
+  const dismissed = useFlag(FLAGS.boardHintDismissed, true);
+  if (dismissed) return null;
   return (
     <div className="flex items-start gap-2 rounded-lg bg-muted/50 py-1.5 pr-1 pl-3 text-xs text-muted-foreground">
       <p className="flex-1 py-1">
@@ -263,12 +250,7 @@ function BoardHint() {
         variant="ghost"
         size="icon-xs"
         aria-label={t.board.hintDismiss}
-        onClick={() => {
-          setClosed(true);
-          try {
-            localStorage.setItem(HINT_KEY, "1");
-          } catch {}
-        }}
+        onClick={() => setFlag(FLAGS.boardHintDismissed)}
       >
         <X />
       </Button>
