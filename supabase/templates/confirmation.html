@@ -1,14 +1,101 @@
-<!-- Supabase → Authentication → Emails → "Confirm signup".
-     Subject: Konfirmasi akun Commission Tracker · Confirm your account -->
-<div style="font-family: system-ui, -apple-system, Segoe UI, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #171717">
-  <p style="font-size: 18px; font-weight: 600; margin: 0 0 16px">Commission Tracker</p>
+<!--
+  Supabase → Authentication → Emails → "Confirm signup".
+  Subject: Konfirmasi email kamu · Confirm your email — Commission Tracker
 
-  <p style="margin: 0 0 12px">Halo! Klik tombol di bawah untuk mengonfirmasi email dan mulai mencatat commission kamu.</p>
-  <p style="margin: 0 0 24px; color: #737373; font-size: 14px">Hi! Click the button below to confirm your email and start tracking your commissions.</p>
+  Link memakai token_hash (bukan {{ .ConfirmationURL }}): tetap berhasil walau email dibuka
+  di perangkat lain dari tempat mendaftar. Site URL di Supabase harus URL produksi.
+-->
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light only" />
+    <title>Konfirmasi email · Commission Tracker</title>
+  </head>
+  <body style="margin: 0; padding: 0; background: #f5f5f5">
+    <!-- Teks pratinjau di kotak masuk -->
+    <div style="display: none; max-height: 0; overflow: hidden; opacity: 0">
+      Satu klik lagi untuk mulai mencatat commission kamu. · One more click to start tracking your commissions.
+    </div>
 
-  <p style="margin: 0 0 24px">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #171717; color: #fafafa; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-weight: 500">Konfirmasi email · Confirm email</a>
-  </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: #f5f5f5">
+      <tr>
+        <td align="center" style="padding: 32px 16px">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 480px; background: #ffffff; border: 1px solid #e5e5e5; border-radius: 12px">
+            <tr>
+              <td style="padding: 28px 28px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="vertical-align: middle; padding-right: 10px">
+                      <img src="{{ .SiteURL }}/apple-icon.png" width="32" height="32" alt="" style="display: block; border-radius: 8px" />
+                    </td>
+                    <td style="vertical-align: middle; font-size: 16px; font-weight: 600; color: #171717">Commission Tracker</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
 
-  <p style="margin: 0; color: #737373; font-size: 13px">Kalau kamu tidak mendaftar, abaikan email ini.<br />If you did not sign up, ignore this email.</p>
-</div>
+            <tr>
+              <td style="padding: 24px 28px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #171717">
+                <h1 style="margin: 0 0 12px; font-size: 22px; line-height: 1.25; font-weight: 600; letter-spacing: -0.01em">Konfirmasi email kamu</h1>
+                <p style="margin: 0 0 8px; font-size: 15px; line-height: 1.6">
+                  Halo! Akun Commission Tracker untuk <strong>{{ .Email }}</strong> hampir siap. Klik tombol di bawah untuk
+                  mengonfirmasi email, lalu kamu bisa langsung mencatat antrean, deadline, dan pembayaran commission.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 20px 28px 8px">
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="border-radius: 8px; background: #171717">
+                      <a
+                        href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email&amp;next=/dashboard"
+                        style="display: inline-block; padding: 12px 22px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 600; color: #fafafa; text-decoration: none; border-radius: 8px"
+                        >Konfirmasi email</a
+                      >
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 12px 28px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.6; color: #737373">
+                Link berlaku 1 jam. Tombol tidak bisa diklik? Salin link ini ke browser:<br />
+                <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email&amp;next=/dashboard" style="color: #525252; word-break: break-all">{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email&amp;next=/dashboard</a>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 24px 28px 0">
+                <div style="border-top: 1px solid #e5e5e5"></div>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 20px 28px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #525252">
+                <p style="margin: 0 0 6px; font-size: 15px; font-weight: 600; color: #171717">Confirm your email</p>
+                <p style="margin: 0; font-size: 14px; line-height: 1.6">
+                  Hi! Your Commission Tracker account for <strong>{{ .Email }}</strong> is almost ready. Use the button above to
+                  confirm your email. The link expires in 1 hour.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 24px 28px 28px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #a3a3a3">
+                Tidak merasa mendaftar? Abaikan email ini; akun tidak akan aktif tanpa konfirmasi.<br />
+                Didn't sign up? Ignore this email; the account stays inactive.<br /><br />
+                Kami tidak pernah meminta password lewat email. · We never ask for your password by email.<br />
+                <a href="{{ .SiteURL }}" style="color: #a3a3a3">Commission Tracker</a> · gratis untuk artist / free for artists
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

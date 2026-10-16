@@ -1,14 +1,101 @@
-<!-- Supabase → Authentication → Emails → "Reset password".
-     Subject: Reset password Commission Tracker · Reset your password -->
-<div style="font-family: system-ui, -apple-system, Segoe UI, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #171717">
-  <p style="font-size: 18px; font-weight: 600; margin: 0 0 16px">Commission Tracker</p>
+<!--
+  Supabase → Authentication → Emails → "Reset password".
+  Subject: Atur ulang password · Reset your password — Commission Tracker
 
-  <p style="margin: 0 0 12px">Seseorang meminta reset password untuk akun ini. Klik tombol di bawah untuk membuat password baru.</p>
-  <p style="margin: 0 0 24px; color: #737373; font-size: 14px">Someone asked to reset the password for this account. Click the button below to set a new password.</p>
+  Link memakai token_hash (bukan {{ .ConfirmationURL }}): tetap berhasil walau email dibuka
+  di perangkat lain dari tempat meminta reset. Site URL di Supabase harus URL produksi.
+-->
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light only" />
+    <title>Atur ulang password · Commission Tracker</title>
+  </head>
+  <body style="margin: 0; padding: 0; background: #f5f5f5">
+    <!-- Teks pratinjau di kotak masuk -->
+    <div style="display: none; max-height: 0; overflow: hidden; opacity: 0">
+      Buat password baru untuk akun Commission Tracker kamu. · Set a new password for your Commission Tracker account.
+    </div>
 
-  <p style="margin: 0 0 24px">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #171717; color: #fafafa; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-weight: 500">Buat password baru · Set new password</a>
-  </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: #f5f5f5">
+      <tr>
+        <td align="center" style="padding: 32px 16px">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 480px; background: #ffffff; border: 1px solid #e5e5e5; border-radius: 12px">
+            <tr>
+              <td style="padding: 28px 28px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="vertical-align: middle; padding-right: 10px">
+                      <img src="{{ .SiteURL }}/apple-icon.png" width="32" height="32" alt="" style="display: block; border-radius: 8px" />
+                    </td>
+                    <td style="vertical-align: middle; font-size: 16px; font-weight: 600; color: #171717">Commission Tracker</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
 
-  <p style="margin: 0; color: #737373; font-size: 13px">Kalau kamu tidak memintanya, abaikan email ini. Password kamu tidak berubah.<br />If you did not ask for this, ignore this email. Your password stays the same.</p>
-</div>
+            <tr>
+              <td style="padding: 24px 28px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #171717">
+                <h1 style="margin: 0 0 12px; font-size: 22px; line-height: 1.25; font-weight: 600; letter-spacing: -0.01em">Atur ulang password</h1>
+                <p style="margin: 0 0 8px; font-size: 15px; line-height: 1.6">
+                  Ada permintaan reset password untuk akun <strong>{{ .Email }}</strong>. Klik tombol di bawah untuk membuat
+                  password baru. Data commission kamu tetap aman dan tidak berubah.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 20px 28px 8px">
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="border-radius: 8px; background: #171717">
+                      <a
+                        href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery&amp;next=/reset-password"
+                        style="display: inline-block; padding: 12px 22px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 600; color: #fafafa; text-decoration: none; border-radius: 8px"
+                        >Buat password baru</a
+                      >
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 12px 28px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.6; color: #737373">
+                Link berlaku 1 jam dan hanya bisa dipakai sekali. Tombol tidak bisa diklik? Salin link ini ke browser:<br />
+                <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery&amp;next=/reset-password" style="color: #525252; word-break: break-all">{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery&amp;next=/reset-password</a>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 24px 28px 0">
+                <div style="border-top: 1px solid #e5e5e5"></div>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 20px 28px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #525252">
+                <p style="margin: 0 0 6px; font-size: 15px; font-weight: 600; color: #171717">Reset your password</p>
+                <p style="margin: 0; font-size: 14px; line-height: 1.6">
+                  Someone asked to reset the password for <strong>{{ .Email }}</strong>. Use the button above to set a new one. The
+                  link expires in 1 hour and works once. Your commission data is untouched.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 24px 28px 28px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #a3a3a3">
+                Tidak meminta reset? Abaikan email ini; password kamu tidak berubah.<br />
+                Didn't ask for this? Ignore this email; your password stays the same.<br /><br />
+                Kami tidak pernah meminta password lewat email. · We never ask for your password by email.<br />
+                <a href="{{ .SiteURL }}" style="color: #a3a3a3">Commission Tracker</a> · gratis untuk artist / free for artists
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -83,7 +83,7 @@ Open http://localhost:3000 and sign up. New accounts get default order types, ad
 
 ### Auth emails
 
-`supabase/templates/` holds bilingual (Indonesian + English) emails for sign-up confirmation and password reset. Paste each file into Supabase → Authentication → Emails, with the subject line written at the top of the file. In Authentication → URL Configuration, set the Site URL to your deployed URL and add `<your-url>/auth/confirm` to the redirect URLs.
+`supabase/templates/` holds bilingual (Indonesian + English) emails for sign-up confirmation ("Confirm signup") and password reset ("Reset password"). Paste each file into Supabase → Authentication → Emails, with the subject line written at the top of the file. The links use `{{ .TokenHash }}` to `/auth/confirm` rather than `{{ .ConfirmationURL }}`, so they work even when the email is opened on another device. They build on `{{ .SiteURL }}`, so in Authentication → URL Configuration set the Site URL to your deployed URL and add `<your-url>/auth/confirm` to the redirect URLs.
 
 ### Checks
 
