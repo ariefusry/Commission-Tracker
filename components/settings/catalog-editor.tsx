@@ -9,6 +9,8 @@ import { useDict } from "@/components/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PriceInput } from "@/components/price-input";
+import { useToast } from "@/components/toast";
+import { formatThousands, parseRupiah } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 import { translateError } from "@/lib/i18n";
 import { catalogItemSchema } from "@/lib/validators";
@@ -27,7 +29,7 @@ function useItemForm(initial: { name: string; price: string; is_active: boolean 
   const [pending, startTransition] = useTransition();
 
   const submit = (save: (v: { name: string; price: number; is_active: boolean }) => Promise<{ error?: string; fieldErrors?: Record<string, string[] | undefined> }>, onDone?: () => void) => {
-    const input = { name: values.name, price: values.price === "" ? Number.NaN : Number(values.price), is_active: values.is_active };
+    const input = { name: values.name, price: parseRupiah(values.price) ?? Number.NaN, is_active: values.is_active };
     const parsed = catalogItemSchema.safeParse(input);
     if (!parsed.success) {
       const f = z.flattenError(parsed.error).fieldErrors;
@@ -45,11 +47,12 @@ function useItemForm(initial: { name: string; price: string; is_active: boolean 
 }
 
 function Row({ kind, item, first, last }: { kind: CatalogKind; item: CatalogItem; first: boolean; last: boolean }) {
-  const initial = { name: item.name, price: String(item.price), is_active: item.is_active };
-  const f = useItemForm(initial);
   const { t } = useDict();
+  const toast = useToast();
+  const initial = { name: item.name, price: formatThousands(item.price, t.intl), is_active: item.is_active };
+  const f = useItemForm(initial);
   const dirty =
-    f.values.name !== item.name || f.values.price !== String(item.price) || f.values.is_active !== item.is_active;
+    f.values.name !== item.name || parseRupiah(f.values.price) !== item.price || f.values.is_active !== item.is_active;
 
   const run = (action: () => Promise<{ error?: string }>) =>
     f.startTransition(async () => {
@@ -63,7 +66,10 @@ function Row({ kind, item, first, last }: { kind: CatalogKind; item: CatalogItem
         className={`grid items-start gap-2 ${hasPrice(kind) ? "grid-cols-[1fr_7.5rem] sm:grid-cols-[1fr_9rem_auto_auto]" : "grid-cols-[1fr_auto] sm:grid-cols-[1fr_auto_auto]"}`}
         onSubmit={(e) => {
           e.preventDefault();
-          f.submit((v) => saveCatalogItem(kind, item.id, v));
+          f.submit(
+            (v) => saveCatalogItem(kind, item.id, v),
+            () => toast({ message: t.toast.saved(f.values.name.trim()) }),
+          );
         }}
       >
         <div className="col-span-2 grid gap-1 sm:col-span-1">
@@ -116,7 +122,9 @@ function Row({ kind, item, first, last }: { kind: CatalogKind; item: CatalogItem
             disabled={f.pending}
             onConfirm={() => deleteCatalogItem(kind, item.id)}
           />
-          <Button type="submit" size="sm" disabled={!dirty || f.pending}>
+          {/* Tampil hanya saat baris ini diubah (tanpa deretan tombol yang tampak nonaktif);
+              ruangnya tetap ada agar kolom lain tidak bergeser. */}
+          <Button type="submit" size="sm" disabled={!dirty || f.pending} className={dirty ? undefined : "invisible"}>
             {f.pending ? "..." : t.common.save}
           </Button>
         </div>

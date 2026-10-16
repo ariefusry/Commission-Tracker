@@ -290,11 +290,13 @@ const id = {
     moved: (name: string, column: string) => `${name} dipindah ke ${column}`,
     reordered: (name: string) => `Urutan ${name} diubah`,
     deleted: (name: string) => `${name} dihapus`,
+    saved: (name: string) => `${name} disimpan`,
     linkCopied: (name: string) => `Link tracking ${name} disalin`,
     copyFailed: (url: string) => `Gagal menyalin. Salin manual: ${url}`,
   },
   form: {
     newTitle: "Tambah commission",
+    required: "wajib",
     editTitle: "Edit commission",
     client: "Client",
     username: "Username client",

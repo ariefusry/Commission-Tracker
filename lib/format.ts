@@ -17,6 +17,23 @@ export function formatRupiah(value: number): string {
   return rupiah.format(value);
 }
 
+/** Teks input harga ("50.000", "50,000", "Rp 50.000") → angka; kosong → null. */
+export function parseRupiah(value: unknown): number | null {
+  if (typeof value === "number") return value;
+  const digits = String(value ?? "").replace(/\D/g, "");
+  return digits ? Number(digits) : null;
+}
+
+const plain = new Map<string, Intl.NumberFormat>();
+/** Isi input harga: "50000" → "50.000" (id-ID) / "50,000" (en-GB); tanpa digit → "". */
+export function formatThousands(value: string | number, intl = "id-ID"): string {
+  const n = parseRupiah(value);
+  if (n === null) return "";
+  let f = plain.get(intl);
+  if (!f) plain.set(intl, (f = new Intl.NumberFormat(intl, { maximumFractionDigits: 0 })));
+  return f.format(n);
+}
+
 /** Tanggal `YYYY-MM-DD` dari database → "15 Okt 2026" / "15 Oct 2026". */
 export function formatDate(value: string | null, intl = "id-ID"): string {
   return value ? dateFormat(intl, { day: "numeric", month: "short", year: "numeric" }).format(new Date(`${value}T00:00:00Z`)) : "-";

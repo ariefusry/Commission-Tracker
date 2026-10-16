@@ -6,6 +6,7 @@ import { z } from "zod";
 import { saveCatalogItem } from "@/app/[lang]/(admin)/settings/actions";
 import { useDict } from "@/components/i18n-provider";
 import { PriceInput } from "@/components/price-input";
+import { parseRupiah } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { translateError } from "@/lib/i18n";
@@ -36,7 +37,7 @@ export function InlineAddType({ onCreated }: { onCreated: (t: Created) => void }
   const add = () => {
     const parsed = catalogItemSchema.safeParse({
       name,
-      price: price === "" ? Number.NaN : Number(price),
+      price: parseRupiah(price) ?? Number.NaN,
       is_active: true,
     });
     if (!parsed.success) {

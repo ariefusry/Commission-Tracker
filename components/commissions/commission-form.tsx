@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CUSTOM_TYPE, PAYMENT_STATUSES, STATUSES, type StageOption } from "@/lib/commission";
 import { localToday } from "@/lib/deadline";
-import { formatRupiah } from "@/lib/format";
+import { formatRupiah, parseRupiah } from "@/lib/format";
 import { translateError } from "@/lib/i18n";
 import { amountDue, priceTotal } from "@/lib/pricing";
 import { commissionSchema, type CommissionInput, type CommissionValues } from "@/lib/validators";
@@ -38,8 +38,9 @@ type Props = {
   children?: React.ReactNode;
 };
 
-const toInt = (v: unknown) => (v === "" || v === null ? 0 : Number(v));
-const toIntOrNull = (v: unknown) => (v === "" || v === null ? null : Number(v));
+// Harga dari PriceInput berformat ribuan ("50.000"): ambil digitnya saja.
+const toInt = (v: unknown) => parseRupiah(v) ?? 0;
+const toIntOrNull = (v: unknown) => parseRupiah(v);
 
 export function CommissionForm({ commissionId, defaultValues, types, addons, snapshot, stages, children }: Props) {
   const [pending, startTransition] = useTransition();
@@ -105,15 +106,27 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
     control: React.ReactNode,
     hint?: string,
     wide?: boolean,
+    extra?: { required?: boolean; after?: React.ReactNode },
   ) => (
     <div className={`grid content-start gap-2 ${wide ? "sm:col-span-2" : ""}`}>
-      <Label htmlFor={name}>{label}</Label>
+      <Label htmlFor={name}>
+        {label}
+        {extra?.required && (
+          <>
+            <span className="text-destructive" aria-hidden>
+              *
+            </span>
+            <span className="sr-only">({t.form.required})</span>
+          </>
+        )}
+      </Label>
       {control}
       {err(name) ? (
         <p className="text-sm text-destructive">{err(name)}</p>
       ) : (
         hint && <p className="text-sm text-muted-foreground">{hint}</p>
       )}
+      {extra?.after}
     </div>
   );
 
@@ -150,7 +163,7 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
     >
       <div className="grid gap-6">
       <Section title={f.client}>
-        {field("client_username", f.username, <Input {...invalid("client_username")} {...register("client_username")} />)}
+        {field("client_username", f.username, <Input {...invalid("client_username")} aria-required {...register("client_username")} />, undefined, false, { required: true })}
         {field("contact_platform", f.platform, <Input {...invalid("contact_platform")} placeholder={f.platformPlaceholder} {...register("contact_platform")} />)}
         {field("contact_handle", f.contact, <Input {...invalid("contact_handle")} placeholder={f.contactPlaceholder} {...register("contact_handle")} />)}
       </Section>
@@ -159,8 +172,7 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
         {field(
           "type_id",
           f.type,
-          <div className="grid gap-2">
-            {select(
+          select(
               "type_id",
               [
                 ...allTypes.map((t) => ({ value: t.id, label: `${t.name} (${formatRupiah(t.base_price)})` })),
@@ -170,14 +182,20 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
                   : []),
               ],
               f.chooseType,
-            )}
-            <InlineAddType
-              onCreated={(t) => {
-                setCreatedTypes((prev) => [...prev, t]);
-                setValue("type_id", t.id, { shouldDirty: true, shouldValidate: true });
-              }}
-            />
-          </div>,
+            ),
+          undefined,
+          false,
+          {
+            required: true,
+            after: (
+              <InlineAddType
+                onCreated={(t) => {
+                  setCreatedTypes((prev) => [...prev, t]);
+                  setValue("type_id", t.id, { shouldDirty: true, shouldValidate: true });
+                }}
+              />
+            ),
+          },
         )}
         {typeId === CUSTOM_TYPE &&
           field("type_custom", f.customName, <Input {...invalid("type_custom")} {...register("type_custom")} />)}

@@ -290,11 +290,13 @@ const en: Dict = {
     moved: (name, column) => `Moved ${name} to ${column}`,
     reordered: (name) => `Reordered ${name}`,
     deleted: (name) => `Deleted ${name}`,
+    saved: (name) => `Saved ${name}`,
     linkCopied: (name) => `Copied tracking link for ${name}`,
     copyFailed: (url) => `Couldn't copy. Copy it manually: ${url}`,
   },
   form: {
     newTitle: "Add commission",
+    required: "required",
     editTitle: "Edit commission",
     client: "Client",
     username: "Client username",
