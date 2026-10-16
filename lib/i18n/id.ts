@@ -413,6 +413,9 @@ const id = {
     slots: "Jumlah slot",
     slotsHint: "Berapa commission yang kamu kerjakan bersamaan. Jika slot penuh, commission baru otomatis masuk waiting list.",
     trackingPage: "Halaman tracking client",
+    accent: "Warna halaman tracking",
+    accentHint: "Dipakai untuk avatar dan progress di halaman yang dilihat client.",
+    accentNames: { neutral: "Netral", rose: "Rose", orange: "Oranye", emerald: "Hijau", sky: "Biru", violet: "Ungu", pink: "Pink" },
     showQueue: "Tampilkan antrean dan perkiraan selesai",
     showQueueHint:
       'Client melihat posisinya di antrean, papan "Sedang dikerjakan" / "Waiting list" (tanpa nama client lain), dan perkiraan tanggal selesai dari kecepatan kerja kamu.',

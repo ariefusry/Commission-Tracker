@@ -13,6 +13,7 @@ import { formatDate } from "@/lib/format";
 import { todayWib } from "@/lib/date";
 import type { Dict } from "@/lib/i18n";
 import { getDict } from "@/lib/i18n/server";
+import { accentStyle } from "@/lib/accent";
 
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -48,11 +49,19 @@ async function Tracking({ params }: { params: PageProps<"/[lang]/track/[code]">[
   const due = deadlineInfo(t.deadline, t.status, today);
 
   return (
-    <article className="grid gap-5 rounded-xl border bg-card p-5 sm:p-6">
+    // Aksen pilihan artist menggantikan token primary: avatar dan stepper ikut berwarna.
+    <article className="grid gap-5 rounded-xl border bg-card p-5 sm:p-6" style={accentStyle(t.accent_color)}>
       <header className="grid gap-1">
-        <p className="text-sm text-muted-foreground">
-          {t.artist_name ? d.tracking.by(t.artist_name) : d.tracking.progress}
-        </p>
+        <div className="flex items-center gap-2.5">
+          {t.artist_name && (
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground" aria-hidden>
+              {t.artist_name.trim()[0].toUpperCase()}
+            </span>
+          )}
+          <p className="text-sm text-muted-foreground">
+            {t.artist_name ? d.tracking.by(t.artist_name) : d.tracking.progress}
+          </p>
+        </div>
         <h1 className="text-xl font-semibold">{t.client_username}</h1>
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <span className="text-muted-foreground">{t.type_name}</span>

@@ -301,6 +301,8 @@ Kolom lama `commissions.stage` (enum), `stage_custom`, dan enum `commission_stag
 
 `settings.count_cancelled_paid` (default `true`): pembayaran dari commission batal (DP yang tidak dikembalikan) dihitung sebagai uang masuk di dashboard. Diubah di Pengaturan → Pembayaran.
 
+`settings.accent_color` (default `null` = netral): warna aksen halaman tracking, salah satu kunci palet `rose`, `orange`, `emerald`, `sky`, `violet`, `pink` (check constraint, sama dengan `lib/accent.ts`). Dikembalikan `get_tracking` sebagai `accent_color`. Diubah di Pengaturan → Umum.
+
 ## Antrean & Perkiraan Selesai (halaman tracking)
 
 - `commissions.completed_at`: diisi trigger saat status menjadi `done`, dikosongkan jika dibuka lagi. Data lama diisi dari `deadline` (tanggal selesai asli tidak tercatat).

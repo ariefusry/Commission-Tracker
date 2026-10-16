@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Preferences } from "@/lib/data/settings";
+import { ACCENT_KEYS, accentStyle, type Accent } from "@/lib/accent";
 import { translateError } from "@/lib/i18n";
 
 type Status = { error?: string; saved?: boolean };
@@ -70,6 +71,62 @@ function DisplayName({ initial }: { initial: string }) {
       </p>
       <StatusText pending={pending} status={status} />
     </form>
+  );
+}
+
+/** Warna aksen halaman tracking: tersimpan begitu dipilih; pratinjau avatar ikut berubah. */
+function AccentPicker({ initial, name }: { initial: Accent | null; name: string }) {
+  const { t } = useDict();
+  const s = t.settings;
+  const [value, setValue] = useState<Accent | null>(initial);
+  const [status, setStatus] = useState<Status>({});
+  const [pending, startTransition] = useTransition();
+  const options: (Accent | null)[] = [null, ...ACCENT_KEYS];
+
+  const pick = (next: Accent | null) => {
+    const previous = value;
+    setValue(next);
+    startTransition(async () => {
+      const result = await updatePreferences({ accent_color: next });
+      if (result.error) setValue(previous); // kembalikan jika gagal
+      setStatus(result.error ? { error: result.error } : { saved: true });
+    });
+  };
+
+  return (
+    <fieldset className="grid gap-2">
+      <legend className="text-sm font-medium">{s.accent}</legend>
+      <div className="flex items-center gap-3 rounded-lg border p-3" style={accentStyle(value)}>
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground" aria-hidden>
+          {(name.trim()[0] ?? "A").toUpperCase()}
+        </span>
+        <span className="text-sm text-muted-foreground">{s.accentHint}</span>
+      </div>
+      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={s.accent}>
+        {options.map((key) => {
+          const label = s.accentNames[key ?? "neutral"];
+          const selected = value === key;
+          return (
+            <button
+              key={key ?? "neutral"}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              aria-label={label}
+              title={label}
+              disabled={pending}
+              onClick={() => !selected && pick(key)}
+              className={`flex size-9 items-center justify-center rounded-full ring-offset-2 ring-offset-background transition-transform active:scale-95 pointer-coarse:size-11 ${
+                selected ? "ring-2 ring-foreground" : "ring-1 ring-border"
+              }`}
+            >
+              <span className="size-6 rounded-full bg-primary" style={accentStyle(key)} />
+            </button>
+          );
+        })}
+      </div>
+      <StatusText pending={pending} status={status} />
+    </fieldset>
   );
 }
 
@@ -166,6 +223,7 @@ export function GeneralSettings({ initial }: { initial: Preferences }) {
       <SlotLimit initial={initial.slot_limit} />
       <div className="grid gap-2">
         <h3 className="text-sm font-semibold">{t.settings.trackingPage}</h3>
+        <AccentPicker initial={initial.accent_color} name={initial.display_name} />
         <PreferenceToggle field="show_queue" initial={initial.show_queue} title={t.settings.showQueue}>
           {t.settings.showQueueHint}
         </PreferenceToggle>

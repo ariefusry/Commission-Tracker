@@ -87,14 +87,14 @@ isOneToOne: false
                   ]
                 },"settings": {
                   Row: {
-                    "count_cancelled_paid": boolean,"discord_webhook_url": string | null,"display_name": string | null,"is_open": boolean,"last_reminded_on": string | null,"reminder_channel": string,"reminder_days": number,"reminder_locale": string,"show_queue": boolean,"slot_limit": number,"user_id": string
+                    "accent_color": string | null,"count_cancelled_paid": boolean,"discord_webhook_url": string | null,"display_name": string | null,"is_open": boolean,"last_reminded_on": string | null,"reminder_channel": string,"reminder_days": number,"reminder_locale": string,"show_queue": boolean,"slot_limit": number,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "count_cancelled_paid"?: boolean,"discord_webhook_url"?: string | null,"display_name"?: string | null,"is_open"?: boolean,"last_reminded_on"?: string | null,"reminder_channel"?: string,"reminder_days"?: number,"reminder_locale"?: string,"show_queue"?: boolean,"slot_limit"?: number,"user_id"?: string
+                    "accent_color"?: string | null,"count_cancelled_paid"?: boolean,"discord_webhook_url"?: string | null,"display_name"?: string | null,"is_open"?: boolean,"last_reminded_on"?: string | null,"reminder_channel"?: string,"reminder_days"?: number,"reminder_locale"?: string,"show_queue"?: boolean,"slot_limit"?: number,"user_id"?: string
                   }
                   Update: {
-                    "count_cancelled_paid"?: boolean,"discord_webhook_url"?: string | null,"display_name"?: string | null,"is_open"?: boolean,"last_reminded_on"?: string | null,"reminder_channel"?: string,"reminder_days"?: number,"reminder_locale"?: string,"show_queue"?: boolean,"slot_limit"?: number,"user_id"?: string
+                    "accent_color"?: string | null,"count_cancelled_paid"?: boolean,"discord_webhook_url"?: string | null,"display_name"?: string | null,"is_open"?: boolean,"last_reminded_on"?: string | null,"reminder_channel"?: string,"reminder_days"?: number,"reminder_locale"?: string,"show_queue"?: boolean,"slot_limit"?: number,"user_id"?: string
                   }
                   Relationships: [
                     
@@ -150,7 +150,7 @@ isOneToOne: false
                            },
 "get_tracking":
 { Args: { "p_code": string }; Returns: {
-              "artist_name": string,"client_username": string,"current_stage": number,"deadline": string,"queue": Json,"queue_position": number,"queue_total": number,"recent_completions": (string)[],"slot_limit": number,"stages": (string)[],"start_date": string,"status": Database["public"]['Enums']["commission_status"],"type_name": string,"updated_at": string,"wait_position": number,"wait_total": number,"wip": Json
+              "accent_color": string,"artist_name": string,"client_username": string,"current_stage": number,"deadline": string,"queue": Json,"queue_position": number,"queue_total": number,"recent_completions": (string)[],"slot_limit": number,"stages": (string)[],"start_date": string,"status": Database["public"]['Enums']["commission_status"],"type_name": string,"updated_at": string,"wait_position": number,"wait_total": number,"wip": Json
             }[]
                            },
 "has_access":
@@ -158,6 +158,9 @@ isOneToOne: false
                            },
 "save_commission":
 { Args: { "p_addons": Json,"p_data": Json,"p_id"?: string }; Returns: string
+                           },
+"wip_object_count":
+{ Args: { "p_commission": string }; Returns: number
                            }
           }
           Enums: {

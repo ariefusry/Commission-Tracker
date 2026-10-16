@@ -4,6 +4,7 @@ import { refresh } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { ACCENT_KEYS } from "@/lib/accent";
 import { todayWib } from "@/lib/date";
 import { actionDict, actionLocale } from "@/lib/i18n/action";
 import { emailAvailable, sendDiscord, sendEmail } from "@/lib/notify";
@@ -123,6 +124,7 @@ export async function moveItem(kind: "type" | "stage", id: string, direction: "u
 const preferencesSchema = z
   .object({
     display_name: z.string().trim().max(60, "max60Chars"),
+    accent_color: z.enum(ACCENT_KEYS).nullable(),
     count_cancelled_paid: z.boolean(),
     show_queue: z.boolean(),
     // Pesan = kunci t.errors.

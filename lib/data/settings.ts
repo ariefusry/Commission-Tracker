@@ -1,4 +1,5 @@
 import "server-only";
+import { isAccent, type Accent } from "@/lib/accent";
 import type { CatalogItem } from "@/components/settings/catalog-editor";
 import { emailAvailable } from "@/lib/notify";
 import { createClient } from "@/lib/supabase/server";
@@ -12,6 +13,7 @@ const countBy = (ids: (string | null)[]) => {
 export type ReminderChannel = "off" | "discord" | "email";
 export type Preferences = {
   display_name: string;
+  accent_color: Accent | null;
   count_cancelled_paid: boolean;
   show_queue: boolean;
   slot_limit: number;
@@ -28,13 +30,14 @@ export async function getPreferences(): Promise<Preferences> {
   const [{ data, error }, { data: claims }] = await Promise.all([
     supabase
       .from("settings")
-      .select("display_name, count_cancelled_paid, show_queue, slot_limit, reminder_channel, discord_webhook_url, reminder_days")
+      .select("display_name, accent_color, count_cancelled_paid, show_queue, slot_limit, reminder_channel, discord_webhook_url, reminder_days")
       .maybeSingle(),
     supabase.auth.getClaims(),
   ]);
   if (error) throw error;
   return {
     display_name: data?.display_name ?? "",
+    accent_color: isAccent(data?.accent_color) ? data.accent_color : null,
     count_cancelled_paid: data?.count_cancelled_paid ?? true,
     show_queue: data?.show_queue ?? true,
     slot_limit: data?.slot_limit ?? 5,

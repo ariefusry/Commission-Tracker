@@ -412,6 +412,9 @@ const en: Dict = {
     slots: "Slots",
     slotsHint: "How many commissions you work on at once. When all slots are taken, new commissions go to the waiting list.",
     trackingPage: "Client tracking page",
+    accent: "Tracking page color",
+    accentHint: "Used for the avatar and progress on the page your clients see.",
+    accentNames: { neutral: "Neutral", rose: "Rose", orange: "Orange", emerald: "Green", sky: "Blue", violet: "Purple", pink: "Pink" },
     showQueue: "Show the queue and estimated finish date",
     showQueueHint:
       'Clients see their place in the queue, an "In progress" / "Waiting list" board (without other client names), and an estimated finish date based on your pace.',
