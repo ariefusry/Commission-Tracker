@@ -250,12 +250,13 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
             stages.filter((s) => s.is_active || s.id === defaultValues.stage_id).map((s) => ({ value: s.id, label: s.name })),
             f.chooseStage,
           ),
-          stages.some((s) => s.is_active) ? undefined : f.noActiveStage,
+          stages.some((s) => s.is_active) ? f.stageHint : f.noActiveStage,
         )}
         {field(
           "status",
           f.status,
           select("status", STATUSES.map((s) => ({ value: s, label: t.status[s] }))),
+          f.statusHint,
         )}
         {field("revision_count", f.revisions, <Input type="number" inputMode="numeric" min={0} {...invalid("revision_count")} {...register("revision_count", { setValueAs: toInt })} />)}
       </Section>

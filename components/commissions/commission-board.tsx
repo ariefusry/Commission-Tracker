@@ -19,9 +19,9 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CheckCircle2, GripVertical, Hourglass, Paintbrush, Play, RotateCcw } from "lucide-react";
+import { CheckCircle2, GripVertical, Hourglass, Paintbrush, Play, RotateCcw, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useOptimistic, useRef, useState, useTransition } from "react";
+import { useEffect, useOptimistic, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { moveCommission } from "@/app/[lang]/(admin)/commissions/actions";
 import { AppSelect } from "@/components/app-select";
 import { Actions, Deadline, Total, useQuickUpdate, type CommissionRow } from "@/components/commissions/commission-list";
@@ -198,6 +198,49 @@ function Column({ id, highlight, children }: { id: ColumnKey; highlight: boolean
   return (
     <div ref={setNodeRef} className={`grid min-h-24 content-start gap-2 rounded-lg transition-colors ${highlight ? "bg-primary/5 ring-2 ring-primary/30" : ""}`}>
       {children}
+    </div>
+  );
+}
+
+const HINT_KEY = "commission-tracker:board-hint-dismissed";
+const readHintDismissed = () => {
+  try {
+    return localStorage.getItem(HINT_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+const subscribeStorage = (onChange: () => void) => {
+  window.addEventListener("storage", onChange);
+  return () => window.removeEventListener("storage", onChange);
+};
+
+/** Petunjuk geser kartu: tampil sampai ditutup, lalu diingat di perangkat ini. */
+function BoardHint() {
+  const { t } = useDict();
+  // Server dan render pertama: anggap sudah ditutup, agar tidak berkedip muncul lalu hilang.
+  const dismissed = useSyncExternalStore(subscribeStorage, readHintDismissed, () => true);
+  const [closed, setClosed] = useState(false);
+  if (dismissed || closed) return null;
+  return (
+    <div className="flex items-start gap-2 rounded-lg bg-muted/50 py-1.5 pr-1 pl-3 text-xs text-muted-foreground">
+      <p className="flex-1 py-1">
+        {t.board.hintBefore} <GripVertical className="inline size-3.5 align-text-bottom" /> {t.board.hintAfter}
+      </p>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-xs"
+        aria-label={t.board.hintDismiss}
+        onClick={() => {
+          setClosed(true);
+          try {
+            localStorage.setItem(HINT_KEY, "1");
+          } catch {}
+        }}
+      >
+        <X />
+      </Button>
     </div>
   );
 }
@@ -425,9 +468,7 @@ export function CommissionBoard({
           </span>
         </div>
       )}
-      <p className="text-xs text-muted-foreground">
-        {t.board.hintBefore} <GripVertical className="inline size-3.5 align-text-bottom" /> {t.board.hintAfter}
-      </p>
+      <BoardHint />
 
       <DndContext
         id="commission-board"
@@ -440,7 +481,11 @@ export function CommissionBoard({
           <TabsList className="w-full">
             {COLUMNS.map((c) => (
               <DroppableTab key={c.key} column={c.key} highlight={activeId !== null && overColumn === c.key}>
-                {t.board[c.key]} ({c.key === "working" ? `${columns.working.length}/${slotLimit}` : columns[c.key].length})
+                {/* Label pendek + jumlah sebagai badge: muat di layar 360px. */}
+                {t.board.tabs[c.key]}
+                <span className="rounded-full bg-muted px-1.5 text-xs font-normal tabular-nums text-muted-foreground">
+                  {c.key === "working" ? `${columns.working.length}/${slotLimit}` : columns[c.key].length}
+                </span>
               </DroppableTab>
             ))}
           </TabsList>

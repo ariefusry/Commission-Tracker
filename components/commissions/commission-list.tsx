@@ -269,8 +269,12 @@ function buildColumns(onUpdate: OnUpdate, pending: boolean, today: string, stage
       id: "progress",
       header: () => (
         <div className="grid grid-cols-3 gap-2">
-          <span>{t.commissions.stage}</span>
-          <span>{t.commissions.status}</span>
+          <span title={t.form.stageHint} className="w-fit cursor-help underline decoration-dotted underline-offset-4">
+            {t.commissions.stage}
+          </span>
+          <span title={t.form.statusHint} className="w-fit cursor-help underline decoration-dotted underline-offset-4">
+            {t.commissions.status}
+          </span>
           <span>{t.commissions.payment}</span>
         </div>
       ),
