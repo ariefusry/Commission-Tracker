@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { CUSTOM_TYPE } from "@/lib/commission";
 import { priceTotal } from "@/lib/pricing";
-import { WIP_BUCKET } from "@/lib/storage";
+import { removeWipFiles } from "@/lib/storage";
 import { actionDict } from "@/lib/i18n/action";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -151,14 +151,7 @@ export async function deleteCommission(id: string): Promise<ActionResult> {
     console.error("deleteCommission wip select", wipError);
     return { error: t.actions.wipDeleteFailed };
   }
-  if (wip.length) {
-    const removed = await supabase.storage.from(WIP_BUCKET).remove(wip.map((w) => w.storage_path));
-    // remove() tidak error bila file tak terhapus (mis. policy) → cek jumlahnya.
-    if (removed.error || removed.data.length < wip.length) {
-      console.error("deleteCommission wip", removed.error);
-      return { error: t.actions.wipDeleteFailed };
-    }
-  }
+  if (!(await removeWipFiles(supabase, wip.map((w) => w.storage_path)))) return { error: t.actions.wipDeleteFailed };
 
   const { data, error } = await supabase.from("commissions").delete().eq("id", id).select("id");
   if (error || !data?.length) {

@@ -4,7 +4,7 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 import { actionDict } from "@/lib/i18n/action";
 import { createClient } from "@/lib/supabase/server";
-import { WIP_BUCKET, WIP_MAX_BYTES, WIP_MAX_PER_COMMISSION, WIP_TYPES, wipPath } from "@/lib/storage";
+import { WIP_BUCKET, WIP_MAX_BYTES, WIP_MAX_PER_COMMISSION, WIP_TYPES, removeWipFiles, wipPath } from "@/lib/storage";
 
 export type WipResult = { error?: string };
 const idSchema = z.uuid();
@@ -57,15 +57,6 @@ export async function uploadWip(formData: FormData): Promise<WipResult> {
   return {};
 }
 
-/** true jika file masih ada atau statusnya tidak bisa dipastikan (aman: jangan hapus barisnya). */
-async function wipExists(supabase: Awaited<ReturnType<typeof createClient>>, path: string) {
-  try {
-    return (await supabase.storage.from(WIP_BUCKET).exists(path)).data;
-  } catch {
-    return true;
-  }
-}
-
 export async function deleteWip(id: string): Promise<WipResult> {
   const t = await actionDict();
   if (!idSchema.safeParse(id).success) return { error: t.actions.invalidId };
@@ -73,13 +64,7 @@ export async function deleteWip(id: string): Promise<WipResult> {
   const { data } = await supabase.from("wip_images").select("storage_path").eq("id", id).maybeSingle();
   if (!data) return { error: t.actions.imageNotFound };
 
-  const removed = await supabase.storage.from(WIP_BUCKET).remove([data.storage_path]);
-  // remove() tidak error bila file tak terhapus (mis. policy) → cek jumlahnya.
-  // 0 terhapus karena file memang sudah hilang tetap boleh lanjut, kalau tidak barisnya tak bisa dihapus selamanya.
-  if (removed.error || (removed.data.length < 1 && (await wipExists(supabase, data.storage_path)))) {
-    console.error("deleteWip storage", removed.error);
-    return { error: t.actions.imageDeleteFailed };
-  }
+  if (!(await removeWipFiles(supabase, [data.storage_path]))) return { error: t.actions.imageDeleteFailed };
   const { error } = await supabase.from("wip_images").delete().eq("id", id);
   if (error) {
     console.error("deleteWip row", error);

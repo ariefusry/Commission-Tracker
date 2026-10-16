@@ -8,7 +8,7 @@ import { todayWib } from "@/lib/date";
 import { actionDict, actionLocale } from "@/lib/i18n/action";
 import { emailAvailable, sendDiscord, sendEmail } from "@/lib/notify";
 import { reminderText } from "@/lib/reminders";
-import { WIP_BUCKET } from "@/lib/storage";
+import { removeWipFiles } from "@/lib/storage";
 import { createClient } from "@/lib/supabase/server";
 import { catalogItemSchema, reminderSchema, type CatalogItemInput, type ReminderInput } from "@/lib/validators";
 
@@ -151,8 +151,6 @@ export async function updatePreferences(input: z.input<typeof preferencesSchema>
   return {};
 }
 
-const REMOVE_BATCH = 100;
-
 /**
  * Hapus akun sendiri: file WIP di Storage dulu (cascade database tidak menyentuh Storage),
  * lalu semua data lewat delete_own_account(). `confirm` = kata konfirmasi dari kamus.
@@ -180,15 +178,7 @@ export async function deleteAccount(confirm: string): Promise<CatalogResult> {
     wip.push(...data);
     if (data.length < 1000) break;
   }
-  for (let i = 0; i < wip.length; i += REMOVE_BATCH) {
-    const paths = wip.slice(i, i + REMOVE_BATCH).map((w) => w.storage_path);
-    const removed = await supabase.storage.from(WIP_BUCKET).remove(paths);
-    // remove() tidak error bila file tak terhapus (mis. policy) → cek jumlahnya.
-    if (removed.error || removed.data.length < paths.length) {
-      console.error("deleteAccount storage", removed.error);
-      return { error: t.actions.accountDeleteFailed };
-    }
-  }
+  if (!(await removeWipFiles(supabase, wip.map((w) => w.storage_path)))) return { error: t.actions.accountDeleteFailed };
 
   const { error } = await supabase.rpc("delete_own_account");
   if (error) {
