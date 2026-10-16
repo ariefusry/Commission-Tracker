@@ -21,7 +21,7 @@ import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalList
 import { CSS } from "@dnd-kit/utilities";
 import { CheckCircle2, GripVertical, Hourglass, Paintbrush, Play, RotateCcw } from "lucide-react";
 import Link from "next/link";
-import { useOptimistic, useState, useTransition } from "react";
+import { useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import { moveCommission } from "@/app/[lang]/(admin)/commissions/actions";
 import { AppSelect } from "@/components/app-select";
 import { Actions, Deadline, Total, useQuickUpdate, type CommissionRow } from "@/components/commissions/commission-list";
@@ -40,6 +40,12 @@ type Move = { id: string; status: BoardStatus; queue_order: number };
 
 const DONE_LIMIT = 10;
 const COLUMN_KEYS: ColumnKey[] = ["waiting", "working", "done"];
+
+const reducedMotion = () => typeof window !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+// Getar singkat saat kartu diangkat/ditaruh (Android; iOS tidak mendukung Vibration API).
+const haptic = () => navigator.vibrate?.(8);
+// Kartu kembali ke tempatnya: spring tanpa pantulan (dekati damping 1.0).
+const DROP_ANIMATION = { duration: 220, easing: "cubic-bezier(0.2, 0.9, 0.3, 1)" };
 
 const columnOf = (status: Status): ColumnKey | null =>
   status === "queue" ? "waiting" : status === "in_progress" || status === "revision" ? "working" : status === "done" ? "done" : null;
@@ -234,6 +240,28 @@ export function CommissionBoard({
   const toast = useToast();
   const quickUpdate = useQuickUpdate(stages, startTransition);
   const [mobileColumn, setMobileColumn] = useState<ColumnKey>("working");
+  // HP: kolom berjajar horizontal dengan scroll-snap (swipe + momentum bawaan browser); tab ikut posisi scroll.
+  const pagerRef = useRef<HTMLDivElement>(null);
+  const pageLeft = (pager: HTMLElement, column: ColumnKey) =>
+    (pager.children[COLUMN_KEYS.indexOf(column)] as HTMLElement).offsetLeft - parseFloat(getComputedStyle(pager).paddingLeft);
+  const goTo = (column: ColumnKey) => {
+    setMobileColumn(column);
+    const pager = pagerRef.current;
+    if (pager && pager.scrollWidth > pager.clientWidth)
+      pager.scrollTo({ left: pageLeft(pager, column), behavior: reducedMotion() ? "auto" : "smooth" });
+  };
+  const onPagerScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const pager = e.currentTarget;
+    const nearest = COLUMN_KEYS.reduce((best, c) =>
+      Math.abs(pageLeft(pager, c) - pager.scrollLeft) < Math.abs(pageLeft(pager, best) - pager.scrollLeft) ? c : best,
+    );
+    if (nearest !== mobileColumn) setMobileColumn(nearest);
+  };
+  // Mulai di kolom "Sedang dikerjakan" tanpa animasi (desktop: tidak bisa di-scroll, tidak berpengaruh).
+  useEffect(() => {
+    const pager = pagerRef.current;
+    if (pager) pager.scrollLeft = pageLeft(pager, "working");
+  }, []);
   const [suggest, setSuggest] = useState<CommissionRow | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overColumn, setOverColumn] = useState<ColumnKey | null>(null);
@@ -298,12 +326,15 @@ export function CommissionBoard({
     return row ? columnOf(row.status) : null;
   };
 
-  const onDragStart = ({ active }: DragStartEvent) => setActiveId(String(active.id));
+  const onDragStart = ({ active }: DragStartEvent) => {
+    setActiveId(String(active.id));
+    haptic();
+  };
   const onDragOver = ({ over }: DragOverEvent) => {
     const column = over ? findColumn(String(over.id)) : null;
     setOverColumn(column);
     // Melayang di atas tab (HP): buka kolomnya, seperti folder spring-loaded.
-    if (column && String(over?.id).startsWith("tab:")) setMobileColumn(column);
+    if (column && column !== mobileColumn && String(over?.id).startsWith("tab:")) goTo(column);
   };
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
@@ -339,6 +370,7 @@ export function CommissionBoard({
     const queueOrder =
       toColumn === "done" ? row.queue_order : orderBetween(list[index - 1]?.queue_order, list[index]?.queue_order);
     if (fromColumn === toColumn && queueOrder === row.queue_order) return;
+    haptic();
     commit(row, status, queueOrder);
   };
 
@@ -377,7 +409,7 @@ export function CommissionBoard({
   });
 
   return (
-    <div className="grid gap-3">
+    <div className="grid grid-cols-1 gap-3">
       {suggest && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-sm" role="status">
           <span>
@@ -397,9 +429,14 @@ export function CommissionBoard({
         {t.board.hintBefore} <GripVertical className="inline size-3.5 align-text-bottom" /> {t.board.hintAfter}
       </p>
 
-      <DndContext id="commission-board" accessibility={accessibility} sensors={sensors} collisionDetection={boardCollision} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={() => { setActiveId(null); setOverColumn(null); }}>
-        {/* Di bawah lg: satu kolom per tab. */}
-        <Tabs value={mobileColumn} onValueChange={(v) => setMobileColumn(v as ColumnKey)} className="lg:hidden">
+      <DndContext
+        id="commission-board"
+        accessibility={accessibility}
+        // Tepi kiri/kanan 10% saja yang menggulir ke kolom sebelah, agar mengurutkan vertikal tidak ikut pindah halaman.
+        autoScroll={{ threshold: { x: 0.1, y: 0.2 } }}
+        sensors={sensors} collisionDetection={boardCollision} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={() => { setActiveId(null); setOverColumn(null); }}>
+        {/* Di bawah lg: tab = indikator halaman kolom; ketuk untuk pindah, atau swipe kolomnya. */}
+        <Tabs value={mobileColumn} onValueChange={(v) => goTo(v as ColumnKey)} className="lg:hidden">
           <TabsList className="w-full">
             {COLUMNS.map((c) => (
               <DroppableTab key={c.key} column={c.key} highlight={activeId !== null && overColumn === c.key}>
@@ -409,7 +446,11 @@ export function CommissionBoard({
           </TabsList>
         </Tabs>
 
-        <div className="grid gap-4 lg:grid-cols-3 lg:items-start">
+        <div
+          ref={pagerRef}
+          onScroll={onPagerScroll}
+          className="relative -mx-4 flex snap-x snap-mandatory scroll-px-4 items-start gap-4 overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:none] lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0"
+        >
           {COLUMNS.map(({ key, icon: Icon, empty }) => {
             const title = t.board[key];
             const items = key === "done" ? columns.done.slice(0, DONE_LIMIT) : columns[key];
@@ -417,7 +458,7 @@ export function CommissionBoard({
               <section
                 key={key}
                 aria-label={title}
-                className={`grid content-start gap-3 rounded-xl bg-muted/50 p-3 ${key === mobileColumn ? "" : "hidden lg:grid"}`}
+                className="grid w-full shrink-0 snap-start snap-always content-start gap-3 rounded-xl bg-muted/50 p-3 lg:w-auto"
               >
                 <h2 className="flex items-center gap-2 px-1 text-sm font-semibold">
                   <Icon className="size-4 text-muted-foreground" />
@@ -448,9 +489,11 @@ export function CommissionBoard({
             );
           })}
         </div>
-        <DragOverlay>
+        <DragOverlay dropAnimation={reducedMotion() ? null : DROP_ANIMATION}>
           {active ? (
-            <div className={`${CARD_CLASS} rotate-1 shadow-lg`}>
+            // Terangkat: sedikit lebih besar + bayangan. Di HP diperkecil dari titik pegangan agar tab dan
+            // kolom tujuan tetap terlihat di sekitar jari.
+            <div className={`${CARD_CLASS} origin-top-left scale-[1.02] rotate-1 shadow-xl pointer-coarse:scale-[0.6] pointer-coarse:opacity-90`}>
               <CardBody
                 {...cardProps(active, columnOf(active.status) ?? "working")}
                 handle={<GripVertical className="mt-0.5 size-4 text-muted-foreground" />}
