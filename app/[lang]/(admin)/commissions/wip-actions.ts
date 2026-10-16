@@ -57,6 +57,15 @@ export async function uploadWip(formData: FormData): Promise<WipResult> {
   return {};
 }
 
+/** true jika file masih ada atau statusnya tidak bisa dipastikan (aman: jangan hapus barisnya). */
+async function wipExists(supabase: Awaited<ReturnType<typeof createClient>>, path: string) {
+  try {
+    return (await supabase.storage.from(WIP_BUCKET).exists(path)).data;
+  } catch {
+    return true;
+  }
+}
+
 export async function deleteWip(id: string): Promise<WipResult> {
   const t = await actionDict();
   if (!idSchema.safeParse(id).success) return { error: t.actions.invalidId };
@@ -66,7 +75,8 @@ export async function deleteWip(id: string): Promise<WipResult> {
 
   const removed = await supabase.storage.from(WIP_BUCKET).remove([data.storage_path]);
   // remove() tidak error bila file tak terhapus (mis. policy) → cek jumlahnya.
-  if (removed.error || removed.data.length < 1) {
+  // 0 terhapus karena file memang sudah hilang tetap boleh lanjut, kalau tidak barisnya tak bisa dihapus selamanya.
+  if (removed.error || (removed.data.length < 1 && (await wipExists(supabase, data.storage_path)))) {
     console.error("deleteWip storage", removed.error);
     return { error: t.actions.imageDeleteFailed };
   }
