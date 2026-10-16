@@ -157,7 +157,9 @@ TrackerCommis/
 - [x] Halaman `/privacy`
 - [x] Hapus akun sendiri (Pengaturan → Umum), termasuk file WIP di Storage
 - [x] Template email konfirmasi & reset password dua bahasa (`supabase/templates/`)
-- [ ] Pasang template email di dashboard Supabase (manual)
+- [ ] Pasang SMTP sendiri di Supabase (Resend + domain terverifikasi); tanpa ini template tidak bisa diedit dan Supabase memakai email default (manual)
+- [ ] Pasang template email di dashboard Supabase setelah SMTP aktif; Site URL = URL produksi (manual)
+- [ ] Cadangan email default: `/auth/confirm` gagal tukar `code` (link dibuka di perangkat lain) → daftar: "Email sudah terkonfirmasi, silakan masuk"; reset: "Buka link di perangkat yang sama"
 
 ### Milestone 10 — Aplikasi HP & pengingat
 - [x] PWA: manifest, ikon (termasuk maskable & Apple), theme color; bisa dipasang di layar utama
