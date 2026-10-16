@@ -9,7 +9,9 @@ export default async function ForgotPasswordPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t.auth.forgotTitle}</CardTitle>
+        <CardTitle>
+          <h1>{t.auth.forgotTitle}</h1>
+        </CardTitle>
         <CardDescription>{t.auth.forgotDescription}</CardDescription>
       </CardHeader>
       <CardContent>

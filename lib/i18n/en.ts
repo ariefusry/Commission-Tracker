@@ -125,6 +125,7 @@ const en: Dict = {
     toCommissions: "Go to commissions",
   },
   auth: {
+    loginDescription: "Pick up where you left off.",
     footer: "Free for every artist · Support with a donation",
     email: "Email",
     password: "Password",

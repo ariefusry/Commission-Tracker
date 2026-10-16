@@ -9,7 +9,9 @@ export default async function ResetPasswordPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t.auth.resetTitle}</CardTitle>
+        <CardTitle>
+          <h1>{t.auth.resetTitle}</h1>
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <AuthForm

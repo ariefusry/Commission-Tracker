@@ -9,7 +9,9 @@ export default async function SignupPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t.auth.signup}</CardTitle>
+        <CardTitle>
+          <h1>{t.auth.signup}</h1>
+        </CardTitle>
         <CardDescription>{t.auth.signupDescription}</CardDescription>
       </CardHeader>
       <CardContent>

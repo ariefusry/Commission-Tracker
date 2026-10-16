@@ -29,8 +29,10 @@ export default async function LoginPage({ searchParams }: PageProps<"/[lang]/log
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t.auth.login}</CardTitle>
-        <CardDescription>Commission Tracker</CardDescription>
+        <CardTitle>
+          <h1>{t.auth.login}</h1>
+        </CardTitle>
+        <CardDescription>{t.auth.loginDescription}</CardDescription>
       </CardHeader>
       <CardContent>
         <Suspense fallback={<AuthForm action={login} submitLabel={t.auth.login} fields={fields(t)} />}>

@@ -123,6 +123,7 @@ const id = {
     toCommissions: "Ke daftar commission",
   },
   auth: {
+    loginDescription: "Lanjutkan melacak commission kamu.",
     footer: "Gratis untuk semua artist · Dukung lewat donasi",
     email: "Email",
     password: "Password",
