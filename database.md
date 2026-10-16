@@ -323,7 +323,7 @@ Aplikasi tidak berbayar (didukung donasi QRIS). `has_access()` kini hanya `auth.
 
 ## Gambar WIP (migration `20261015130000`, `20261015140000`)
 
-- Bucket Storage publik `wip` (≤ 1 MB, WebP/JPEG). Path `{user_id}/{commission_id}/{uuid}.webp`; policy storage: artist hanya boleh insert/select/delete di folder `{user_id}` miliknya. **Select wajib ada**: tanpa itu `remove()` tidak menghapus apa pun dan tidak error.
+- Bucket Storage publik `wip` (≤ 1 MB, WebP/JPEG). Path `{user_id}/{commission_id}/{uuid}.webp`; policy storage: artist hanya boleh insert/select/delete di folder `{user_id}` miliknya; insert juga wajib `{commission_id}` milik sendiri dan maks. 10 file per folder commission, dihitung lewat `wip_object_count()` (`security definer`; subquery langsung ke `storage.objects` di policy-nya sendiri = infinite recursion). Migration `20261016010000` + `20261016020000`. **Select wajib ada**: tanpa itu `remove()` tidak menghapus apa pun dan tidak error.
 - Tabel `wip_images` (`commission_id`, `stage_id`, `storage_path`): policy pemilik + path harus di folder milik artist; trigger membatasi maks. 10 per commission.
 - `get_tracking` mengembalikan `wip` (path, nama tahap, waktu; terbaru dulu). URL publik dibangun di `lib/storage.ts`.
 - Hapus commission/gambar: file di Storage dihapus lebih dulu (cascade hanya menghapus baris).
