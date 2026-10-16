@@ -96,7 +96,7 @@ TrackerCommis/
 
 ### Milestone 1 — Database dan auth (1 hari)
 - [x] Jalankan migration dari `database.md`
-- [x] Trigger user baru: buat `subscriptions`, `settings`, tipe dan add-on default
+- [x] Trigger user baru: buat `settings`, tipe, add-on, dan tahap default (tabel `subscriptions` dihapus, aplikasi gratis)
 - [x] Halaman daftar, login, logout, lupa password (Supabase Auth)
 - [x] Proxy (`proxy.ts`): belum login → `/login`
 - [x] Aktifkan RLS per user; uji akses langsung lewat API (user lain dan tanpa login ditolak)

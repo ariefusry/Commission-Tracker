@@ -30,7 +30,7 @@ Solo artists, many of them in Indonesia, who draw anime and VTuber-style commiss
 
 **Two languages without breaking links.** Artists had already sent clients tracking links like `/track/3d8e7808`, so adding `/en/...` prefixes would have broken them. Instead, every route lives under `app/[lang]`, and the request proxy rewrites `/track/3d8e7808` to `/en/track/...` or `/id/track/...` based on a `lang` cookie. The URL in the browser never changes. Both language versions still prerender, which matters because the app uses Next.js Cache Components. The dictionaries are typed: if the English file misses a key, the build fails.
 
-**Free, funded by donations.** The first plan had a paid subscription with a trial. I dropped it. Artists in this market already pay platform fees, and a tracker only helps if they use it for every order. The app is free with a QRIS donation page, and the subscription table stays unused.
+**Free, funded by donations.** The first plan had a paid subscription with a trial. I dropped it. Artists in this market already pay platform fees, and a tracker only helps if they use it for every order. The app is free with a QRIS donation page, and I removed the subscription table.
 
 **Storage that cleans itself up.** WIP images give clients something to look at, but they fill free-tier storage fast. The browser compresses each image to WebP at 1600px before upload, the app caps it at 10 per commission, and a daily Vercel Cron job deletes images 30 days after a commission is done. Every delete checks how many files Storage actually removed, because Supabase's `remove()` does not report an error when a policy blocks it.
 
