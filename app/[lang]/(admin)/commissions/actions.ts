@@ -76,6 +76,8 @@ export async function saveCommission(id: string | null, input: CommissionInput):
     ...v.custom_addons.map((a) => ({ addon_id: null, custom_name: a.name, price: a.price })),
   ];
   const total = priceTotal({ basePrice, addonPrices: addons.map((a) => a.price), override: v.price_override });
+  // price_total = integer Postgres; jumlah add-on katalog tidak dibatasi, jadi total bisa melewatinya.
+  if (total > 2_147_483_647) return { fieldErrors: { addon_ids: ["tooLarge"] } };
   // DP hanya disimpan untuk status dp; paid → pendapatan = total.
   const dpAmount = v.payment_status === "dp" ? v.dp_amount : 0;
   if (dpAmount > total) return { fieldErrors: { dp_amount: ["dpOverTotal"] } };
