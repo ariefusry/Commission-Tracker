@@ -282,10 +282,13 @@ function AttentionGroup({
   );
 }
 
-function Attention({ all, today, t }: { all: CommissionRow[]; today: string; t: Dict }) {
+const MIN_COMPARE = 5;
+
+function Attention({ all, today, t, hideWhenEmpty }: { all: CommissionRow[]; today: string; t: Dict; hideWhenEmpty?: boolean }) {
   const a = needsAttention(all, today);
   const deadline = (r: CommissionRow) => deadlineLabel(deadlineInfo(r.deadline, r.status, today), t);
   const empty = !a.late.length && !a.soon.length && !a.unpaid.length;
+  if (empty && hideWhenEmpty) return null;
   return (
     <Panel title={t.dashboard.attention} note={t.dashboard.attentionNote}>
       {empty ? (
@@ -402,7 +405,10 @@ export function DashboardView({ rows: all, today, options, initial }: Props) {
   const rows = filterByRange(scoped, range);
   const s = summarize(rows, options);
   const prev = previousRange(range, today);
-  const p = prev ? summarize(filterByRange(scoped, prev), options) : null;
+  const before = prev ? summarize(filterByRange(scoped, prev), options) : null;
+  // Persen dari 2 → 4 pesanan ("+100%") lebih menyesatkan daripada membantu: bandingkan bila datanya cukup.
+  const p = before && before.count >= MIN_COMPARE && s.count >= MIN_COMPARE ? before : null;
+  const dueCount = rows.filter((r) => r.status !== "cancelled" && amountDue(r.price_total, r.payment_status, r.dp_amount) > 0).length;
   const series = revenueSeries(rows, range, today, options);
   const types = typeDistribution(filterByRange(all, range));
   const late = rows.filter((r) => deadlineInfo(r.deadline, r.status, today).tone === "late").length;
@@ -485,6 +491,10 @@ export function DashboardView({ rows: all, today, options, initial }: Props) {
         </p>
       </div>
 
+      <div className="lg:hidden">
+        <Attention all={all} today={today} t={t} hideWhenEmpty />
+      </div>
+
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <Stat
           t={t}
@@ -514,9 +524,22 @@ export function DashboardView({ rows: all, today, options, initial }: Props) {
           note={s.cancelledPaid ? t.dashboard.paidFromCancelled(formatRupiah(s.cancelledPaid)) : undefined}
           delta={p && percentChange(s.paid, p.paid)}
         />
-        <Stat t={t} icon={Hourglass} label={t.dashboard.due} value={formatRupiah(s.due)} tone={s.due > 0 ? "warn" : undefined} />
+        <Stat
+          t={t}
+          icon={Hourglass}
+          label={t.dashboard.due}
+          value={formatRupiah(s.due)}
+          tone={s.due > 0 ? "warn" : undefined}
+          note={dueCount ? t.dashboard.fromCommissions(dueCount) : t.dashboard.allPaid}
+        />
         <div className="col-span-2 lg:col-span-1">
-          <Stat t={t} icon={Calculator} label={t.dashboard.average} value={formatRupiah(s.average)} />
+          <Stat
+            t={t}
+            icon={Calculator}
+            label={t.dashboard.average}
+            value={formatRupiah(s.average)}
+            note={s.count ? t.dashboard.fromCommissions(s.count) : undefined}
+          />
         </div>
       </div>
 
@@ -573,7 +596,9 @@ export function DashboardView({ rows: all, today, options, initial }: Props) {
             )}
           </Panel>
         )}
-        <Attention all={all} today={today} t={t} />
+        <div className="hidden lg:grid">
+          <Attention all={all} today={today} t={t} />
+        </div>
       </div>
 
       {rows.length > 0 && (

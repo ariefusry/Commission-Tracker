@@ -176,6 +176,8 @@ const id = {
     paidFromCancelled: (amount: string) => `Termasuk ${amount} dari batal`,
     due: "Belum dibayar",
     average: "Rata-rata harga",
+    fromCommissions: (n: number) => `dari ${n} commission`,
+    allPaid: "Semua sudah lunas",
     emptyTitle: "Belum ada commission di periode ini",
     emptyBody: "Pilih periode lain atau tambah commission baru.",
     addCommission: "Tambah commission",

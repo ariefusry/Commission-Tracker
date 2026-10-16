@@ -178,6 +178,8 @@ const en: Dict = {
     paidFromCancelled: (amount) => `Includes ${amount} from cancelled`,
     due: "Unpaid",
     average: "Average price",
+    fromCommissions: (n) => `across ${n} commission${n === 1 ? "" : "s"}`,
+    allPaid: "All paid up",
     emptyTitle: "No commissions in this period",
     emptyBody: "Pick another period or add a new commission.",
     addCommission: "Add commission",
