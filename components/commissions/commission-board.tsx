@@ -2,7 +2,9 @@
 
 import {
   closestCorners,
+  pointerWithin,
   DndContext,
+  type CollisionDetection,
   DragOverlay,
   KeyboardSensor,
   PointerSensor,
@@ -100,11 +102,15 @@ function CardBody({ row, column, stages, today, pending, slotFull, onUpdate, onM
               value={row.status}
               disabled={pending}
               onValueChange={(value) =>
-                value !== row.status && onUpdate({ field: "status", value: value as "in_progress" | "revision" })
+                value === "queue"
+                  ? onMove("queue")
+                  : value !== row.status && onUpdate({ field: "status", value: value as "in_progress" | "revision" })
               }
               options={[
                 { value: "in_progress", label: t.status.in_progress },
                 { value: "revision", label: t.status.revision },
+                // Satu-satunya jalan kembali ke antrean di HP (board HP satu kolom per tab).
+                { value: "queue", label: t.status.queue },
               ]}
             />
           )}
@@ -161,7 +167,7 @@ function SortableCard(props: CardProps) {
             ref={setActivatorNodeRef}
             type="button"
             aria-label={t.board.drag(props.row.client_username)}
-            className="-ml-1 mt-0.5 cursor-grab touch-none rounded p-0.5 text-muted-foreground hover:bg-muted active:cursor-grabbing"
+            className="-ml-1 mt-0.5 cursor-grab touch-none rounded p-0.5 pointer-coarse:p-3 text-muted-foreground hover:bg-muted active:cursor-grabbing"
             {...attributes}
             {...listeners}
           >
@@ -187,6 +193,24 @@ function Column({ id, highlight, children }: { id: ColumnKey; highlight: boolean
     </div>
   );
 }
+
+/** Tab kolom di HP juga area drop: kartu bisa dipindah kolom walau kolomnya sedang tidak tampil. */
+function DroppableTab({ column, highlight, children }: { column: ColumnKey; highlight: boolean; children: React.ReactNode }) {
+  const { setNodeRef } = useDroppable({ id: `tab:${column}` });
+  return (
+    <TabsTrigger ref={setNodeRef} value={column} className={highlight ? "ring-2 ring-primary/30" : undefined}>
+      {children}
+    </TabsTrigger>
+  );
+}
+
+// Area drop tersembunyi (kolom/tab di luar layar, display: none) berukuran 0 di pojok kiri atas dan bisa
+// "menang" di closestCorners: abaikan. Tab kecil dicek dari posisi jari, bukan sudut kartu yang besar.
+const boardCollision: CollisionDetection = (args) => {
+  const visible = args.droppableContainers.filter((c) => (c.rect.current?.width ?? 0) > 0);
+  const tab = pointerWithin({ ...args, droppableContainers: visible.filter((c) => String(c.id).startsWith("tab:")) });
+  return tab.length ? tab : closestCorners({ ...args, droppableContainers: visible });
+};
 
 /**
  * Board ala Trello: Waiting list → Sedang dikerjakan → Selesai.
@@ -260,13 +284,19 @@ export function CommissionBoard({
     });
 
   const findColumn = (id: string): ColumnKey | null => {
-    if ((COLUMN_KEYS as string[]).includes(id)) return id as ColumnKey;
+    const key = id.startsWith("tab:") ? id.slice(4) : id;
+    if ((COLUMN_KEYS as string[]).includes(key)) return key as ColumnKey;
     const row = rows.find((r) => r.id === id);
     return row ? columnOf(row.status) : null;
   };
 
   const onDragStart = ({ active }: DragStartEvent) => setActiveId(String(active.id));
-  const onDragOver = ({ over }: DragOverEvent) => setOverColumn(over ? findColumn(String(over.id)) : null);
+  const onDragOver = ({ over }: DragOverEvent) => {
+    const column = over ? findColumn(String(over.id)) : null;
+    setOverColumn(column);
+    // Melayang di atas tab (HP): buka kolomnya, seperti folder spring-loaded.
+    if (column && String(over?.id).startsWith("tab:")) setMobileColumn(column);
+  };
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     setActiveId(null);
@@ -342,18 +372,18 @@ export function CommissionBoard({
         {t.board.hintBefore} <GripVertical className="inline size-3.5 align-text-bottom" /> {t.board.hintAfter}
       </p>
 
-      {/* Di bawah lg: satu kolom per tab. */}
-      <Tabs value={mobileColumn} onValueChange={(v) => setMobileColumn(v as ColumnKey)} className="lg:hidden">
-        <TabsList className="w-full">
-          {COLUMNS.map((c) => (
-            <TabsTrigger key={c.key} value={c.key}>
-              {t.board[c.key]} ({c.key === "working" ? `${columns.working.length}/${slotLimit}` : columns[c.key].length})
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      <DndContext id="commission-board" sensors={sensors} collisionDetection={boardCollision} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={() => { setActiveId(null); setOverColumn(null); }}>
+        {/* Di bawah lg: satu kolom per tab. */}
+        <Tabs value={mobileColumn} onValueChange={(v) => setMobileColumn(v as ColumnKey)} className="lg:hidden">
+          <TabsList className="w-full">
+            {COLUMNS.map((c) => (
+              <DroppableTab key={c.key} column={c.key} highlight={activeId !== null && overColumn === c.key}>
+                {t.board[c.key]} ({c.key === "working" ? `${columns.working.length}/${slotLimit}` : columns[c.key].length})
+              </DroppableTab>
+            ))}
+          </TabsList>
+        </Tabs>
 
-      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={() => { setActiveId(null); setOverColumn(null); }}>
         <div className="grid gap-4 lg:grid-cols-3 lg:items-start">
           {COLUMNS.map(({ key, icon: Icon, empty }) => {
             const title = t.board[key];
