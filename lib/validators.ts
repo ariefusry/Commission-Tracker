@@ -55,7 +55,7 @@ export const commissionSchema = z
     deadline: z.union([z.iso.date(e("invalidDate")), z.literal("")]),
     stage_id: z.uuid(e("chooseStage")),
     status: z.enum(STATUSES),
-    revision_count: z.number({ error: e("notNumber") }).int().min(0).max(999),
+    revision_count: z.number({ error: e("notNumber") }).int(e("integer")).min(0, e("notNegative")).max(999, e("tooLarge")),
     payment_status: z.enum(PAYMENT_STATUSES),
     dp_amount: money,
     price_override: money.nullable(),
@@ -105,7 +105,7 @@ export const reminderSchema = z
   .object({
     reminder_channel: z.enum(["off", "discord", "email"]),
     discord_webhook_url: z.string().trim().max(300),
-    reminder_days: z.number().int().min(1).max(14),
+    reminder_days: z.number({ error: e("notNumber") }).int(e("integer")).min(1, e("min1")).max(14, e("tooLarge")),
   })
   .superRefine((v, ctx) => {
     const url = v.discord_webhook_url;

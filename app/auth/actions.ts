@@ -24,6 +24,15 @@ function parse<T extends z.ZodType>(schema: T, formData: FormData) {
 
 const fieldErrors = (error: z.ZodError) => z.flattenError(error).fieldErrors;
 
+/** Error Supabase Auth → pesan kamus (error.message mentah selalu berbahasa Inggris). */
+async function authError(code: string | undefined) {
+  const t = (await actionDict()).auth;
+  if (code === "weak_password") return t.weakPassword;
+  if (code === "same_password") return t.samePassword;
+  if (code?.startsWith("over_") && code.endsWith("_rate_limit")) return t.rateLimited;
+  return t.authFailed;
+}
+
 async function origin() {
   return (await headers()).get("origin") ?? "";
 }
@@ -51,7 +60,10 @@ export async function signup(_: AuthState, formData: FormData): Promise<AuthStat
     password: parsed.data.password,
     options: { emailRedirectTo: `${await origin()}/auth/confirm?next=/dashboard` },
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("signup", error);
+    return { error: await authError(error.code) };
+  }
   return { message: (await actionDict()).auth.checkEmail };
 }
 
@@ -73,7 +85,10 @@ export async function resetPassword(_: AuthState, formData: FormData): Promise<A
 
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("resetPassword", error);
+    return { error: await authError(error.code) };
+  }
   redirect("/dashboard");
 }
 

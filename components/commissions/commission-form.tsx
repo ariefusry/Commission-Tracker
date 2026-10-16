@@ -151,8 +151,8 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
       <div className="grid gap-6">
       <Section title={f.client}>
         {field("client_username", f.username, <Input {...invalid("client_username")} {...register("client_username")} />)}
-        {field("contact_platform", f.platform, <Input {...invalid("contact_platform")} placeholder="Twitter, Discord, ..." {...register("contact_platform")} />)}
-        {field("contact_handle", f.contact, <Input {...invalid("contact_handle")} placeholder="@handle" {...register("contact_handle")} />)}
+        {field("contact_platform", f.platform, <Input {...invalid("contact_platform")} placeholder={f.platformPlaceholder} {...register("contact_platform")} />)}
+        {field("contact_handle", f.contact, <Input {...invalid("contact_handle")} placeholder={f.contactPlaceholder} {...register("contact_handle")} />)}
       </Section>
 
       <Section title={f.order}>
@@ -166,7 +166,7 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
                 ...allTypes.map((t) => ({ value: t.id, label: `${t.name} (${formatRupiah(t.base_price)})` })),
                 // "Custom" hanya untuk commission lama yang sudah memakainya.
                 ...(defaultValues.type_id === CUSTOM_TYPE
-                  ? [{ value: CUSTOM_TYPE, label: `Custom: ${defaultValues.type_custom}` }]
+                  ? [{ value: CUSTOM_TYPE, label: `${f.customTypeLabel}: ${defaultValues.type_custom}` }]
                   : []),
               ],
               f.chooseType,
