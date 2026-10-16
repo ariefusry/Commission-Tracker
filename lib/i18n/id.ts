@@ -40,6 +40,7 @@ const id = {
     left: (days: number) => `${days} hari lagi`,
   },
   nav: {
+    main: "Navigasi utama",
     dashboard: "Dashboard",
     commissions: "Commission",
     settings: "Pengaturan",

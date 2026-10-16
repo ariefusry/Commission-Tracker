@@ -5,7 +5,7 @@ import { logout } from "@/app/auth/actions";
 import { LanguageToggle } from "@/components/language-toggle";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { NavLinks } from "@/components/nav-links";
+import { NavLinks, TabBar } from "@/components/nav-links";
 import { Button } from "@/components/ui/button";
 import type { Dict } from "@/lib/i18n";
 import { getDict } from "@/lib/i18n/server";
@@ -15,7 +15,9 @@ function DonateLink({ t, compact = false }: { t: Dict; compact?: boolean }) {
   return (
     <Link
       href="/donasi"
-      className="flex w-fit items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1 text-xs text-rose-700 hover:bg-rose-100 dark:bg-rose-950 dark:text-rose-300"
+      className={`flex w-fit items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1 text-xs text-rose-700 hover:bg-rose-100 dark:bg-rose-950 dark:text-rose-300 ${
+        compact ? "pointer-coarse:size-11 pointer-coarse:justify-center pointer-coarse:p-0" : ""
+      }`}
     >
       <Heart className="size-3.5" />
       {compact ? <span className="sr-only">{t.nav.donate}</span> : t.nav.donate}
@@ -31,7 +33,7 @@ async function Account({ variant }: { variant: "sidebar" | "header" }) {
 
   if (variant === "header") {
     return (
-      <div className="flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-1">
         <DonateLink t={t} compact />
         <div className="flex items-center">
           <LanguageToggle />
@@ -79,7 +81,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex flex-1">
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-6 border-r bg-muted/30 p-4 lg:flex">
         <Logo />
-        <NavLinks vertical />
+        <NavLinks />
         <div className="mt-auto">
           <Suspense fallback={<div className="h-16" />}>
             <Account variant="sidebar" />
@@ -91,13 +93,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur lg:hidden">
           <div className="flex h-14 items-center gap-2 px-4">
             <Logo withText={false} />
-            <NavLinks />
             <Suspense fallback={null}>
               <Account variant="header" />
             </Suspense>
           </div>
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 lg:px-8 lg:py-8">{children}</main>
+        <TabBar />
       </div>
     </div>
   );

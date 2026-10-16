@@ -43,6 +43,7 @@ const en: Dict = {
     left: (days) => `${plural(days, "day")} left`,
   },
   nav: {
+    main: "Main navigation",
     dashboard: "Dashboard",
     commissions: "Commissions",
     settings: "Settings",
