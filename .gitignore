@@ -42,4 +42,4 @@ yarn-error.log*
 next-env.d.ts
 
 # Kartu QRIS asli (berisi nama/NMID); yang dipublikasikan hanya public/qris.png
-qris-original.png
+qris-original*.png
