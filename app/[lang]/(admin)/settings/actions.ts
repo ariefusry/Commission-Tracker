@@ -165,11 +165,20 @@ export async function deleteAccount(confirm: string): Promise<CatalogResult> {
   const { data: claims } = await supabase.auth.getClaims();
   if (!claims?.claims.sub) return { error: t.actions.sessionExpired };
 
-  // RLS: hanya gambar milik user ini.
-  const { data: wip, error: wipError } = await supabase.from("wip_images").select("storage_path");
-  if (wipError) {
-    console.error("deleteAccount wip", wipError);
-    return { error: t.actions.accountDeleteFailed };
+  // RLS: hanya gambar milik user ini. Dibaca per halaman: PostgREST memotong hasil di max-rows (1000).
+  const wip: { storage_path: string }[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error: wipError } = await supabase
+      .from("wip_images")
+      .select("storage_path")
+      .order("id")
+      .range(from, from + 999);
+    if (wipError) {
+      console.error("deleteAccount wip", wipError);
+      return { error: t.actions.accountDeleteFailed };
+    }
+    wip.push(...data);
+    if (data.length < 1000) break;
   }
   for (let i = 0; i < wip.length; i += REMOVE_BATCH) {
     const paths = wip.slice(i, i + REMOVE_BATCH).map((w) => w.storage_path);
