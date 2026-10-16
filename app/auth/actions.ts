@@ -26,7 +26,9 @@ const fieldErrors = (error: z.ZodError) => z.flattenError(error).fieldErrors;
 
 /** Error Supabase Auth → pesan kamus (error.message mentah selalu berbahasa Inggris). */
 async function authError(code: string | undefined) {
-  const t = (await actionDict()).auth;
+  const d = await actionDict();
+  const t = d.auth;
+  if (code === "email_address_invalid") return d.errors.invalidEmail;
   if (code === "weak_password") return t.weakPassword;
   if (code === "same_password") return t.samePassword;
   if (code?.startsWith("over_") && code.endsWith("_rate_limit")) return t.rateLimited;
