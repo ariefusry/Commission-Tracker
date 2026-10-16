@@ -498,10 +498,10 @@ export function DashboardView({ rows: all, today, options, initial }: Props) {
         <Stat
           t={t}
           icon={Coins}
-          label={t.dashboard.revenue}
+          label={t.dashboard.orderValue}
           value={formatRupiah(s.orderValue)}
           trend={series.points.map((pt) => pt.paid + pt.due)}
-          note={t.dashboard.orderValue}
+          note={t.dashboard.orderValueNote}
           delta={p && percentChange(s.orderValue, p.orderValue)}
         />
         <Stat

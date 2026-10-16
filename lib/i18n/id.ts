@@ -170,6 +170,7 @@ const id = {
     lateCount: (n: number) => `${n} terlambat`,
     revenue: "Total pendapatan",
     orderValue: "Nilai order",
+    orderValueNote: "Tanpa commission batal",
     paid: "Sudah dibayar",
     paidFromCancelled: (amount: string) => `Termasuk ${amount} dari batal`,
     due: "Belum dibayar",

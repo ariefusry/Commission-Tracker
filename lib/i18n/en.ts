@@ -172,6 +172,7 @@ const en: Dict = {
     lateCount: (n) => `${n} late`,
     revenue: "Total income",
     orderValue: "Order value",
+    orderValueNote: "Excludes cancelled commissions",
     paid: "Paid",
     paidFromCancelled: (amount) => `Includes ${amount} from cancelled`,
     due: "Unpaid",
