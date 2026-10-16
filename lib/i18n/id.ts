@@ -103,6 +103,7 @@ const id = {
     inUse: (n: number) => `Dipakai ${n} commission. Nonaktifkan saja agar tidak muncul di form baru.`,
     imageFormat: "Format gambar tidak didukung.",
     imageTooBig: "Gambar terlalu besar (maks. 1 MB setelah dikompres).",
+    avatarTooBig: "Foto terlalu besar (maks. 256 KB setelah dikompres).",
     imageLimit: (n: number) => `Maksimal ${n} gambar WIP per commission.`,
     uploadFailed: "Gagal mengunggah gambar. Coba lagi.",
     imageSaveFailed: "Gagal menyimpan gambar.",
@@ -416,6 +417,12 @@ const id = {
     accent: "Warna halaman tracking",
     accentHint: "Dipakai untuk avatar dan progress di halaman yang dilihat client.",
     accentNames: { neutral: "Netral", rose: "Rose", orange: "Oranye", emerald: "Hijau", sky: "Biru", violet: "Ungu", pink: "Pink" },
+    photo: "Foto profil",
+    photoHint: "Tampil di halaman tracking client. Dipotong persegi otomatis.",
+    photoUpload: "Unggah foto",
+    photoChange: "Ganti foto",
+    photoRemove: "Hapus foto",
+    photoProcessing: "Memproses foto...",
     showQueue: "Tampilkan antrean dan perkiraan selesai",
     showQueueHint:
       'Client melihat posisinya di antrean, papan "Sedang dikerjakan" / "Waiting list" (tanpa nama client lain), dan perkiraan tanggal selesai dari kecepatan kerja kamu.',
@@ -433,6 +440,7 @@ const id = {
     deleteAccountButton: "Hapus akun permanen",
   },
   tracking: {
+    artistPhoto: (name: string) => `Foto ${name}`,
     notFound: "Kode tracking tidak ditemukan",
     notFoundBody: "Periksa kembali link yang dikirim artist kamu.",
     by: (artist: string) => `Commission oleh ${artist}`,
@@ -516,14 +524,14 @@ const id = {
           "Email akun kamu.",
           "Price list, add-on, tahap pengerjaan, dan pengaturan kamu.",
           "Commission yang kamu catat: username dan kontak client, harga, pembayaran, deadline, link referensi, dan catatan.",
-          "Gambar WIP yang kamu unggah.",
+          "Gambar WIP dan foto profil (opsional) yang kamu unggah.",
         ],
       },
       {
         title: "Siapa yang bisa melihat",
         items: [
           "Hanya kamu. Aturan di database membatasi setiap data ke pemilik akunnya.",
-          "Client yang memegang link tracking hanya melihat progress commission miliknya: username, tipe, tahap, deadline, posisi antrean, dan gambar WIP. Harga, kontak, dan catatan tidak tampil.",
+          "Client yang memegang link tracking hanya melihat progress commission miliknya: username, tipe, tahap, deadline, posisi antrean, dan gambar WIP, serta nama tampilan dan foto profil kamu. Harga, kontak, dan catatan tidak tampil.",
         ],
       },
       {
@@ -531,6 +539,7 @@ const id = {
         items: [
           "Data tersimpan selama akun kamu ada.",
           "Gambar WIP terhapus otomatis 30 hari setelah commission selesai, atau saat commission dihapus.",
+          "Foto profil terhapus saat kamu menghapus atau menggantinya.",
           "Saat kamu menghapus akun di Pengaturan → Umum, semua data dan gambar terhapus saat itu juga.",
         ],
       },

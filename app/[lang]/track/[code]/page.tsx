@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Logo } from "@/components/logo";
@@ -14,6 +15,7 @@ import { todayWib } from "@/lib/date";
 import type { Dict } from "@/lib/i18n";
 import { getDict } from "@/lib/i18n/server";
 import { accentStyle } from "@/lib/accent";
+import { avatarUrl } from "@/lib/storage";
 
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -53,10 +55,21 @@ async function Tracking({ params }: { params: PageProps<"/[lang]/track/[code]">[
     <article className="grid gap-5 rounded-xl border bg-card p-5 sm:p-6" style={accentStyle(t.accent_color)}>
       <header className="grid gap-1">
         <div className="flex items-center gap-2.5">
-          {t.artist_name && (
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground" aria-hidden>
-              {t.artist_name.trim()[0].toUpperCase()}
-            </span>
+          {t.artist_avatar ? (
+            <Image
+              src={avatarUrl(t.artist_avatar)}
+              alt={t.artist_name ? d.tracking.artistPhoto(t.artist_name) : ""}
+              width={40}
+              height={40}
+              className="size-10 shrink-0 rounded-full border bg-muted object-cover"
+              unoptimized
+            />
+          ) : (
+            t.artist_name && (
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground" aria-hidden>
+                {t.artist_name.trim()[0].toUpperCase()}
+              </span>
+            )
           )}
           <p className="text-sm text-muted-foreground">
             {t.artist_name ? d.tracking.by(t.artist_name) : d.tracking.progress}

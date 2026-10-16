@@ -9,7 +9,7 @@ import { todayWib } from "@/lib/date";
 import { actionDict, actionLocale } from "@/lib/i18n/action";
 import { emailAvailable, sendDiscord, sendEmail } from "@/lib/notify";
 import { reminderText } from "@/lib/reminders";
-import { removeWipFiles } from "@/lib/storage";
+import { AVATAR_BUCKET, AVATAR_MAX_BYTES, AVATAR_TYPES, avatarPath, removeFiles, removeWipFiles } from "@/lib/storage";
 import { createClient } from "@/lib/supabase/server";
 import { catalogItemSchema, reminderSchema, type CatalogItemInput, type ReminderInput } from "@/lib/validators";
 
@@ -182,6 +182,15 @@ export async function deleteAccount(confirm: string): Promise<CatalogResult> {
   }
   if (!(await removeWipFiles(supabase, wip.map((w) => w.storage_path)))) return { error: t.actions.accountDeleteFailed };
 
+  // Foto profil: seluruh isi folder user (termasuk sisa file lama bila dulu gagal terhapus).
+  const avatars = await supabase.storage.from(AVATAR_BUCKET).list(claims.claims.sub);
+  if (avatars.error) {
+    console.error("deleteAccount avatars", avatars.error);
+    return { error: t.actions.accountDeleteFailed };
+  }
+  const avatarPaths = avatars.data.map((f) => `${claims.claims.sub}/${f.name}`);
+  if (!(await removeFiles(supabase, AVATAR_BUCKET, avatarPaths))) return { error: t.actions.accountDeleteFailed };
+
   const { error } = await supabase.rpc("delete_own_account");
   if (error) {
     console.error("deleteAccount", error);
@@ -190,6 +199,71 @@ export async function deleteAccount(confirm: string): Promise<CatalogResult> {
   // User sudah tidak ada: cukup hapus cookie sesi di browser ini.
   await supabase.auth.signOut({ scope: "local" });
   redirect("/");
+}
+
+/** Foto profil artist (sudah dikompres persegi di browser). Foto lama dihapus setelah yang baru tersimpan. */
+export async function uploadAvatar(formData: FormData): Promise<CatalogResult> {
+  const t = await actionDict();
+  const file = formData.get("file");
+  if (!(file instanceof File)) return { error: t.actions.invalidData };
+  if (!(AVATAR_TYPES as readonly string[]).includes(file.type)) return { error: t.actions.imageFormat };
+  if (file.size > AVATAR_MAX_BYTES) return { error: t.actions.avatarTooBig };
+
+  const supabase = await createClient();
+  const { data: claims } = await supabase.auth.getClaims();
+  const userId = claims?.claims.sub;
+  if (!userId) return { error: t.actions.sessionExpired };
+
+  const { data: current, error: readError } = await supabase.from("settings").select("avatar_path").eq("user_id", userId).maybeSingle();
+  if (readError) {
+    console.error("uploadAvatar read", readError);
+    return { error: t.actions.saveFailed };
+  }
+
+  const path = avatarPath(userId, file.type as (typeof AVATAR_TYPES)[number]);
+  const upload = await supabase.storage.from(AVATAR_BUCKET).upload(path, file, { contentType: file.type, upsert: false });
+  if (upload.error) {
+    console.error("uploadAvatar storage", upload.error);
+    return { error: t.actions.uploadFailed };
+  }
+
+  const { data, error } = await supabase.from("settings").update({ avatar_path: path }).eq("user_id", userId).select("user_id");
+  if (error || !data?.length) {
+    if (error) console.error("uploadAvatar row", error);
+    // Jangan tinggalkan file yatim jika baris gagal diperbarui.
+    await removeFiles(supabase, AVATAR_BUCKET, [path]);
+    return { error: t.actions.saveFailed };
+  }
+  // Foto lama: gagal hapus tidak membatalkan ganti foto (policy menyisakan ruang; terhapus saat hapus akun).
+  if (current?.avatar_path && !(await removeFiles(supabase, AVATAR_BUCKET, [current.avatar_path]))) {
+    console.error("uploadAvatar foto lama tersisa", current.avatar_path);
+  }
+  refresh();
+  return {};
+}
+
+export async function removeAvatar(): Promise<CatalogResult> {
+  const t = await actionDict();
+  const supabase = await createClient();
+  const { data: claims } = await supabase.auth.getClaims();
+  const userId = claims?.claims.sub;
+  if (!userId) return { error: t.actions.sessionExpired };
+
+  const { data: current, error: readError } = await supabase.from("settings").select("avatar_path").eq("user_id", userId).maybeSingle();
+  if (readError) {
+    console.error("removeAvatar read", readError);
+    return { error: t.actions.imageDeleteFailed };
+  }
+  if (!current?.avatar_path) return {};
+  // File dulu, baru baris (sama seperti WIP): bila file gagal terhapus, path tetap tersimpan dan bisa dicoba lagi.
+  if (!(await removeFiles(supabase, AVATAR_BUCKET, [current.avatar_path]))) return { error: t.actions.imageDeleteFailed };
+  const { error } = await supabase.from("settings").update({ avatar_path: null }).eq("user_id", userId);
+  if (error) {
+    console.error("removeAvatar row", error);
+    return { error: t.actions.imageDeleteFailed };
+  }
+  refresh();
+  return {};
 }
 
 /** Simpan pengingat deadline. Bahasa pesan = bahasa UI saat menyimpan. */

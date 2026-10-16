@@ -303,6 +303,8 @@ Kolom lama `commissions.stage` (enum), `stage_custom`, dan enum `commission_stag
 
 `settings.accent_color` (default `null` = netral): warna aksen halaman tracking, salah satu kunci palet `rose`, `orange`, `emerald`, `sky`, `violet`, `pink` (check constraint, sama dengan `lib/accent.ts`). Dikembalikan `get_tracking` sebagai `accent_color`. Diubah di Pengaturan → Umum.
 
+`settings.avatar_path` (default `null` = inisial): foto profil artist di bucket publik `avatars` (maks. 256 KB, WebP/JPEG, dikompres persegi 256px di browser). Check constraint: path harus `{user_id}/{uuid}.webp|jpg` di folder pemilik baris. Policy Storage: upload/hapus/baca hanya di folder sendiri, satu tingkat, maksimal 3 file per user (dihitung lewat `avatar_object_count()` `security definer` agar policy tidak rekursif). `get_tracking` mengembalikannya sebagai `artist_avatar`. Foto lama dihapus setelah foto baru tersimpan. Tes: `supabase/tests/avatar.sql`.
+
 ## Antrean & Perkiraan Selesai (halaman tracking)
 
 - `commissions.completed_at`: diisi trigger saat status menjadi `done`, dikosongkan jika dibuka lagi. Data lama diisi dari `deadline` (tanggal selesai asli tidak tercatat).
@@ -333,7 +335,7 @@ Aplikasi tidak berbayar (didukung donasi QRIS). `has_access()` kini hanya `auth.
 
 ## Hapus Akun
 
-`delete_own_account()` (`security definer`, migration `20261015150000`, hanya role `authenticated`) menghapus commission milik `auth.uid()` lebih dulu, lalu baris `auth.users`; tabel lain ikut terhapus lewat `on delete cascade`. Urutan ini perlu karena `stages` dilindungi `on delete restrict` dari `commissions` dan `wip_images`. File WIP di Storage tidak ikut cascade: server action `deleteAccount` menghapusnya lewat Storage API sebelum memanggil fungsi ini dan mengecek jumlah file terhapus. Tes: `supabase/tests/delete_account.sql`.
+`delete_own_account()` (`security definer`, migration `20261015150000`, hanya role `authenticated`) menghapus commission milik `auth.uid()` lebih dulu, lalu baris `auth.users`; tabel lain ikut terhapus lewat `on delete cascade`. Urutan ini perlu karena `stages` dilindungi `on delete restrict` dari `commissions` dan `wip_images`. File WIP dan foto profil di Storage tidak ikut cascade: server action `deleteAccount` menghapusnya lewat Storage API sebelum memanggil fungsi ini dan mengecek jumlah file terhapus. Tes: `supabase/tests/delete_account.sql`.
 
 ## Pengingat Deadline
 

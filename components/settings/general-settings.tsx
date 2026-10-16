@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { updatePreferences } from "@/app/[lang]/(admin)/settings/actions";
+import { ImagePlus } from "lucide-react";
+import { useRef, useState, useTransition } from "react";
+import { removeAvatar, updatePreferences, uploadAvatar } from "@/app/[lang]/(admin)/settings/actions";
 import { useDict } from "@/components/i18n-provider";
 import { DeleteAccount } from "@/components/settings/delete-account";
 import { ReminderSettings } from "@/components/settings/reminder-settings";
@@ -11,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Preferences } from "@/lib/data/settings";
 import { ACCENT_KEYS, accentStyle, type Accent } from "@/lib/accent";
+import { compressAvatar } from "@/lib/image";
 import { translateError } from "@/lib/i18n";
 
 type Status = { error?: string; saved?: boolean };
@@ -74,14 +76,44 @@ function DisplayName({ initial }: { initial: string }) {
   );
 }
 
-/** Warna aksen halaman tracking: tersimpan begitu dipilih; pratinjau avatar ikut berubah. */
-function AccentPicker({ initial, name }: { initial: Accent | null; name: string }) {
+/**
+ * Profil di halaman tracking: foto (opsional) dan warna aksen. Pratinjau = avatar yang dilihat client.
+ * Foto dikompres persegi 256px di browser; tanpa foto, avatar berupa inisial berwarna aksen.
+ */
+function TrackingProfile({ initial, initialPhoto, name }: { initial: Accent | null; initialPhoto: string | null; name: string }) {
   const { t } = useDict();
   const s = t.settings;
   const [value, setValue] = useState<Accent | null>(initial);
+  const [photo, setPhoto] = useState<string | null>(initialPhoto);
   const [status, setStatus] = useState<Status>({});
+  const [photoStatus, setPhotoStatus] = useState<Status>({});
   const [pending, startTransition] = useTransition();
+  const [photoPending, startPhoto] = useTransition();
+  const fileRef = useRef<HTMLInputElement>(null);
   const options: (Accent | null)[] = [null, ...ACCENT_KEYS];
+
+  const upload = (file: File) =>
+    startPhoto(async () => {
+      let compressed: File;
+      try {
+        compressed = await compressAvatar(file);
+      } catch {
+        setPhotoStatus({ error: t.actions.imageFormat });
+        return;
+      }
+      const form = new FormData();
+      form.set("file", compressed);
+      const result = await uploadAvatar(form);
+      if (!result.error) setPhoto(URL.createObjectURL(compressed));
+      setPhotoStatus(result.error ? { error: result.error } : { saved: true });
+    });
+
+  const remove = () =>
+    startPhoto(async () => {
+      const result = await removeAvatar();
+      if (!result.error) setPhoto(null);
+      setPhotoStatus(result.error ? { error: result.error } : { saved: true });
+    });
 
   const pick = (next: Accent | null) => {
     const previous = value;
@@ -94,14 +126,50 @@ function AccentPicker({ initial, name }: { initial: Accent | null; name: string 
   };
 
   return (
+    <div className="grid gap-4">
+    <div className="grid gap-2">
+      <span className="text-sm font-medium">{s.photo}</span>
+      <div className="flex items-center gap-4 rounded-lg border p-3" style={accentStyle(value)}>
+        {photo ? (
+          // eslint-disable-next-line @next/next/no-img-element -- pratinjau lokal (blob:) atau URL Storage publik
+          <img src={photo} alt="" className="size-16 shrink-0 rounded-full border bg-muted object-cover" />
+        ) : (
+          <span className="flex size-16 shrink-0 items-center justify-center rounded-full bg-primary text-xl font-semibold text-primary-foreground" aria-hidden>
+            {(name.trim()[0] ?? "A").toUpperCase()}
+          </span>
+        )}
+        <div className="grid gap-2">
+          <span className="text-sm text-muted-foreground">{s.photoHint}</span>
+          <div className="flex flex-wrap gap-2">
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              tabIndex={-1}
+              aria-hidden
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = ""; // pilih file yang sama lagi tetap memicu onChange
+                if (file) upload(file);
+              }}
+            />
+            <Button type="button" size="sm" variant="outline" disabled={photoPending} onClick={() => fileRef.current?.click()}>
+              <ImagePlus /> {photoPending ? s.photoProcessing : photo ? s.photoChange : s.photoUpload}
+            </Button>
+            {photo && (
+              <Button type="button" size="sm" variant="ghost" disabled={photoPending} onClick={remove}>
+                {s.photoRemove}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+      <StatusText pending={photoPending} status={photoStatus} />
+    </div>
     <fieldset className="grid gap-2">
       <legend className="text-sm font-medium">{s.accent}</legend>
-      <div className="flex items-center gap-3 rounded-lg border p-3" style={accentStyle(value)}>
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground" aria-hidden>
-          {(name.trim()[0] ?? "A").toUpperCase()}
-        </span>
-        <span className="text-sm text-muted-foreground">{s.accentHint}</span>
-      </div>
+      <span className="text-sm text-muted-foreground">{s.accentHint}</span>
       <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={s.accent}>
         {options.map((key) => {
           const label = s.accentNames[key ?? "neutral"];
@@ -127,6 +195,7 @@ function AccentPicker({ initial, name }: { initial: Accent | null; name: string 
       </div>
       <StatusText pending={pending} status={status} />
     </fieldset>
+    </div>
   );
 }
 
@@ -223,7 +292,7 @@ export function GeneralSettings({ initial }: { initial: Preferences }) {
       <SlotLimit initial={initial.slot_limit} />
       <div className="grid gap-2">
         <h3 className="text-sm font-semibold">{t.settings.trackingPage}</h3>
-        <AccentPicker initial={initial.accent_color} name={initial.display_name} />
+        <TrackingProfile initial={initial.accent_color} initialPhoto={initial.avatar_url} name={initial.display_name} />
         <PreferenceToggle field="show_queue" initial={initial.show_queue} title={t.settings.showQueue}>
           {t.settings.showQueueHint}
         </PreferenceToggle>

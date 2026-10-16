@@ -1,5 +1,6 @@
 import "server-only";
 import { isAccent, type Accent } from "@/lib/accent";
+import { avatarUrl } from "@/lib/storage";
 import type { CatalogItem } from "@/components/settings/catalog-editor";
 import { emailAvailable } from "@/lib/notify";
 import { createClient } from "@/lib/supabase/server";
@@ -14,6 +15,8 @@ export type ReminderChannel = "off" | "discord" | "email";
 export type Preferences = {
   display_name: string;
   accent_color: Accent | null;
+  /** URL publik foto profil (null = pakai inisial). */
+  avatar_url: string | null;
   count_cancelled_paid: boolean;
   show_queue: boolean;
   slot_limit: number;
@@ -30,7 +33,7 @@ export async function getPreferences(): Promise<Preferences> {
   const [{ data, error }, { data: claims }] = await Promise.all([
     supabase
       .from("settings")
-      .select("display_name, accent_color, count_cancelled_paid, show_queue, slot_limit, reminder_channel, discord_webhook_url, reminder_days")
+      .select("display_name, accent_color, avatar_path, count_cancelled_paid, show_queue, slot_limit, reminder_channel, discord_webhook_url, reminder_days")
       .maybeSingle(),
     supabase.auth.getClaims(),
   ]);
@@ -38,6 +41,7 @@ export async function getPreferences(): Promise<Preferences> {
   return {
     display_name: data?.display_name ?? "",
     accent_color: isAccent(data?.accent_color) ? data.accent_color : null,
+    avatar_url: data?.avatar_path ? avatarUrl(data.avatar_path) : null,
     count_cancelled_paid: data?.count_cancelled_paid ?? true,
     show_queue: data?.show_queue ?? true,
     slot_limit: data?.slot_limit ?? 5,

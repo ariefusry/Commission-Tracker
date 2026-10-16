@@ -105,6 +105,7 @@ const en: Dict = {
     inUse: (n) => `Used by ${plural(n, "commission")}. Deactivate it instead so it no longer shows in new forms.`,
     imageFormat: "Image format not supported.",
     imageTooBig: "Image too large (1 MB max after compression).",
+    avatarTooBig: "Photo too large (max 256 KB after compression).",
     imageLimit: (n) => `${n} WIP images max per commission.`,
     uploadFailed: "Could not upload the image. Try again.",
     imageSaveFailed: "Could not save the image.",
@@ -415,6 +416,12 @@ const en: Dict = {
     accent: "Tracking page color",
     accentHint: "Used for the avatar and progress on the page your clients see.",
     accentNames: { neutral: "Neutral", rose: "Rose", orange: "Orange", emerald: "Green", sky: "Blue", violet: "Purple", pink: "Pink" },
+    photo: "Profile photo",
+    photoHint: "Shown on your clients' tracking page. Cropped to a square automatically.",
+    photoUpload: "Upload photo",
+    photoChange: "Change photo",
+    photoRemove: "Remove photo",
+    photoProcessing: "Processing photo...",
     showQueue: "Show the queue and estimated finish date",
     showQueueHint:
       'Clients see their place in the queue, an "In progress" / "Waiting list" board (without other client names), and an estimated finish date based on your pace.',
@@ -432,6 +439,7 @@ const en: Dict = {
     deleteAccountButton: "Delete account for good",
   },
   tracking: {
+    artistPhoto: (name) => `${name}'s photo`,
     notFound: "Tracking code not found",
     notFoundBody: "Check the link your artist sent you.",
     by: (artist) => `Commission by ${artist}`,
@@ -515,14 +523,14 @@ const en: Dict = {
           "Your account email.",
           "Your price list, add-ons, workflow stages, and settings.",
           "The commissions you record: client username and contact, prices, payments, deadlines, reference links, and notes.",
-          "The WIP images you upload.",
+          "The WIP images and optional profile photo you upload.",
         ],
       },
       {
         title: "Who can see it",
         items: [
           "Only you. Database rules limit every record to the account that owns it.",
-          "A client with a tracking link sees the progress of their own commission only: username, type, stage, deadline, queue position, and WIP images. Prices, contacts, and notes stay hidden.",
+          "A client with a tracking link sees the progress of their own commission only: username, type, stage, deadline, queue position, and WIP images, plus your display name and profile photo. Prices, contacts, and notes stay hidden.",
         ],
       },
       {
@@ -530,6 +538,7 @@ const en: Dict = {
         items: [
           "Your data stays as long as your account exists.",
           "WIP images are deleted 30 days after a commission is done, or when you delete the commission.",
+          "Your profile photo is deleted when you remove or replace it.",
           "When you delete your account in Settings → General, all data and images are deleted right away.",
         ],
       },

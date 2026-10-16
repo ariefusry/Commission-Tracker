@@ -93,7 +93,7 @@ npm test            # unit tests: pricing, stats, queue estimate, reminders, dat
 npm run build
 ```
 
-SQL tests for RLS, saving, tracking, queue, WIP images, account deletion, and reminder settings are in `supabase/tests/`. Each one runs inside a transaction and rolls back.
+SQL tests for RLS, saving, tracking, queue, WIP images, profile photos, account deletion, and reminder settings are in `supabase/tests/`. Each one runs inside a transaction and rolls back.
 
 ## Deploy
 
