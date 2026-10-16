@@ -9,8 +9,9 @@ export async function GET(request: NextRequest) {
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
   const nextParam = searchParams.get("next") ?? "/dashboard";
-  // Hanya path internal, cegah open redirect.
-  const next = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/dashboard";
+  // Hanya path internal, cegah open redirect. Cek origin hasil parse: "/\evil.com" dan "/\t/evil.com" lolos cek prefix.
+  const nextUrl = new URL(nextParam, request.url);
+  const next = nextParam.startsWith("/") && nextUrl.origin === request.nextUrl.origin ? nextParam : "/dashboard";
 
   const supabase = await createClient();
   const { error } = code
