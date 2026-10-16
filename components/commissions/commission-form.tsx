@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash2 } from "lucide-react";
+import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Controller, useFieldArray, useForm, useWatch, type FieldPath } from "react-hook-form";
@@ -55,6 +55,7 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
     defaultValues: { ...defaultValues, start_date: defaultValues.start_date || localToday() },
   });
   const { register, handleSubmit, setValue, setError, formState } = form;
+  const isNew = commissionId === null;
   const customAddons = useFieldArray({ control: form.control, name: "custom_addons" });
 
   const [typeId, addonIds, custom, override, payment, dpAmount] = useWatch({
@@ -261,7 +262,13 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
         {field("revision_count", f.revisions, <Input type="number" inputMode="numeric" min={0} {...invalid("revision_count")} {...register("revision_count", { setValueAs: toInt })} />)}
       </Section>
 
-      <Section title={f.payment}>
+      {/* Form baru: pembayaran & lainnya terlipat (nilai bawaannya sudah masuk akal); terbuka sendiri bila ada error. */}
+      <Section
+        title={f.payment}
+        collapsed={isNew}
+        summary={payment === "dp" ? `${t.payment.dp} ${formatRupiah(parseRupiah(dpAmount) ?? 0)}` : t.payment[payment]}
+        forceOpen={Boolean(err("payment_status") || err("dp_amount") || err("price_override"))}
+      >
         {field(
           "payment_status",
           f.paymentStatus,
@@ -277,7 +284,12 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
         )}
       </Section>
 
-      <Section title={f.other}>
+      <Section
+        title={f.other}
+        collapsed={isNew}
+        summary={f.optional}
+        forceOpen={Boolean(err("reference_links") || err("notes"))}
+      >
         {field(
           "reference_links",
           f.references,
@@ -358,11 +370,32 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+type SectionProps = {
+  title: string;
+  children: React.ReactNode;
+  /** Mulai terlipat (judul + ringkasan); bisa dibuka kapan saja. */
+  collapsed?: boolean;
+  summary?: string;
+  forceOpen?: boolean;
+};
+
+function Section({ title, children, collapsed, summary, forceOpen }: SectionProps) {
+  if (collapsed === undefined) {
+    return (
+      <section className="grid gap-4 rounded-xl border bg-card p-4 sm:p-5">
+        <h2 className="font-semibold">{title}</h2>
+        <div className="grid gap-4 sm:grid-cols-2">{children}</div>
+      </section>
+    );
+  }
   return (
-    <section className="grid gap-4 rounded-xl border bg-card p-4 sm:p-5">
-      <h2 className="font-semibold">{title}</h2>
-      <div className="grid gap-4 sm:grid-cols-2">{children}</div>
-    </section>
+    <details className="disclosure group rounded-xl border bg-card" open={!collapsed || forceOpen}>
+      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 p-4 sm:px-5 [&::-webkit-details-marker]:hidden">
+        <h2 className="font-semibold">{title}</h2>
+        {summary && <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground group-open:hidden">{summary}</span>}
+        <ChevronDown className="ml-auto size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180" aria-hidden />
+      </summary>
+      <div className="grid gap-4 px-4 pb-4 sm:grid-cols-2 sm:px-5 sm:pb-5">{children}</div>
+    </details>
   );
 }

@@ -334,6 +334,7 @@ const en: Dict = {
     auto: "Automatic",
     manualPriceHint: "Leave empty to use the type + add-on price",
     other: "Other",
+    optional: "Optional",
     references: "Reference links",
     referencesPlaceholder: "One link per line",
     notes: "Notes",

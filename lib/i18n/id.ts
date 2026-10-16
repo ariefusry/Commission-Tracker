@@ -334,6 +334,7 @@ const id = {
     auto: "Otomatis",
     manualPriceHint: "Kosongkan untuk harga otomatis dari tipe + add-on",
     other: "Lainnya",
+    optional: "Opsional",
     references: "Link referensi",
     referencesPlaceholder: "Satu link per baris",
     notes: "Catatan",
