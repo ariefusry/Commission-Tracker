@@ -62,7 +62,7 @@ create table addons (
 create table commissions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
-  tracking_code text not null unique,           -- untuk halaman publik (Fase 2)
+  tracking_code text not null unique,           -- halaman publik; 16 hex acak (check constraint, migration 20261016000000)
   client_username text not null,
   contact_platform text,                        -- twitter, discord, instagram, dll
   contact_handle text,

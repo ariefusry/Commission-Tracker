@@ -14,14 +14,14 @@ update public.stages set is_active = false where user_id = '00000000-0000-0000-0
 insert into public.commissions (user_id, client_username, type_custom, stage_id, tracking_code, price_total, dp_amount, payment_status, contact_handle, notes)
 values ('00000000-0000-0000-0000-00000000000a', 'client-x', 'Chibi',
         (select id from public.stages where user_id = '00000000-0000-0000-0000-00000000000a' and name = 'Lineart'),
-        'abcd1234', 150000, 50000, 'dp', '@rahasia', 'catatan rahasia');
+        'abcd1234abcd1234', 150000, 50000, 'dp', '@rahasia', 'catatan rahasia');
 
 set local role anon;
 
 do $$
 declare r record;
 begin
-  select * into r from public.get_tracking('abcd1234');
+  select * into r from public.get_tracking('abcd1234abcd1234');
   if r.client_username is distinct from 'client-x' then raise exception 'anon tidak bisa tracking'; end if;
   if r.artist_name is distinct from 'Studio A' then raise exception 'nama artist salah'; end if;
   if r.type_name is distinct from 'Chibi' then raise exception 'tipe salah'; end if;
@@ -29,10 +29,11 @@ begin
   if r.stages is distinct from array['Dikonfirmasi', 'Sketsa', 'Lineart', 'Finishing'] then raise exception 'daftar tahap salah: %', r.stages; end if;
   if r.current_stage is distinct from 2 then raise exception 'indeks tahap salah: %', r.current_stage; end if;
 
-  if exists (select 1 from public.get_tracking('ABCD1234')) then raise exception 'kode harus persis (huruf kecil)'; end if;
-  if exists (select 1 from public.get_tracking('abcd123')) then raise exception 'kode 7 karakter diterima'; end if;
+  if exists (select 1 from public.get_tracking('ABCD1234ABCD1234')) then raise exception 'kode harus persis (huruf kecil)'; end if;
+  if exists (select 1 from public.get_tracking('abcd1234abcd123')) then raise exception 'kode 15 karakter diterima'; end if;
+  if exists (select 1 from public.get_tracking('abcd1234')) then raise exception 'kode 8 karakter (format lama) diterima'; end if;
   if exists (select 1 from public.get_tracking('%')) then raise exception 'wildcard diterima'; end if;
-  if exists (select 1 from public.get_tracking('00000000')) then raise exception 'kode tak dikenal mengembalikan data'; end if;
+  if exists (select 1 from public.get_tracking('0000000000000000')) then raise exception 'kode tak dikenal mengembalikan data'; end if;
 
   begin
     perform 1 from public.commissions;

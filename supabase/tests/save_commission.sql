@@ -28,7 +28,7 @@ begin
 
   select * into c from public.commissions where id = v_id;
   if c.user_id <> '00000000-0000-0000-0000-00000000000a' then raise exception 'user_id bukan dari auth.uid()'; end if;
-  if length(c.tracking_code) <> 8 then raise exception 'tracking_code tidak 8 karakter'; end if;
+  if c.tracking_code !~ '^[0-9a-f]{16}$' then raise exception 'tracking_code bukan 16 hex: %', c.tracking_code; end if;
   if c.reference_links <> array['https://a.test/1', 'https://a.test/2'] then raise exception 'reference_links salah'; end if;
   if c.stage_id <> v_sketch then raise exception 'stage_id tidak tersimpan'; end if;
   if (select count(*) from public.commission_addons where commission_id = v_id) <> 2 then raise exception 'add-on create salah'; end if;

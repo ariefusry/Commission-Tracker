@@ -7,7 +7,7 @@ values ('00000000-0000-0000-0000-00000000000a', 'wip-a@test.local', 'authenticat
 
 insert into public.commissions (id, user_id, client_username, type_custom, stage_id, tracking_code)
 values ('10000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000a', 'client-a', 'X',
-        (select id from public.stages where user_id = '00000000-0000-0000-0000-00000000000a' and name = 'Sketsa'), 'bbbb0001');
+        (select id from public.stages where user_id = '00000000-0000-0000-0000-00000000000a' and name = 'Sketsa'), 'bbbb0001bbbb0001');
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000a","role":"authenticated"}', true);
@@ -57,7 +57,7 @@ set local role anon;
 do $$
 declare r record;
 begin
-  select * into r from public.get_tracking('bbbb0001');
+  select * into r from public.get_tracking('bbbb0001bbbb0001');
   if jsonb_array_length(r.wip) <> 10 then raise exception 'jumlah WIP salah: %', jsonb_array_length(r.wip); end if;
   if r.wip -> 0 ->> 'path' not like '%/10.webp' then raise exception 'urutan WIP bukan terbaru dulu: %', r.wip -> 0; end if;
   if r.wip -> 0 ->> 'stage' <> 'Sketsa' then raise exception 'nama tahap WIP salah'; end if;
