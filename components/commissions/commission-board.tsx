@@ -19,12 +19,13 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CheckCircle2, GripVertical, Hourglass, Paintbrush, Play, RotateCcw, X } from "lucide-react";
+import { CheckCircle2, ChevronDown, GripVertical, Hourglass, Paintbrush, Play, RotateCcw, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useOptimistic, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { moveCommission } from "@/app/[lang]/(admin)/commissions/actions";
 import { AppSelect } from "@/components/app-select";
-import { Actions, Deadline, Total, useQuickUpdate, type CommissionRow } from "@/components/commissions/commission-list";
+import { CopyTrackingLink } from "@/components/commissions/copy-tracking-link";
+import { Deadline, DeleteButton, EditLink, Total, useQuickUpdate, type CommissionRow } from "@/components/commissions/commission-list";
 import { useDict } from "@/components/i18n-provider";
 import { useToast } from "@/components/toast";
 import { Button } from "@/components/ui/button";
@@ -76,6 +77,40 @@ function CardBody({ row, column, stages, today, pending, slotFull, onUpdate, onM
   const stageOptions = stages
     .filter((s) => s.is_active || s.id === row.stage_id)
     .map((s) => ({ value: s.id, label: s.name }));
+  const stageName = stages.find((s) => s.id === row.stage_id)?.name;
+
+  const selects = column !== "done" && (
+    <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+      <AppSelect
+        size="sm"
+        aria-label={`${t.commissions.stage} ${row.client_username}`}
+        value={row.stage_id}
+        disabled={pending}
+        onValueChange={(value) => value !== row.stage_id && onUpdate({ field: "stage_id", value })}
+        options={stageOptions}
+      />
+      {column === "working" && (
+        <AppSelect
+          size="sm"
+          className="w-28"
+          aria-label={`${t.commissions.status} ${row.client_username}`}
+          value={row.status}
+          disabled={pending}
+          onValueChange={(value) =>
+            value === "queue"
+              ? onMove("queue")
+              : value !== row.status && onUpdate({ field: "status", value: value as "in_progress" | "revision" })
+          }
+          options={[
+            { value: "in_progress", label: t.status.in_progress },
+            { value: "revision", label: t.status.revision },
+            // Satu-satunya jalan kembali ke antrean di HP (board HP satu kolom per halaman).
+            { value: "queue", label: t.status.queue },
+          ]}
+        />
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -92,43 +127,39 @@ function CardBody({ row, column, stages, today, pending, slotFull, onUpdate, onM
         </div>
       </div>
 
-      {column !== "done" && (
-        <div className="grid grid-cols-[1fr_auto] items-center gap-2">
-          <AppSelect
-            size="sm"
-            aria-label={`${t.commissions.stage} ${row.client_username}`}
-            value={row.stage_id}
-            disabled={pending}
-            onValueChange={(value) => value !== row.stage_id && onUpdate({ field: "stage_id", value })}
-            options={stageOptions}
-          />
-          {column === "working" && (
-            <AppSelect
-              size="sm"
-              className="w-28"
-              aria-label={`${t.commissions.status} ${row.client_username}`}
-              value={row.status}
-              disabled={pending}
-              onValueChange={(value) =>
-                value === "queue"
-                  ? onMove("queue")
-                  : value !== row.status && onUpdate({ field: "status", value: value as "in_progress" | "revision" })
-              }
-              options={[
-                { value: "in_progress", label: t.status.in_progress },
-                { value: "revision", label: t.status.revision },
-                // Satu-satunya jalan kembali ke antrean di HP (board HP satu kolom per tab).
-                { value: "queue", label: t.status.queue },
-              ]}
-            />
-          )}
-        </div>
-      )}
+      {/* Desktop: dropdown langsung terlihat (kolom board lebar cukup). */}
+      {selects && <div className="hidden lg:block">{selects}</div>}
 
       <div className="flex items-end justify-between gap-2 text-sm">
         <Deadline row={row} today={today} />
-        <Actions row={row} />
+        <div className="flex justify-end">
+          <CopyTrackingLink code={row.tracking_code} name={row.client_username} />
+          <EditLink row={row} />
+          {/* HP: hapus ada di balik "ubah cepat" (kecuali kolom Selesai yang tidak punya dropdown). */}
+          <span className={selects ? "hidden lg:contents" : "contents"}>
+            <DeleteButton row={row} />
+          </span>
+        </div>
       </div>
+
+      {/* HP: ringkasan tahap/status; dropdown dan hapus satu tingkat lebih dalam. */}
+      {selects && (
+        <details className="disclosure group -mx-3 border-t lg:hidden">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 text-sm [&::-webkit-details-marker]:hidden">
+            <span className="sr-only">{t.commissions.quickEdit}:</span>
+            <span className="min-w-0 flex-1 truncate text-muted-foreground">
+              {[stageName, column === "working" ? t.status[row.status] : null].filter(Boolean).join(" · ")}
+            </span>
+            <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180" aria-hidden />
+          </summary>
+          <div className="grid gap-2 px-3 pb-1">
+            {selects}
+            <div className="flex justify-end">
+              <DeleteButton row={row} />
+            </div>
+          </div>
+        </details>
+      )}
 
       {column === "waiting" && (
         <Button

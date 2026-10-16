@@ -158,7 +158,7 @@ function QuickSelects({ row, stages, onUpdate, pending, labelled }: { row: Commi
   ));
 }
 
-function EditLink({ row }: { row: CommissionRow }) {
+export function EditLink({ row }: { row: CommissionRow }) {
   const { t } = useDict();
   return (
     <Button
@@ -173,7 +173,7 @@ function EditLink({ row }: { row: CommissionRow }) {
   );
 }
 
-function DeleteButton({ row }: { row: CommissionRow }) {
+export function DeleteButton({ row }: { row: CommissionRow }) {
   const { t } = useDict();
   const toast = useToast();
   return (
