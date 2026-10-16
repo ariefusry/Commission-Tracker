@@ -3,7 +3,7 @@
 A free web app for illustrators who take art commissions. Track every order from waiting list to delivery, see what you earned and what clients still owe, and send each client a private link where they can follow their commission's progress.
 
 **Live:** https://commission-tracker-one.vercel.app
-**Example client tracking page:** https://commission-tracker-one.vercel.app/track/3d8e7808 (fictional demo data)
+**Example client tracking page:** https://commission-tracker-one.vercel.app/track/655ca041e4c47169 (fictional demo data)
 
 ![Dashboard](docs/screenshots/dashboard-light.png)
 

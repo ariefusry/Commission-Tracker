@@ -1,7 +1,7 @@
 # Social Media Posts - Commission Tracker
 
 Live link: https://commission-tracker-one.vercel.app
-Demo tracking page: https://commission-tracker-one.vercel.app/track/3d8e7808
+Demo tracking page: https://commission-tracker-one.vercel.app/track/655ca041e4c47169
 
 
 ---
@@ -60,7 +60,7 @@ there's a donation option if you wanna support but that's totally up to you.
 
 https://commission-tracker-one.vercel.app
 here's a demo tracking page so you can see what your client would see
-https://commission-tracker-one.vercel.app/track/3d8e7808
+https://commission-tracker-one.vercel.app/track/655ca041e4c47169
 
 
 ---
