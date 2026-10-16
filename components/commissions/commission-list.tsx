@@ -227,7 +227,7 @@ function MobileCard({ row, today, stages, onUpdate, pending }: { row: Commission
           </div>
         </div>
       </div>
-      <details className="group border-t">
+      <details className="disclosure group border-t">
         <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-4 text-sm [&::-webkit-details-marker]:hidden">
           <span className="sr-only">{t.commissions.quickEdit}:</span>
           <span className="min-w-0 flex-1 truncate text-muted-foreground">

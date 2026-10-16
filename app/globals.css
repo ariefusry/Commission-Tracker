@@ -147,3 +147,26 @@
     scrollbar-gutter: stable;
   }
 }
+/* ---------- Gerak & material (prinsip Apple: tumbuh dari tempatnya, material ikut preferensi sistem) ---------- */
+
+/* Buka-tutup <details class="disclosure"> beranimasi tinggi; browser tanpa interpolate-size langsung terbuka. */
+@supports (interpolate-size: allow-keywords) {
+  details.disclosure {
+    interpolate-size: allow-keywords;
+  }
+  details.disclosure::details-content {
+    height: 0;
+    overflow: clip;
+    transition:
+      height 220ms cubic-bezier(0.2, 0.9, 0.3, 1),
+      content-visibility 220ms allow-discrete;
+  }
+  details.disclosure[open]::details-content {
+    height: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  details.disclosure::details-content {
+    transition: none;
+  }
+}
