@@ -271,7 +271,8 @@ export function CommissionBoard({
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     setActiveId(null);
     setOverColumn(null);
-    if (!over) return;
+    // Dilepas di atas dirinya sendiri: tanpa ini kartu terlempar ke bawah kolom.
+    if (!over || over.id === active.id) return;
     const row = rows.find((r) => r.id === active.id);
     const toColumn = findColumn(String(over.id));
     if (!row || !toColumn) return;
