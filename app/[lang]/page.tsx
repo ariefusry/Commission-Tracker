@@ -39,10 +39,10 @@ export default async function LandingPage() {
           <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-5xl">{l.title}</h1>
           <p className="text-base text-pretty text-muted-foreground sm:text-lg">{l.subtitle}</p>
           <div className="flex flex-wrap justify-center gap-2">
-            <Button size="lg" nativeButton={false} render={<Link href="/signup" />}>
+            <Button size="lg" className="h-11 px-5" nativeButton={false} render={<Link href="/signup" />}>
               {l.signup}
             </Button>
-            <Button size="lg" variant="outline" nativeButton={false} render={<Link href="/login" />}>
+            <Button size="lg" variant="outline" className="h-11 px-5" nativeButton={false} render={<Link href="/login" />}>
               {l.login}
             </Button>
           </div>
@@ -81,7 +81,7 @@ export default async function LandingPage() {
           <p className="text-muted-foreground">{l.clientBody}</p>
           <p className="text-sm text-muted-foreground">{l.extras}</p>
           <div>
-            <Button nativeButton={false} render={<Link href="/signup" />}>
+            <Button size="lg" className="h-11 px-5" nativeButton={false} render={<Link href="/signup" />}>
               {l.signup}
             </Button>
           </div>
