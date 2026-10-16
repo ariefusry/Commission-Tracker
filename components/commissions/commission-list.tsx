@@ -1,7 +1,7 @@
 "use client";
 
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table";
-import { Pencil, SearchX } from "lucide-react";
+import { ChevronDown, Pencil, SearchX } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { deleteCommission, quickUpdate } from "@/app/[lang]/(admin)/commissions/actions";
@@ -77,6 +77,9 @@ export function Total({ row }: { row: CommissionRow }) {
   );
 }
 
+const paymentLabel = (row: CommissionRow, t: Dict) =>
+  row.payment_status === "dp" ? `${t.payment.dp} ${formatRupiah(row.dp_amount)}` : t.payment[row.payment_status];
+
 function QuickSelects({ row, stages, onUpdate, pending, labelled }: { row: CommissionRow; stages: StageOption[]; onUpdate: OnUpdate; pending: boolean; labelled?: boolean }) {
   const { t } = useDict();
   const selects = [
@@ -103,7 +106,7 @@ function QuickSelects({ row, stages, onUpdate, pending, labelled }: { row: Commi
       value: row.payment_status,
       options: PAYMENT_STATUSES,
       labels: t.payment as Record<string, string>,
-      custom: row.payment_status === "dp" ? `${t.payment.dp} ${formatRupiah(row.dp_amount)}` : null,
+      custom: row.payment_status === "dp" ? paymentLabel(row, t) : null,
     },
   ];
 
@@ -122,27 +125,88 @@ function QuickSelects({ row, stages, onUpdate, pending, labelled }: { row: Commi
   ));
 }
 
-export function Actions({ row }: { row: CommissionRow }) {
+function EditLink({ row }: { row: CommissionRow }) {
   const { t } = useDict();
+  return (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      aria-label={t.common.edit(row.client_username)}
+      nativeButton={false}
+      render={<Link href={`/commissions/${row.id}`} />}
+    >
+      <Pencil />
+    </Button>
+  );
+}
+
+function DeleteButton({ row }: { row: CommissionRow }) {
+  const { t } = useDict();
+  return (
+    <ConfirmDeleteButton
+      label={t.common.deleteNamed(row.client_username)}
+      title={t.commissions.deleteTitle(row.client_username)}
+      description={t.commissions.deleteBody}
+      onConfirm={() => deleteCommission(row.id)}
+    />
+  );
+}
+
+export function Actions({ row }: { row: CommissionRow }) {
   return (
     <div className="flex justify-end">
       <CopyTrackingLink code={row.tracking_code} name={row.client_username} />
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        aria-label={t.common.edit(row.client_username)}
-        nativeButton={false}
-        render={<Link href={`/commissions/${row.id}`} />}
-      >
-        <Pencil />
-      </Button>
-      <ConfirmDeleteButton
-        label={t.common.deleteNamed(row.client_username)}
-        title={t.commissions.deleteTitle(row.client_username)}
-        description={t.commissions.deleteBody}
-        onConfirm={() => deleteCommission(row.id)}
-      />
+      <EditLink row={row} />
+      <DeleteButton row={row} />
     </div>
+  );
+}
+
+/**
+ * Kartu HP: ringkasan dulu (nama, total, deadline, salin link). Ubah tahap/status/bayar
+ * dan hapus satu tingkat lebih dalam, di balik baris status yang bisa dibuka.
+ */
+function MobileCard({ row, today, stages, onUpdate, pending }: { row: CommissionRow; today: string; stages: StageOption[]; onUpdate: OnUpdate; pending: boolean }) {
+  const { t } = useDict();
+  const stage = stages.find((s) => s.id === row.stage_id)?.name;
+  return (
+    <li className="rounded-xl border bg-card">
+      <div className="grid gap-2 p-4 pb-2">
+        <div className="flex items-start justify-between gap-3">
+          <div className="grid min-w-0">
+            <Link href={`/commissions/${row.id}`} className="truncate font-medium">
+              {row.client_username}
+            </Link>
+            <span className="text-sm text-muted-foreground">{row.type_name}</span>
+          </div>
+          <Total row={row} />
+        </div>
+        <div className="flex items-end justify-between gap-3 text-sm">
+          <Deadline row={row} today={today} />
+          <div className="flex">
+            <CopyTrackingLink code={row.tracking_code} name={row.client_username} />
+            <EditLink row={row} />
+          </div>
+        </div>
+      </div>
+      <details className="group border-t">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-4 text-sm [&::-webkit-details-marker]:hidden">
+          <span className="sr-only">{t.commissions.quickEdit}:</span>
+          <span className="min-w-0 flex-1 truncate text-muted-foreground">
+            {[stage, t.status[row.status], paymentLabel(row, t)].filter(Boolean).join(" · ")}
+          </span>
+          <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180" aria-hidden />
+        </summary>
+        <div className="grid gap-3 px-4 pb-4">
+          <div className="grid grid-cols-2 gap-2 [&>*:last-child]:col-span-2">
+            <QuickSelects row={row} stages={stages} onUpdate={onUpdate} pending={pending} labelled />
+          </div>
+          <div className="flex justify-end">
+            <DeleteButton row={row} />
+          </div>
+        </div>
+      </details>
+    </li>
   );
 }
 
@@ -234,26 +298,9 @@ export function CommissionList({ data, today, stages }: { data: CommissionRow[];
 
       {/* HP: kartu */}
       {/* Kartu sampai layar lebar: tabel butuh ~860px, sisa ruang di samping sidebar 1024px hanya ~720px. */}
-      <ul className="grid gap-3 md:grid-cols-2 xl:hidden">
+      <ul className="grid gap-3 md:grid-cols-2 md:items-start xl:hidden">
         {visible.map((row) => (
-          <li key={row.id} className="grid gap-3 rounded-xl border bg-card p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="grid min-w-0">
-                <Link href={`/commissions/${row.id}`} className="truncate font-medium">
-                  {row.client_username}
-                </Link>
-                <span className="text-sm text-muted-foreground">{row.type_name}</span>
-              </div>
-              <Total row={row} />
-            </div>
-            <div className="flex items-end justify-between gap-3 text-sm">
-              <Deadline row={row} today={today} />
-              <Actions row={row} />
-            </div>
-            <div className="grid grid-cols-2 gap-2 [&>*:last-child]:col-span-2">
-              <QuickSelects row={row} stages={stages} onUpdate={onUpdate} pending={pending} labelled />
-            </div>
-          </li>
+          <MobileCard key={row.id} row={row} today={today} stages={stages} onUpdate={onUpdate} pending={pending} />
         ))}
       </ul>
 

@@ -47,7 +47,7 @@ export function ConfirmDeleteButton({ label, title, description, disabled, onCon
     >
       <AlertDialogTrigger
         disabled={disabled}
-        render={<Button type="button" variant="ghost" size="icon-sm" className="text-destructive" aria-label={label} />}
+        render={<Button type="button" variant="ghost" size="icon-sm" className="text-muted-foreground hover:text-destructive" aria-label={label} />}
       >
         <Trash2 />
       </AlertDialogTrigger>

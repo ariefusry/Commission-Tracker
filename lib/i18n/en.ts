@@ -213,6 +213,7 @@ const en: Dict = {
   },
   sorts: { newest: "Newest", deadline: "Nearest deadline", total: "Highest total", client: "Client A-Z" },
   commissions: {
+    quickEdit: "Quick edit",
     title: "Commissions",
     add: "Add",
     addCommission: "Add commission",

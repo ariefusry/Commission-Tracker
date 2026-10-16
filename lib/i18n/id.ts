@@ -211,6 +211,7 @@ const id = {
   },
   sorts: { newest: "Terbaru", deadline: "Deadline terdekat", total: "Total tertinggi", client: "Client A-Z" },
   commissions: {
+    quickEdit: "Ubah cepat",
     title: "Commission",
     add: "Tambah",
     addCommission: "Tambah commission",
