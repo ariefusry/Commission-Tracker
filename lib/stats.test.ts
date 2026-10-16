@@ -128,6 +128,13 @@ describe("revenueSeries", () => {
     const s = revenueSeries([row({ start_date: "2025-12-05" })], { from: null, to: null }, "2026-02-01");
     expect(s.points.map((p) => p.key)).toEqual(["2025-12", "2026-01", "2026-02"]);
   });
+
+  it("tanggal mulai di masa depan tetap masuk chart (sama dengan summarize)", () => {
+    const rows = [row({ start_date: "2026-10-14" }), row({ start_date: "2026-10-20", price_total: 500000 })];
+    const s = revenueSeries(rows, { from: "2026-10-12", to: null }, today);
+    expect(s.points.at(-1)?.key).toBe("2026-10-20");
+    expect(s.points.reduce((sum, p) => sum + p.due, 0)).toBe(summarize(rows).due);
+  });
 });
 
 describe("typeDistribution", () => {

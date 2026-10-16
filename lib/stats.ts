@@ -102,7 +102,9 @@ const MAX_DAILY_POINTS = 31;
  * Hari/bulan kosong tetap muncul agar sumbu waktu tidak melompat.
  */
 export function revenueSeries(rows: StatRow[], range: DateRange, today: string, options: StatOptions = DEFAULT_OPTIONS) {
-  const end = range.to ?? today;
+  // Rentang terbuka: sampai hari ini, atau lebih jauh jika ada pesanan bertanggal mulai di masa depan
+  // (summarize ikut menghitungnya, jadi chart harus memuatnya juga).
+  const end = range.to ?? rows.reduce((max, r) => (r.start_date > max ? r.start_date : max), today);
   const start = range.from ?? rows.reduce((min, r) => (r.start_date < min ? r.start_date : min), end);
   const daily = (Date.parse(end) - Date.parse(start)) / DAY_MS + 1 <= MAX_DAILY_POINTS;
 
