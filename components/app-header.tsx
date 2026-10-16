@@ -92,7 +92,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur lg:hidden">
+        <header className="material scroll-edge-top sticky top-0 z-30 border-b bg-background/80 backdrop-blur-xl backdrop-saturate-150 lg:hidden">
           <div className="flex h-14 items-center gap-2 px-4">
             <Logo withText={false} />
             <Suspense fallback={null}>

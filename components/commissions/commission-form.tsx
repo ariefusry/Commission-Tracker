@@ -337,7 +337,7 @@ export function CommissionForm({ commissionId, defaultValues, types, addons, sna
         </div>
       </aside>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150 lg:hidden">
+      <div className="material scroll-edge-bottom fixed inset-x-0 bottom-0 z-20 border-t bg-background/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150 lg:hidden">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
           <div className="grid">
             <span className="text-xs text-muted-foreground">{t.common.total}</span>

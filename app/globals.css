@@ -170,3 +170,48 @@
     transition: none;
   }
 }
+
+/*
+ * Tepi scroll: garis bar melayang hanya muncul saat ada konten yang lewat di bawahnya
+ * (header: setelah halaman digulir; bar bawah: selama masih ada konten di bawah layar).
+ * Tanpa scroll-driven animation garis tetap tampil seperti biasa.
+ */
+@supports (animation-timeline: scroll()) {
+  .scroll-edge-top {
+    border-bottom-color: transparent;
+    animation: scroll-edge-top linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 24px;
+  }
+  .scroll-edge-bottom {
+    border-top-color: transparent;
+    animation: scroll-edge-bottom linear both;
+    animation-timeline: scroll(root);
+    animation-range: calc(100% - 24px) 100%;
+  }
+}
+@keyframes scroll-edge-top {
+  to {
+    border-bottom-color: var(--border);
+  }
+}
+@keyframes scroll-edge-bottom {
+  from {
+    border-top-color: var(--border);
+  }
+}
+
+/* Material tembus pandang (bar, toast) jadi solid bila pengguna meminta transparansi/kontras rendah. */
+@media (prefers-reduced-transparency: reduce) {
+  .material {
+    background-color: var(--background) !important;
+    backdrop-filter: none !important;
+  }
+}
+@media (prefers-contrast: more) {
+  .material {
+    background-color: var(--background) !important;
+    backdrop-filter: none !important;
+    border-color: var(--foreground) !important;
+  }
+}

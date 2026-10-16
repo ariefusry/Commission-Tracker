@@ -66,7 +66,7 @@ function Bar({ pathname }: { pathname: string | null }) {
       <div aria-hidden className="h-[calc(4rem+env(safe-area-inset-bottom))] lg:hidden" />
       <nav
         aria-label={t.nav.main}
-        className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150 lg:hidden"
+        className="material scroll-edge-bottom fixed inset-x-0 bottom-0 z-30 border-t bg-background/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150 lg:hidden"
       >
         <div className="mx-auto grid h-16 max-w-md grid-cols-3">
           {LINKS.map(({ href, key, icon: Icon }) => {

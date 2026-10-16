@@ -57,7 +57,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             onPointerLeave={() => setPaused(false)}
             onFocus={() => setPaused(true)}
             onBlur={() => setPaused(false)}
-            className={`pointer-events-auto flex max-w-md items-center gap-3 rounded-xl border bg-popover/90 py-2 pr-2 pl-4 text-sm text-popover-foreground shadow-lg backdrop-blur-xl backdrop-saturate-150 motion-reduce:slide-in-from-bottom-0 motion-reduce:slide-out-to-bottom-0 ${
+            className={`material pointer-events-auto flex max-w-md items-center gap-3 rounded-xl border bg-popover/90 py-2 pr-2 pl-4 text-sm text-popover-foreground shadow-lg backdrop-blur-xl backdrop-saturate-150 motion-reduce:slide-in-from-bottom-0 motion-reduce:slide-out-to-bottom-0 ${
               toast.leaving
                 ? "animate-out fade-out-0 slide-out-to-bottom-2 duration-150 fill-mode-forwards"
                 : "animate-in fade-in-0 slide-in-from-bottom-2 duration-200"
