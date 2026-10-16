@@ -126,6 +126,11 @@ export async function quickUpdate(id: string, update: QuickUpdate): Promise<Acti
         : { status: u.value };
 
   const supabase = await createClient();
+  // FK tidak memeriksa kepemilikan: pastikan tahap milik user (RLS), sama seperti saveCommission.
+  if (u.field === "stage_id") {
+    const { data: stage } = await supabase.from("stages").select("id").eq("id", u.value).maybeSingle();
+    if (!stage) return { error: t.actions.invalidData };
+  }
   const { data, error } = await supabase.from("commissions").update(patch).eq("id", id).select("id");
   if (error || !data?.length) {
     if (error) console.error("quickUpdate", error);
