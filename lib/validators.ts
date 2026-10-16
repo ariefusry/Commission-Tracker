@@ -27,7 +27,8 @@ const money = z
   .number({ error: e("notNumber") })
   .int(e("noDecimal"))
   .min(0, e("notNegative"))
-  .max(1_000_000_000, e("tooLarge"));
+  // 100 juta: harga dasar + 20 add-on custom tetap muat di kolom integer (maks. ±2,1 miliar).
+  .max(100_000_000, e("tooLarge"));
 
 /** Satu link per baris → array, baris kosong dibuang. */
 export function parseLinks(text: string): string[] {
