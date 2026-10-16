@@ -32,9 +32,14 @@ export async function GET(request: NextRequest) {
   for (let i = 0; i < data.length; i += BATCH) {
     const batch = data.slice(i, i + BATCH);
     const removed = await supabase.storage.from(WIP_BUCKET).remove(batch.map((w) => w.storage_path));
-    if (removed.error || removed.data.length < batch.length) {
-      console.error("cleanup-wip storage", removed.error ?? `hanya ${removed.data.length}/${batch.length} terhapus`);
+    if (removed.error) {
+      console.error("cleanup-wip storage", removed.error);
       break; // baris dibiarkan agar dicoba lagi besok
+    }
+    // Secret key melewati policy Storage: kekurangan berarti file sudah tidak ada. Barisnya tetap dihapus,
+    // kalau tidak batch yang sama macet di sini setiap hari.
+    if (removed.data.length < batch.length) {
+      console.warn("cleanup-wip storage", `hanya ${removed.data.length}/${batch.length} terhapus (sisanya sudah hilang)`);
     }
     const rows = await supabase.from("wip_images").delete().in("id", batch.map((w) => w.id));
     if (rows.error) {
