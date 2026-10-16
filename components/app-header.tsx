@@ -5,6 +5,7 @@ import { logout } from "@/app/auth/actions";
 import { LanguageToggle } from "@/components/language-toggle";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ToastProvider } from "@/components/toast";
 import { NavLinks, TabBar } from "@/components/nav-links";
 import { Button } from "@/components/ui/button";
 import type { Dict } from "@/lib/i18n";
@@ -78,6 +79,7 @@ async function Account({ variant }: { variant: "sidebar" | "header" }) {
 /** Kerangka halaman login: sidebar kiri di desktop, bar atas di HP. */
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
+    <ToastProvider>
     <div className="flex flex-1">
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-6 border-r bg-muted/30 p-4 lg:flex">
         <Logo />
@@ -102,5 +104,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <TabBar />
       </div>
     </div>
+    </ToastProvider>
   );
 }

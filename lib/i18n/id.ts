@@ -272,6 +272,24 @@ const id = {
     slot: "slot",
     doneLimited: (shown: number, total: number) =>
       `Menampilkan ${shown} terbaru dari ${total}. Lihat semua di tampilan Daftar.`,
+    // Pembaca layar saat menggeser kartu (dnd-kit)
+    dragInstructions:
+      "Tekan spasi untuk mengangkat kartu. Pakai tombol panah untuk memindahkannya, spasi lagi untuk menaruh, atau Escape untuk batal.",
+    pickedUp: (name: string) => `${name} diangkat.`,
+    overColumn: (name: string, column: string) => `${name} di kolom ${column}.`,
+    overCard: (name: string, other: string, column: string) => `${name} di posisi ${other}, kolom ${column}.`,
+    notOver: (name: string) => `${name} tidak berada di kolom mana pun.`,
+    dropped: (name: string, column: string) => `${name} ditaruh di kolom ${column}.`,
+    cancelled: (name: string) => `Batal. ${name} kembali ke tempat semula.`,
+  },
+  toast: {
+    undo: "Urungkan",
+    updated: (name: string, value: string) => `${name} → ${value}`,
+    moved: (name: string, column: string) => `${name} dipindah ke ${column}`,
+    reordered: (name: string) => `Urutan ${name} diubah`,
+    deleted: (name: string) => `${name} dihapus`,
+    linkCopied: (name: string) => `Link tracking ${name} disalin`,
+    copyFailed: (url: string) => `Gagal menyalin. Salin manual: ${url}`,
   },
   form: {
     newTitle: "Tambah commission",

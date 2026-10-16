@@ -15,16 +15,18 @@ import {
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
+  type UniqueIdentifier,
 } from "@dnd-kit/core";
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { CheckCircle2, GripVertical, Hourglass, Paintbrush, Play, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useOptimistic, useState, useTransition } from "react";
-import { moveCommission, quickUpdate } from "@/app/[lang]/(admin)/commissions/actions";
+import { moveCommission } from "@/app/[lang]/(admin)/commissions/actions";
 import { AppSelect } from "@/components/app-select";
-import { Actions, Deadline, Total, type CommissionRow } from "@/components/commissions/commission-list";
+import { Actions, Deadline, Total, useQuickUpdate, type CommissionRow } from "@/components/commissions/commission-list";
 import { useDict } from "@/components/i18n-provider";
+import { useToast } from "@/components/toast";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Status, StageOption } from "@/lib/commission";
@@ -229,7 +231,8 @@ export function CommissionBoard({
   slotLimit: number;
 }) {
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
+  const quickUpdate = useQuickUpdate(stages, startTransition);
   const [mobileColumn, setMobileColumn] = useState<ColumnKey>("working");
   const [suggest, setSuggest] = useState<CommissionRow | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -260,14 +263,24 @@ export function CommissionBoard({
     if (next && working < slotLimit) setSuggest(next);
   };
 
-  const commit = (row: CommissionRow, status: BoardStatus, queueOrder: number) => {
+  /** Simpan posisi baru; toast "dipindah/diurutkan · Urungkan" kecuali ini sendiri hasil urungkan. */
+  const commit = (row: CommissionRow, status: BoardStatus, queueOrder: number, isUndo = false) => {
     setSuggest(null);
-    const leftWorking = columnOf(row.status) === "working" && columnOf(status) !== "working";
+    const from = columnOf(row.status);
+    const to = columnOf(status);
     startTransition(async () => {
       applyMove({ id: row.id, status, queue_order: queueOrder });
       const result = await moveCommission(row.id, { status, queue_order: queueOrder });
-      setError(result.error ?? null);
-      if (!result.error && leftWorking && status === "done") offerNext(row.id, columns.working.length - 1);
+      if (result.error) return toast({ message: result.error, tone: "error" });
+      if (isUndo) return;
+      toast({
+        message: from === to ? t.toast.reordered(row.client_username) : t.toast.moved(row.client_username, t.board[to!]),
+        action: {
+          label: t.toast.undo,
+          onClick: () => commit({ ...row, status, queue_order: queueOrder }, row.status as BoardStatus, row.queue_order, true),
+        },
+      });
+      if (from === "working" && status === "done") offerNext(row.id, columns.working.length - 1);
     });
   };
 
@@ -277,11 +290,6 @@ export function CommissionBoard({
     commit(row, status, orderBetween(target.at(-1)?.queue_order, undefined));
   };
 
-  const update = (id: string) => (u: QuickUpdate) =>
-    startTransition(async () => {
-      const result = await quickUpdate(id, u);
-      setError(result.error ?? null);
-    });
 
   const findColumn = (id: string): ColumnKey | null => {
     const key = id.startsWith("tab:") ? id.slice(4) : id;
@@ -335,6 +343,28 @@ export function CommissionBoard({
   };
 
   const active = activeId ? rows.find((r) => r.id === activeId) : null;
+
+  // Pembaca layar: nama client dan nama kolom, bukan UUID (bawaan dnd-kit berbahasa Inggris).
+  const nameOf = (id: UniqueIdentifier) => rows.find((r) => r.id === id)?.client_username ?? "";
+  const columnTitle = (id: UniqueIdentifier) => {
+    const column = findColumn(String(id));
+    return column ? t.board[column] : "";
+  };
+  const accessibility = {
+    screenReaderInstructions: { draggable: t.board.dragInstructions },
+    announcements: {
+      onDragStart: ({ active }: DragStartEvent) => t.board.pickedUp(nameOf(active.id)),
+      onDragOver: ({ active, over }: DragOverEvent) =>
+        !over
+          ? t.board.notOver(nameOf(active.id))
+          : over.id !== active.id && rows.some((r) => r.id === over.id)
+            ? t.board.overCard(nameOf(active.id), nameOf(over.id), columnTitle(over.id))
+            : t.board.overColumn(nameOf(active.id), columnTitle(over.id)),
+      onDragEnd: ({ active, over }: DragEndEvent) =>
+        over ? t.board.dropped(nameOf(active.id), columnTitle(over.id)) : t.board.cancelled(nameOf(active.id)),
+      onDragCancel: ({ active }: DragEndEvent) => t.board.cancelled(nameOf(active.id)),
+    },
+  };
   const cardProps = (row: CommissionRow, column: ColumnKey) => ({
     row,
     column,
@@ -342,17 +372,12 @@ export function CommissionBoard({
     today,
     pending,
     slotFull,
-    onUpdate: update(row.id),
+    onUpdate: (u: QuickUpdate) => quickUpdate(row, u),
     onMove: moveByButton(row),
   });
 
   return (
     <div className="grid gap-3">
-      {error && (
-        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
-          {error}
-        </p>
-      )}
       {suggest && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-sm" role="status">
           <span>
@@ -372,7 +397,7 @@ export function CommissionBoard({
         {t.board.hintBefore} <GripVertical className="inline size-3.5 align-text-bottom" /> {t.board.hintAfter}
       </p>
 
-      <DndContext id="commission-board" sensors={sensors} collisionDetection={boardCollision} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={() => { setActiveId(null); setOverColumn(null); }}>
+      <DndContext id="commission-board" accessibility={accessibility} sensors={sensors} collisionDetection={boardCollision} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={() => { setActiveId(null); setOverColumn(null); }}>
         {/* Di bawah lg: satu kolom per tab. */}
         <Tabs value={mobileColumn} onValueChange={(v) => setMobileColumn(v as ColumnKey)} className="lg:hidden">
           <TabsList className="w-full">

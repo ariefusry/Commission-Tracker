@@ -273,6 +273,23 @@ const en: Dict = {
     hintAfter: "to set priority or change columns. The waiting list order is the turn order your clients see.",
     slot: "slots",
     doneLimited: (shown, total) => `Showing the latest ${shown} of ${total}. See all in the List view.`,
+    dragInstructions:
+      "Press space to pick up a card. Use the arrow keys to move it, space again to drop, or Escape to cancel.",
+    pickedUp: (name) => `Picked up ${name}.`,
+    overColumn: (name, column) => `${name} is over ${column}.`,
+    overCard: (name, other, column) => `${name} is at ${other}'s position in ${column}.`,
+    notOver: (name) => `${name} is not over a column.`,
+    dropped: (name, column) => `Dropped ${name} in ${column}.`,
+    cancelled: (name) => `Cancelled. ${name} returned to its place.`,
+  },
+  toast: {
+    undo: "Undo",
+    updated: (name, value) => `${name} → ${value}`,
+    moved: (name, column) => `Moved ${name} to ${column}`,
+    reordered: (name) => `Reordered ${name}`,
+    deleted: (name) => `Deleted ${name}`,
+    linkCopied: (name) => `Copied tracking link for ${name}`,
+    copyFailed: (url) => `Couldn't copy. Copy it manually: ${url}`,
   },
   form: {
     newTitle: "Add commission",

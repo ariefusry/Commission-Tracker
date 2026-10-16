@@ -9,6 +9,7 @@ import { AppSelect } from "@/components/app-select";
 import { CommissionToolbar } from "@/components/commissions/commission-toolbar";
 import { CopyTrackingLink } from "@/components/commissions/copy-tracking-link";
 import { useDict } from "@/components/i18n-provider";
+import { useToast } from "@/components/toast";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { StateMessage } from "@/components/state-message";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,39 @@ export type CommissionRow = {
   price_total: number;
 };
 
-type OnUpdate = (id: string, update: QuickUpdate) => void;
+type OnUpdate = (row: CommissionRow, update: QuickUpdate) => void;
+
+/**
+ * Ubah tahap/status/bayar dari daftar atau board, lalu toast "nama → nilai · Urungkan".
+ * Bayar yang semula DP tidak bisa diurungkan: nominal DP sudah di-reset (DP hanya lewat form).
+ */
+export function useQuickUpdate(stages: StageOption[], startTransition: React.TransitionStartFunction): OnUpdate {
+  const { t } = useDict();
+  const toast = useToast();
+  return useCallback<OnUpdate>(
+    function run(row, update) {
+      startTransition(async () => {
+        const result = await quickUpdate(row.id, update);
+        if (result.error) return toast({ message: result.error, tone: "error" });
+        const label =
+          update.field === "stage_id"
+            ? (stages.find((s) => s.id === update.value)?.name ?? "")
+            : update.field === "status"
+              ? t.status[update.value]
+              : t.payment[update.value];
+        const previous = { field: update.field, value: row[update.field] } as QuickUpdate;
+        const undoable = !(update.field === "payment_status" && row.payment_status === "dp");
+        toast({
+          message: t.toast.updated(row.client_username, label),
+          action: undoable
+            ? { label: t.toast.undo, onClick: () => run({ ...row, [update.field]: update.value }, previous) }
+            : undefined,
+        });
+      });
+    },
+    [stages, startTransition, t, toast],
+  );
+}
 
 const TONE_CLASS: Record<DeadlineTone, string> = {
   late: "text-destructive font-medium",
@@ -118,7 +151,7 @@ function QuickSelects({ row, stages, onUpdate, pending, labelled }: { row: Commi
         aria-label={`${s.label} ${row.client_username}`}
         value={s.value}
         disabled={pending}
-        onValueChange={(value) => value !== s.value && onUpdate(row.id, { field: s.key, value } as QuickUpdate)}
+        onValueChange={(value) => value !== s.value && onUpdate(row, { field: s.key, value } as QuickUpdate)}
         options={s.options.map((o: string) => ({ value: o, label: o === s.value && s.custom ? s.custom : s.labels[o] }))}
       />
     </div>
@@ -142,12 +175,17 @@ function EditLink({ row }: { row: CommissionRow }) {
 
 function DeleteButton({ row }: { row: CommissionRow }) {
   const { t } = useDict();
+  const toast = useToast();
   return (
     <ConfirmDeleteButton
       label={t.common.deleteNamed(row.client_username)}
       title={t.commissions.deleteTitle(row.client_username)}
       description={t.commissions.deleteBody}
-      onConfirm={() => deleteCommission(row.id)}
+      onConfirm={async () => {
+        const result = await deleteCommission(row.id);
+        if (!result.error) toast({ message: t.toast.deleted(row.client_username) });
+        return result;
+      }}
     />
   );
 }
@@ -256,17 +294,8 @@ function buildColumns(onUpdate: OnUpdate, pending: boolean, today: string, stage
 
 export function CommissionList({ data, today, stages }: { data: CommissionRow[]; today: string; stages: StageOption[] }) {
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
   const { t } = useDict();
-
-  const onUpdate = useCallback<OnUpdate>(
-    (id, update) =>
-      startTransition(async () => {
-        const result = await quickUpdate(id, update);
-        setError(result.error ?? null);
-      }),
-    [],
-  );
+  const onUpdate = useQuickUpdate(stages, startTransition);
   const [filter, setFilter] = useState<CommissionFilter>(EMPTY_FILTER);
   const [sort, setSort] = useState<SortKey>("newest");
   const visible = useMemo(() => applyFilter(data, filter, sort), [data, filter, sort]);
@@ -290,12 +319,6 @@ export function CommissionList({ data, today, stages }: { data: CommissionRow[];
           </Button>
         </StateMessage>
       )}
-      {error && (
-        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
-          {error}
-        </p>
-      )}
-
       {/* HP: kartu */}
       {/* Kartu sampai layar lebar: tabel butuh ~860px, sisa ruang di samping sidebar 1024px hanya ~720px. */}
       <ul className="grid gap-3 md:grid-cols-2 md:items-start xl:hidden">
