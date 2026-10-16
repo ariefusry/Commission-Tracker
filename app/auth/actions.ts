@@ -96,6 +96,7 @@ export async function resetPassword(_: AuthState, formData: FormData): Promise<A
 
 export async function logout() {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  // Lokal: keluar di perangkat ini saja, sesi di HP/perangkat lain tetap jalan.
+  await supabase.auth.signOut({ scope: "local" });
   redirect("/login");
 }
