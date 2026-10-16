@@ -319,7 +319,7 @@ Kolom lama `commissions.stage` (enum), `stage_custom`, dan enum `commission_stag
 
 ## Aplikasi Gratis (migration `20261015120000`)
 
-Aplikasi tidak berbayar (didukung donasi QRIS). `has_access()` kini hanya `auth.uid() is not null`; semua policy tetap `user_id = auth.uid()`. Tabel `subscriptions` dan trigger trial dibiarkan (tidak dipakai aplikasi); bagian dokumen di atas tentang langganan, Midtrans, `payments`, dan `activate_payment` hanya sebagai riwayat dan tidak dibuat.
+Aplikasi tidak berbayar (didukung donasi QRIS). `has_access()` kini hanya `auth.uid() is not null`; semua policy tetap `user_id = auth.uid()`. Tabel `subscriptions` dihapus (migration `20261015170000`) dan trigger `handle_new_user` tidak lagi membuat baris langganan. Bagian dokumen di atas tentang langganan, Midtrans, `payments`, dan `activate_payment` hanya sebagai riwayat.
 
 ## Gambar WIP (migration `20261015130000`, `20261015140000`)
 

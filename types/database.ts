@@ -113,20 +113,6 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
-                },"subscriptions": {
-                  Row: {
-                    "active_until": string | null,"updated_at": string,"user_id": string
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "active_until"?: string | null,"updated_at"?: string,"user_id": string
-                  }
-                  Update: {
-                    "active_until"?: string | null,"updated_at"?: string,"user_id"?: string
-                  }
-                  Relationships: [
-                    
-                  ]
                 },"wip_images": {
                   Row: {
                     "commission_id": string,"created_at": string,"id": string,"stage_id": string,"storage_path": string

@@ -4,9 +4,6 @@ begin;
 insert into auth.users (id, email, aud, role)
 values ('00000000-0000-0000-0000-00000000000a', 'track-a@test.local', 'authenticated', 'authenticated');
 update public.settings set display_name = 'Studio A' where user_id = '00000000-0000-0000-0000-00000000000a';
--- Langganan habis: tracking tetap harus jalan.
-update public.subscriptions set active_until = (now() at time zone 'Asia/Jakarta')::date - 30
-where user_id = '00000000-0000-0000-0000-00000000000a';
 -- Tahap ke-3 dinonaktifkan tapi dipakai commission ini → tetap muncul.
 update public.stages set is_active = false where user_id = '00000000-0000-0000-0000-00000000000a' and name = 'Lineart';
 update public.stages set is_active = false where user_id = '00000000-0000-0000-0000-00000000000a' and name = 'Coloring';
