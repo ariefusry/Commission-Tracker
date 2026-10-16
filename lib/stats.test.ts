@@ -63,10 +63,11 @@ describe("periode", () => {
   });
 
   it("rentang tiap periode", () => {
-    expect(resolveRange("week", today)).toEqual({ from: "2026-10-12", to: null });
-    expect(resolveRange("month", today)).toEqual({ from: "2026-10-01", to: null });
-    expect(resolveRange("3m", today)).toEqual({ from: "2026-08-01", to: null });
-    expect(resolveRange("3m", "2026-01-20")).toEqual({ from: "2025-11-01", to: null });
+    expect(resolveRange("week", today)).toEqual({ from: "2026-10-12", to: "2026-10-18" });
+    expect(resolveRange("month", today)).toEqual({ from: "2026-10-01", to: "2026-10-31" });
+    expect(resolveRange("month", "2028-02-10")).toEqual({ from: "2028-02-01", to: "2028-02-29" });
+    expect(resolveRange("3m", today)).toEqual({ from: "2026-08-01", to: "2026-10-31" });
+    expect(resolveRange("3m", "2026-01-20")).toEqual({ from: "2025-11-01", to: "2026-01-31" });
     expect(resolveRange("all", today)).toEqual({ from: null, to: null });
   });
 
@@ -129,10 +130,22 @@ describe("revenueSeries", () => {
     expect(s.points.map((p) => p.key)).toEqual(["2025-12", "2026-01", "2026-02"]);
   });
 
-  it("tanggal mulai di masa depan tetap masuk chart (sama dengan summarize)", () => {
-    const rows = [row({ start_date: "2026-10-14" }), row({ start_date: "2026-10-20", price_total: 500000 })];
-    const s = revenueSeries(rows, { from: "2026-10-12", to: null }, today);
-    expect(s.points.at(-1)?.key).toBe("2026-10-20");
+  it("bulan ini: pesanan di sisa bulan masuk chart & ringkasan, tetap per hari", () => {
+    const range = resolveRange("month", today);
+    const rows = filterByRange(
+      [row({ start_date: "2026-10-14" }), row({ start_date: "2026-10-20", price_total: 500000 }), row({ start_date: "2026-12-01" })],
+      range,
+    );
+    const s = revenueSeries(rows, range, today);
+    expect(s.granularity).toBe("day");
+    expect(s.points.at(-1)?.key).toBe("2026-10-31");
+    expect(s.points.reduce((sum, p) => sum + p.due, 0)).toBe(summarize(rows).due);
+  });
+
+  it("semua: pesanan bertanggal mulai di masa depan tetap masuk chart", () => {
+    const rows = [row({ start_date: "2026-09-01" }), row({ start_date: "2026-12-01" })];
+    const s = revenueSeries(rows, { from: null, to: null }, today);
+    expect(s.points.at(-1)?.key).toBe("2026-12");
     expect(s.points.reduce((sum, p) => sum + p.due, 0)).toBe(summarize(rows).due);
   });
 });
@@ -157,6 +170,8 @@ describe("previousRange & percentChange", () => {
   it("periode sebelumnya sama panjang, tepat sebelum", () => {
     // Bulan ini s/d hari ini (15 hari) → 15 hari sebelumnya.
     expect(previousRange({ from: "2026-10-01", to: null }, today)).toEqual({ from: "2026-09-16", to: "2026-09-30" });
+    // Bulan berjalan (to = akhir bulan) tetap dibandingkan s/d hari ini, bukan sebulan penuh.
+    expect(previousRange(resolveRange("month", today), today)).toEqual({ from: "2026-09-16", to: "2026-09-30" });
     expect(previousRange({ from: "2026-10-01", to: "2026-10-07" }, today)).toEqual({ from: "2026-09-24", to: "2026-09-30" });
     expect(previousRange({ from: null, to: null }, today)).toBeNull();
   });

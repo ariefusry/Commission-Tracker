@@ -41,6 +41,8 @@ function addMonths(key: string, n: number): string {
   return new Date(Date.UTC(y, m - 1 + n, 1)).toISOString().slice(0, 7);
 }
 
+const monthEnd = (date: string) => addDays(`${addMonths(monthKey(date), 1)}-01`, -1);
+
 /** Senin minggu ini. */
 export function weekStart(today: string): string {
   const dow = new Date(Date.parse(today)).getUTCDay(); // 0 = Minggu
@@ -49,12 +51,14 @@ export function weekStart(today: string): string {
 
 export function resolveRange(period: Period, today: string, custom: { from?: unknown; to?: unknown } = {}): DateRange {
   switch (period) {
+    // Sampai akhir periode (bukan hari ini): pesanan bertanggal mulai di sisa periode ikut terhitung,
+    // dan chart tidak melebar ke masa depan tanpa batas.
     case "week":
-      return { from: weekStart(today), to: null };
+      return { from: weekStart(today), to: addDays(weekStart(today), 6) };
     case "month":
-      return { from: `${monthKey(today)}-01`, to: null };
+      return { from: `${monthKey(today)}-01`, to: monthEnd(today) };
     case "3m":
-      return { from: `${addMonths(monthKey(today), -2)}-01`, to: null };
+      return { from: `${addMonths(monthKey(today), -2)}-01`, to: monthEnd(today) };
     case "all":
       return { from: null, to: null };
     case "custom": {
@@ -102,7 +106,7 @@ const MAX_DAILY_POINTS = 31;
  * Hari/bulan kosong tetap muncul agar sumbu waktu tidak melompat.
  */
 export function revenueSeries(rows: StatRow[], range: DateRange, today: string, options: StatOptions = DEFAULT_OPTIONS) {
-  // Rentang terbuka: sampai hari ini, atau lebih jauh jika ada pesanan bertanggal mulai di masa depan
+  // "Semua" (to = null): sampai hari ini, atau pesanan terjauh jika bertanggal mulai di masa depan
   // (summarize ikut menghitungnya, jadi chart harus memuatnya juga).
   const end = range.to ?? rows.reduce((max, r) => (r.start_date > max ? r.start_date : max), today);
   const start = range.from ?? rows.reduce((min, r) => (r.start_date < min ? r.start_date : min), end);
@@ -149,11 +153,12 @@ export function typeDistribution(rows: StatRow[]) {
 
 /**
  * Periode pembanding: panjang sama, tepat sebelum `range`. null untuk "semua".
- * Rentang terbuka (to = null) dihitung sampai hari ini.
+ * Periode yang belum selesai dihitung sampai hari ini (bulan ini s.d. tgl 16 vs 16 hari sebelumnya).
  */
 export function previousRange(range: DateRange, today: string): DateRange | null {
   if (!range.from) return null;
-  const days = (Date.parse(range.to ?? today) - Date.parse(range.from)) / DAY_MS + 1;
+  const end = range.to && range.to < today ? range.to : today;
+  const days = Math.max(1, (Date.parse(end) - Date.parse(range.from)) / DAY_MS + 1);
   return { from: addDays(range.from, -days), to: addDays(range.from, -1) };
 }
 
